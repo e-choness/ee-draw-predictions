@@ -1,0 +1,15 @@
+{
+  "name": "ee-draw-outlook",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Express Entry pool composition and next-draw CRS cut-off projections from IRCC's published rounds of invitations.",
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "fetch": "node scripts/fetch-ircc.mjs",
+    "build": "node scripts/build.mjs",
+    "start": "node scripts/serve.mjs",
+    "dev": "node scripts/build.mjs && REFRESH_ON_START=0 REFRESH_HOURS=0 node scripts/serve.mjs"
+  },
+  "license": "MIT"
+}

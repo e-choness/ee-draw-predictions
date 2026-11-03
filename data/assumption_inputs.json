@@ -1,0 +1,27 @@
+{
+  "note": "Whole-pool inputs for the high-wage scenario defaults. No figure here comes from invited candidates.",
+  "pool": {
+    "source": "IRCC Express Entry Year-End Report 2024, Table 17a: candidates in the pool who qualify for CBS criteria, as of Dec 1, 2024",
+    "url": "https://www.canada.ca/en/immigration-refugees-citizenship/corporate/publications-manuals/express-entry-year-end-report-2024.html",
+    "total": 218291,
+    "byCategory": { "STEM": 41880, "Health": 17066, "Trade": 7742, "Transport": 7673, "Agri": 3124 }
+  },
+  "profiles2024": {
+    "source": "IRCC Express Entry Year-End Report 2024, Table 3: eligible profiles by additional point type, 2024",
+    "eligibleProfiles": 339621,
+    "educationInCanada": 123387,
+    "arrangedEmployment": 41899
+  },
+  "categoryOccupations": {
+    "source": "IRCC Express Entry Year-End Report 2024, Annex: category-based selection occupations (NOC 2021)",
+    "STEM": ["20010","20011","20012","21200","21201","21202","21203","21210","21211","21220","21221","21222","21223","21230","21231","21232","21233","21234","21300","21310","21311","21321","21322","41400"],
+    "Health": ["31100","31101","31102","31103","31110","31111","31112","31121","31200","31201","31202","31203","31204","31209","31300","31301","31302","31303","32101","32102","32103","32109","32120","32121","32122","32200","32201","32209","33101","33102","33103","33109","41301","41320","42203"],
+    "Agri": ["63201","82030","82031"],
+    "Trade": ["72014","72106","72200","72300","72310","72400","72402","72405","72406","73200"],
+    "Transport": ["70020","72403","72404","72600","72601","72602","72603","72604","73300","93200"]
+  },
+  "expressEntryEligibleOccupations": {
+    "source": "Statistics Canada NOC 2021 Version 1.0: unit groups in TEER 0 (48), 1 (97), 2 (162) and 3 (69)",
+    "count": 376
+  }
+}

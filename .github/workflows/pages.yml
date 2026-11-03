@@ -1,0 +1,62 @@
+name: Refresh IRCC data and deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    # Every day at 22:47 UTC, after IRCC usually posts a draw
+    - cron: "47 22 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Download the latest rounds from IRCC
+        id: fetch
+        run: node scripts/fetch-ircc.mjs
+        env:
+          ALLOW_STALE: "1"
+
+      - name: Commit the new snapshot when IRCC adds a draw
+        if: steps.fetch.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/ee_rounds.json
+          git commit -m "Update IRCC rounds to draw #${{ steps.fetch.outputs.latest }}"
+          git push
+
+      - name: Build the site
+        run: node scripts/build.mjs
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

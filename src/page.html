@@ -1,0 +1,1300 @@
+<meta name="dash-one-writer">
+<style>
+  #dash-root { --dash-gutter: 0; }
+  /* Layout: dark navy rail on the left (pages), scenario bar across the top of the main column, cards in a 12-column grid. Mobile: rail becomes a top bar with scrolling tabs. */
+  .ee {
+    --ee-page: #edf1f7; --ee-card: #ffffff; --ee-line: #e2e7ef; --ee-ink: #263045; --ee-muted: #7b869b; --ee-faint: #a9b2c3;
+    --ee-rail: #1b2136; --ee-rail-ink: #b9c1d4; --ee-rail-hi: #ffffff; --ee-rail-active: #262d47;
+    --ee-blue: #3b97e3; --ee-coral: #ef5461; --ee-green: #3fb46a; --ee-cyan: #17bfe3; --ee-magenta: #c8349f; --ee-orange: #ffa22b; --ee-violet: #8a6ee6; --ee-slate: #9aa6bb;
+    --ee-bubble: #39415a; --ee-bubble-ink: #ffffff; --ee-chip: #f4f6fa; --ee-track: #e4e9f1; --ee-shadow: 0 1px 2px rgba(27, 33, 54, .06);
+    --ee-font: "Open Sans", var(--font-anthropic-sans, "Segoe UI"), "Helvetica Neue", Arial, sans-serif;
+    display: grid; grid-template-columns: 228px minmax(0, 1fr); min-height: 100vh;
+    background: linear-gradient(to right, var(--ee-rail) 228px, var(--ee-page) 228px); color: var(--ee-ink); font-family: var(--ee-font); font-size: 14px; line-height: 1.5;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .ee {
+      --ee-page: #121729; --ee-card: #1a2036; --ee-line: #2a3150; --ee-ink: #e6e9f3; --ee-muted: #95a0b8; --ee-faint: #6a7590;
+      --ee-rail: #0c1020; --ee-rail-active: #1c2340; --ee-bubble: #e6e9f3; --ee-bubble-ink: #1a2036; --ee-chip: #222944; --ee-track: #2a3150; --ee-shadow: none;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] .ee {
+    --ee-page: #121729; --ee-card: #1a2036; --ee-line: #2a3150; --ee-ink: #e6e9f3; --ee-muted: #95a0b8; --ee-faint: #6a7590;
+    --ee-rail: #0c1020; --ee-rail-active: #1c2340; --ee-bubble: #e6e9f3; --ee-bubble-ink: #1a2036; --ee-chip: #222944; --ee-track: #2a3150; --ee-shadow: none;
+    color-scheme: dark;
+  }
+  .ee *, .ee *::before, .ee *::after { box-sizing: border-box; }
+  .ee [hidden] { display: none !important; }
+
+  /* Rail */
+  .ee-rail { background: var(--ee-rail); color: var(--ee-rail-ink); position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto; display: flex; flex-direction: column; gap: 18px; padding: 18px 0; }
+  .ee-brand { display: flex; align-items: baseline; gap: 8px; padding: 0 20px; color: var(--ee-rail-hi); font-weight: 700; font-size: 17px; letter-spacing: .01em; }
+  .ee-brand small { font-weight: 400; font-size: 12px; color: var(--ee-rail-ink); }
+  .ee-feed { margin: 0 14px; padding: 12px; border-radius: 8px; background: var(--ee-rail-active); display: grid; gap: 2px; font-size: 12px; }
+  .ee-feed b { color: var(--ee-rail-hi); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .ee-nav { display: grid; gap: 2px; }
+  .ee-nav-label { padding: 0 20px 4px; font-size: 11px; color: #6f7893; }
+  .ee-nav button { all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; gap: 12px; padding: 9px 20px; border-left: 3px solid transparent; font-size: 13.5px; color: var(--ee-rail-ink); }
+  .ee-nav button:hover { color: var(--ee-rail-hi); background: rgba(255, 255, 255, .04); }
+  .ee-nav button[aria-current="page"] { color: var(--ee-rail-hi); background: var(--ee-rail-active); border-left-color: var(--ee-coral); }
+  .ee-nav button:focus-visible { outline: 2px solid var(--ee-cyan); outline-offset: -2px; }
+  .ee-nav svg { width: 16px; height: 16px; flex: none; stroke: currentColor; fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  .ee-badge { margin-left: auto; font-size: 10.5px; line-height: 1; padding: 4px 6px; border-radius: 9px; background: var(--ee-coral); color: #fff; font-weight: 600; }
+  .ee-rail-foot { margin-top: auto; padding: 0 20px; font-size: 11.5px; color: #6f7893; line-height: 1.45; }
+
+  /* Main */
+  .ee-main { min-width: 0; display: grid; align-content: start; gap: 18px; padding: 18px max(16px, 2vw) 32px; }
+  .ee-bar { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr) auto; gap: 18px; align-items: end; background: var(--ee-card); border: 1px solid var(--ee-line); border-radius: 6px; padding: 14px 18px; box-shadow: var(--ee-shadow); }
+  .ee-bar-sum { display: none; }
+  .ee-field { display: grid; gap: 6px; min-width: 0; }
+  .ee-field > label, .ee-field-label { font-size: 12px; color: var(--ee-muted); display: flex; justify-content: space-between; gap: 8px; }
+  .ee-field output, .ee-val { color: var(--ee-ink); font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .ee-select { appearance: none; width: 100%; font: inherit; font-size: 13px; color: var(--ee-ink); background: var(--ee-chip) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%237b869b' stroke-width='1.6'/%3E%3C/svg%3E") no-repeat right 12px center; border: 1px solid var(--ee-line); border-radius: 999px; padding: 6px 30px 6px 14px; cursor: pointer; }
+  .ee-select:focus-visible, .ee-range:focus-visible, .ee-btn:focus-visible, .ee-pill:focus-visible, .ee-search:focus-visible { outline: 2px solid var(--ee-blue); outline-offset: 2px; }
+  .ee-range { width: 100%; accent-color: var(--ee-blue); margin: 0; height: 22px; }
+  .ee-btn { font: inherit; font-size: 12.5px; color: var(--ee-ink); background: transparent; border: 1px solid var(--ee-line); border-radius: 999px; padding: 6px 14px; cursor: pointer; white-space: nowrap; }
+  .ee-btn:hover { border-color: var(--ee-muted); }
+  .ee-hint { font-size: 11.5px; color: var(--ee-muted); }
+
+  .ee-page-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 6px 18px; }
+  .ee-page-head h1 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -.01em; text-wrap: balance; }
+  .ee-page-head p { margin: 0; color: var(--ee-muted); max-width: 70ch; }
+  .ee-pause { display: flex; gap: 10px; align-items: start; padding: 10px 14px; border-radius: 6px; background: var(--ee-card); border: 1px solid var(--ee-line); border-left: 3px solid var(--ee-orange); font-size: 13px; max-width: 100%; }
+  .ee-pause a { color: inherit; font-weight: 600; }
+
+  .ee-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 18px; }
+  .ee-s12 { grid-column: span 12; } .ee-s8 { grid-column: span 8; } .ee-s7 { grid-column: span 7; } .ee-s6 { grid-column: span 6; } .ee-s5 { grid-column: span 5; } .ee-s4 { grid-column: span 4; } .ee-s3 { grid-column: span 3; }
+
+  .ee-card { background: var(--ee-card); border: 1px solid var(--ee-line); border-radius: 6px; box-shadow: var(--ee-shadow); min-width: 0; display: flex; flex-direction: column; }
+  .ee-card-h { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; padding: 12px 18px; border-bottom: 1px solid var(--ee-line); }
+  .ee-card-h h2 { margin: 0; font-size: 14px; font-weight: 600; }
+  .ee-card-b { padding: 14px 18px 18px; display: grid; gap: 12px; min-width: 0; }
+  .ee-note { margin: 0; color: var(--ee-muted); font-size: 12.5px; line-height: 1.5; max-width: 80ch; }
+
+  .ee-kpi { padding: 16px 18px; display: grid; gap: 4px; align-content: start; }
+  .ee-kpi-label { font-size: 12.5px; color: var(--ee-muted); }
+  .ee-kpi-num { font-size: 30px; font-weight: 600; letter-spacing: -.02em; line-height: 1.15; font-variant-numeric: tabular-nums; min-height: 1.15em; }
+  .ee-kpi-sub { font-size: 12.5px; color: var(--ee-muted); font-variant-numeric: tabular-nums; }
+  .ee .ee-kpi-sub b { color: var(--ee-ink); font-weight: 600; }
+  .ee-up { color: var(--ee-coral); } .ee-down { color: var(--ee-green); }
+  .ee-spark { height: 34px; margin-top: 4px; }
+
+  .ee-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+  .ee-pill { font: inherit; font-size: 12px; padding: 4px 12px; border-radius: 999px; border: 1px solid var(--ee-line); background: transparent; color: var(--ee-ink); cursor: pointer; }
+  .ee-pill[aria-pressed="true"] { background: var(--ee-blue); border-color: var(--ee-blue); color: #fff; }
+
+  .ee-chart { position: relative; min-height: 260px; }
+  .ee-chart.ee-tall { min-height: 320px; }
+  .ee-chart.ee-short { min-height: 220px; }
+  .ee-chart svg { display: block; overflow: visible; }
+  .ee-chart text { fill: var(--ee-muted); font-size: 11px; font-family: var(--ee-font); }
+  .ee-chart .ee-t-ink { fill: var(--ee-ink); font-weight: 600; }
+  .ee-chart .ee-t-bubble { fill: var(--ee-bubble-ink); font-weight: 600; font-size: 11px; }
+  .ee-chart .ee-t-white { fill: #fff; font-weight: 600; font-size: 11px; }
+  .ee-empty { display: flex; align-items: center; justify-content: center; min-height: inherit; color: var(--ee-muted); font-size: 12.5px; text-align: center; padding: 16px; }
+  .ee-tip { position: absolute; pointer-events: none; z-index: 3; background: var(--ee-card); border: 1px solid var(--ee-line); border-radius: 6px; box-shadow: 0 6px 18px rgba(20, 26, 46, .16); padding: 6px 10px; font-size: 12px; line-height: 1.5; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .ee-tip-h { color: var(--ee-muted); }
+  .ee-sw { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 6px; vertical-align: baseline; }
+  .ee-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: var(--ee-muted); }
+  .ee-legend span { display: inline-flex; align-items: center; }
+  .sw-cec { background: var(--ee-blue); } .sw-pnp { background: var(--ee-magenta); } .sw-french { background: var(--ee-cyan); } .sw-other { background: var(--ee-orange); }
+  .sw-today { background: var(--ee-slate); } .sw-after { background: var(--ee-blue); } .sw-prev { background: var(--ee-track); border: 1px solid var(--ee-slate); }
+
+  .ee-table-wrap { overflow: auto; max-height: 34rem; margin: 0 -18px -18px; }
+  .ee-table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+  .ee-table th { position: sticky; top: 0; z-index: 1; background: var(--ee-card); text-align: left; font-weight: 400; font-size: 12px; color: var(--ee-muted); padding: 8px 12px; border-bottom: 1px solid var(--ee-line); white-space: nowrap; }
+  .ee-table th:first-child, .ee-table td:first-child { padding-left: 18px; }
+  .ee-table th:last-child, .ee-table td:last-child { padding-right: 18px; }
+  .ee-table th button { all: unset; cursor: pointer; }
+  .ee-table th button:focus-visible { outline: 2px solid var(--ee-blue); }
+  .ee-table td { padding: 9px 12px; border-bottom: 1px solid var(--ee-line); white-space: nowrap; }
+  .ee-table tr:last-child td { border-bottom: 0; }
+  .ee-table .num { text-align: right; }
+  .ee-table tbody tr[data-key]:hover td { background: var(--ee-chip); }
+  .ee-table tbody tr.is-picked td { background: var(--ee-chip); font-weight: 600; }
+  .ee-table tbody tr.ee-click { cursor: pointer; }
+  .ee-type { display: inline-flex; align-items: center; gap: 8px; }
+  .ee-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+  .ee-tag { display: inline-block; min-width: 3.4em; text-align: center; padding: 3px 10px; border-radius: 999px; color: #fff; font-weight: 600; font-size: 12px; }
+  .ee-search { font: inherit; font-size: 13px; color: var(--ee-ink); background: var(--ee-chip); border: 1px solid var(--ee-line); border-radius: 999px; padding: 6px 14px; width: min(100%, 16rem); }
+
+  .ee-rules { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr)); }
+  .ee-rule { border: 1px solid var(--ee-line); border-radius: 6px; padding: 12px 14px; display: grid; gap: 8px; align-content: start; }
+  .ee-rule h3 { margin: 0; font-size: 13.5px; font-weight: 600; }
+  .ee-rule table { border-collapse: collapse; width: 100%; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+  .ee-rule td { padding: 4px 0; border-bottom: 1px solid var(--ee-line); }
+  .ee-rule tr:last-child td { border-bottom: 0; }
+  .ee-rule td:last-child { text-align: right; font-weight: 600; }
+  .ee-prose { display: grid; gap: 10px; max-width: 72ch; }
+  .ee-prose p, .ee-prose ol, .ee-prose ul { margin: 0; }
+  .ee-prose ol, .ee-prose ul { padding-left: 1.2rem; display: grid; gap: 6px; }
+  .ee-prose a { color: var(--ee-blue); }
+
+  [data-dash-source-state=refreshing] { opacity: .55; transition: opacity .3s; }
+  [data-dash-source-state=empty] { color: transparent; }
+
+  @media (max-width: 1180px) {
+    .ee-bar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .ee-bar .ee-btn { justify-self: start; }
+    .ee-s8, .ee-s7, .ee-s5 { grid-column: span 12; }
+    .ee-s3 { grid-column: span 6; }
+    .ee-s4 { grid-column: span 6; }
+  }
+  @media (max-width: 860px) {
+    .ee { grid-template-columns: minmax(0, 1fr); background: var(--ee-page); }
+    .ee-rail { position: static; height: auto; flex-direction: column; gap: 10px; padding: 12px 0 0; }
+    .ee-feed, .ee-rail-foot, .ee-nav-label { display: none; }
+    .ee-nav { display: flex; overflow-x: auto; gap: 0; scrollbar-width: none; padding: 0 8px; }
+    .ee-nav button { border-left: 0; border-bottom: 3px solid transparent; padding: 10px 12px; white-space: nowrap; }
+    .ee-nav button[aria-current="page"] { border-bottom-color: var(--ee-coral); background: transparent; }
+    .ee-bar { grid-template-columns: minmax(0, 1fr); padding: 0; gap: 0; }
+    .ee-bar-sum { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 12px 16px; cursor: pointer; font-size: 13px; }
+    .ee-bar-fields { display: none; }
+    .ee-bar.is-open .ee-bar-fields { display: grid; gap: 14px; padding: 0 16px 16px; }
+    .ee-s6, .ee-s4, .ee-s3 { grid-column: span 12; }
+    .ee-kpi-num { font-size: 26px; }
+  }
+  @media (min-width: 861px) { .ee-bar-fields { display: contents; } }
+  @media (prefers-reduced-motion: reduce) { .ee * { transition: none !important; animation: none !important; } }
+</style>
+
+<div class="ee">
+  <aside class="ee-rail" aria-label="Pages">
+    <div class="ee-brand">EE Outlook <small>Express Entry</small></div>
+    <div class="ee-feed">
+      <span>Latest IRCC draw</span>
+      <b data-draw="rail-draw" data-source="draws" data-field="drawNumber" data-row="0">—</b>
+      <span>Pool snapshot <b data-draw="rail-asof" data-source="pool_summary" data-field="asOf" data-row="0">—</b></span>
+    </div>
+    <nav class="ee-nav">
+      <span class="ee-nav-label">Outlook</span>
+      <button type="button" data-page="overview"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>Overview</button>
+      <button type="button" data-page="forecast"><svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>Next draw forecast</button>
+      <button type="button" data-page="pool"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg>Pool scores<span class="ee-badge">New rules</span></button>
+      <span class="ee-nav-label">Data</span>
+      <button type="button" data-page="draws"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>All draws</button>
+      <button type="button" data-page="method"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg>Method and sources</button>
+    </nav>
+    <p class="ee-rail-foot">Estimates from IRCC's published draws. Not IRCC guidance.</p>
+  </aside>
+
+  <main class="ee-main">
+    <section class="ee-bar" aria-label="Scenario">
+      <div class="ee-bar-sum" role="button" tabindex="0" aria-expanded="false"><span>Scenario: <b data-draw="bar-summary">—</b></span><span class="ee-hint">Edit</span></div>
+      <div class="ee-bar-fields">
+        <div class="ee-field">
+          <label for="ee-type">Draw type</label>
+          <div data-draw="type-select" data-source="forecast"></div>
+        </div>
+        <div class="ee-field">
+          <span class="ee-field-label"><span>Next draw size</span><span class="ee-val" data-draw="size-label">—</span></span>
+          <div data-draw="size-control" data-source="projection"></div>
+        </div>
+        <div class="ee-field">
+          <label for="ee-work"><span>High-wage work points</span><output data-draw="work-out">—</output></label>
+          <input id="ee-work" class="ee-range ee-work" type="range" min="0" max="50" step="5" value="20">
+        </div>
+        <div class="ee-field">
+          <label for="ee-offer"><span>High-wage job offers</span><output data-draw="offer-out">—</output></label>
+          <input id="ee-offer" class="ee-range ee-offer" type="range" min="0" max="10" step="1" value="7">
+        </div>
+        <button type="button" class="ee-btn ee-reset">Reset scenario</button>
+      </div>
+    </section>
+
+    <!-- Overview -->
+    <section class="ee-page" id="overview">
+      <div class="ee-grid">
+        <div class="ee-s12 ee-page-head">
+          <h1>Express Entry outlook</h1>
+          <p>Where the pool stands, what the next cut-off could be, and what moves it.</p>
+        </div>
+        <p class="ee-s12 ee-pause ee-est">Since November 3, 2026, CRS scores include new points for high-wage work and job offers, and IRCC has paused rounds for up to two weeks while it rescores the pool. IRCC has not yet published a pool count under the new rules, so scores here are estimated from its October 25 count and the scenario above. <a href="#pool" class="ee-go" data-go="pool">How scoring changed</a></p>
+        <p class="ee-s12 ee-pause ee-live" hidden>Scores here come from IRCC's first pool counts under the scoring rules in force since November 3, 2026. <a href="#pool" class="ee-go" data-go="pool">How scoring changed</a></p>
+
+        <div class="ee-card ee-kpi ee-s3" id="kpi-pool">
+          <span class="ee-kpi-label">Profiles in the pool</span>
+          <span class="ee-kpi-num" data-draw="k-pool" data-source="pool_summary" data-field="total" data-row="0">—</span>
+          <span class="ee-kpi-sub"><b data-draw="k-pool-change" data-source="pool_summary" data-field="change" data-row="0">—</b> since the previous snapshot</span>
+          <div class="ee-spark" data-draw="k-pool-spark" data-source="pool_trend"></div>
+        </div>
+        <div class="ee-card ee-kpi ee-s3" id="kpi-top">
+          <span class="ee-kpi-label">Profiles scoring 501+</span>
+          <span class="ee-kpi-num" data-draw="k-top" data-source="outlook_totals" data-field="after501">—</span>
+          <span class="ee-kpi-sub ee-est">Estimated. IRCC's last count, before the new points: <span data-draw="k-top-before" data-source="outlook_totals" data-field="before501">—</span></span>
+        </div>
+        <div class="ee-card ee-kpi ee-s3" id="kpi-next">
+          <span class="ee-kpi-label">Projected next <span data-draw="k-next-label" data-source="forecast" data-field="category">—</span> cut-off</span>
+          <span class="ee-kpi-num" data-draw="k-next" data-source="projection" data-field="projected">—</span>
+          <span class="ee-kpi-sub">Likely <b data-draw="k-next-low" data-source="projection" data-field="low">—</b> to <b data-draw="k-next-high" data-source="projection" data-field="high">—</b> at <span data-draw="k-next-size" data-source="projection" data-field="size">—</span> invitations</span>
+        </div>
+        <div class="ee-card ee-kpi ee-s3" id="kpi-last">
+          <span class="ee-kpi-label">Last draw of this type, old rules</span>
+          <span class="ee-kpi-num" data-draw="k-last" data-source="forecast" data-field="lastCRS">—</span>
+          <span class="ee-kpi-sub"><span data-draw="k-last-date" data-source="forecast" data-field="lastDate">—</span>, <span data-draw="k-last-size" data-source="forecast" data-field="lastSize">—</span> invitations</span>
+        </div>
+
+        <div class="ee-card ee-s12" id="history">
+          <div class="ee-card-h">
+            <h2><span data-draw="hero-title" data-source="forecast" data-field="category">—</span> cut-offs and the next draw</h2>
+            <div class="ee-pills" role="group" aria-label="Time span">
+              <button type="button" class="ee-pill ee-span" data-span="12">12 months</button>
+              <button type="button" class="ee-pill ee-span" data-span="24">24 months</button>
+              <button type="button" class="ee-pill ee-span" data-span="all">Since 2024</button>
+            </div>
+          </div>
+          <div class="ee-card-b">
+            <div class="ee-chart ee-tall" data-draw="hero-chart" data-source="draws projection"></div>
+          </div>
+        </div>
+
+        <div class="ee-card ee-s8" id="monthly">
+          <div class="ee-card-h"><h2>Invitations issued per month</h2>
+            <div class="ee-legend"><span><span class="ee-sw sw-cec"></span>Canadian Experience Class</span><span><span class="ee-sw sw-pnp"></span>Provincial Nominee</span><span><span class="ee-sw sw-french"></span>French language</span><span><span class="ee-sw sw-other"></span>Other categories</span></div>
+          </div>
+          <div class="ee-card-b"><div class="ee-chart" data-draw="monthly-chart" data-source="monthly"></div></div>
+        </div>
+        <div class="ee-card ee-s4" id="mix">
+          <div class="ee-card-h"><h2>Pool by score range</h2></div>
+          <div class="ee-card-b"><div class="ee-chart" data-draw="mix-chart" data-source="outlook"></div><p class="ee-note ee-est">Estimated under the new rules.</p></div>
+        </div>
+
+        <div class="ee-card ee-s12" id="recent">
+          <div class="ee-card-h"><h2>Latest draws</h2><button type="button" class="ee-btn ee-go" data-go="draws">See all draws</button></div>
+          <div class="ee-card-b">
+            <div class="ee-table-wrap">
+              <table class="ee-table" data-source="draws" data-row-key="drawNumber">
+                <thead><tr><th class="num" data-field="drawNumber">Draw</th><th data-field="drawDate">Date</th><th data-field="category">Type</th><th class="num" data-field="drawSize">Invitations</th><th class="num" data-field="drawCRS">Cut-off</th></tr></thead>
+                <tbody data-draw="recent-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Forecast -->
+    <section class="ee-page" id="forecast" hidden>
+      <div class="ee-grid">
+        <div class="ee-s12 ee-page-head">
+          <h1>Next draw forecast</h1>
+          <p>Past cut-offs were set under the old rules. The projection starts from them, then adds what the November 3 points and the next draw's size do to the pool.</p>
+        </div>
+        <div class="ee-card ee-s5" id="waterfall">
+          <div class="ee-card-h"><h2>How the <span data-draw="wf-title" data-source="forecast" data-field="category">—</span> projection is built</h2></div>
+          <div class="ee-card-b">
+            <div class="ee-chart" data-draw="wf-chart" data-source="forecast projection"></div>
+            <p class="ee-note">Higher is harder. Coral steps push the cut-off up; green steps bring it down. The first two steps use old-rule cut-offs.</p>
+          </div>
+        </div>
+        <div class="ee-card ee-s7" id="sensitivity">
+          <div class="ee-card-h"><h2>Invitations and the cut-off</h2>
+          </div>
+          <div class="ee-card-b">
+            <div class="ee-chart" data-draw="sens-chart" data-source="projection"></div>
+            <p class="ee-note">After the pause IRCC may issue more or fewer invitations than usual. A bigger draw reaches further down the pool and lowers the cut-off. Drag the draw size above to move the marker.</p>
+          </div>
+        </div>
+        <div class="ee-card ee-s12" id="all-types">
+          <div class="ee-card-h"><h2>Every draw type</h2><span class="ee-hint">Each at its usual size, except the selected type. Select a row to explore it.</span></div>
+          <div class="ee-card-b">
+            <div class="ee-table-wrap">
+              <table class="ee-table" data-source="projection" data-row-key="scenario,key,size">
+                <thead><tr>
+                  <th data-field="key">Draw type</th>
+                  <th class="num" data-field="size">Invitations</th>
+                  <th class="num" data-field="projected">Projected</th>
+                  <th class="num" data-field="low">Low</th>
+                  <th class="num" data-field="high">High</th>
+                  <th class="num" data-field="ruleEffect">New points</th>
+                  <th class="num" data-field="sizeEffect">Draw size</th>
+                  <th>Against last cut-off (old rules)</th>
+                </tr></thead>
+                <tbody data-draw="types-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pool -->
+    <section class="ee-page" id="pool" hidden>
+      <div class="ee-grid">
+        <div class="ee-s12 ee-page-head">
+          <h1>Pool scores</h1>
+          <p class="ee-est">Scores under the rules in force since November 3, estimated from IRCC's last count and the scenario above until IRCC publishes a count under the new rules.</p>
+          <p class="ee-live" hidden>Scores under the rules in force since November 3, from IRCC's published counts.</p>
+        </div>
+        <div class="ee-card ee-kpi ee-s4">
+          <span class="ee-kpi-label">Profiles scoring 501+</span>
+          <span class="ee-kpi-num" data-draw="r-501" data-source="outlook_totals" data-field="after501">—</span>
+          <span class="ee-kpi-sub ee-est"><b data-draw="r-501-change" data-source="outlook_totals" data-field="change501">—</b> from the new points</span>
+        </div>
+        <div class="ee-card ee-kpi ee-s4">
+          <span class="ee-kpi-label">Profiles scoring 451+</span>
+          <span class="ee-kpi-num" data-draw="r-451" data-source="outlook_totals" data-field="after451">—</span>
+          <span class="ee-kpi-sub ee-est"><b data-draw="r-451-change" data-source="outlook_totals" data-field="change451">—</b> from the new points</span>
+        </div>
+        <div class="ee-card ee-kpi ee-s4">
+          <span class="ee-kpi-label">IRCC pool count used</span>
+          <span class="ee-kpi-num" data-draw="p-asof" data-source="pool_summary" data-field="asOf" data-row="0">—</span>
+          <span class="ee-kpi-sub"><span data-draw="k-pool-2" data-source="pool_summary" data-field="total" data-row="0">—</span> profiles</span>
+        </div>
+        <div class="ee-card ee-s12" id="bands">
+          <div class="ee-card-h"><h2>Profiles by score band</h2>
+            <div class="ee-legend"><span><span class="ee-sw sw-after"></span>New rules<span class="ee-est">, estimated</span></span><span class="ee-est"><span class="ee-sw sw-prev"></span>IRCC's last count, before the new points</span></div>
+          </div>
+          <div class="ee-card-b"><div class="ee-chart ee-tall" data-draw="rescored-chart" data-source="outlook projection"></div></div>
+        </div>
+        <div class="ee-card ee-s12">
+          <div class="ee-card-h"><h2>How scoring changed on November 3</h2></div>
+          <div class="ee-card-b">
+            <p class="ee-note">A labour market integration factor worth up to 150 points now counts either Canadian work or a job offer, whichever scores higher. High-wage means the occupation's national median wage is at least 1.3, 1.5 or 2 times the average; 186 occupations qualify. An LMIA is no longer needed for a job offer to count.</p>
+            <div class="ee-rules">
+              <div class="ee-rule"><h3>Extra points for Canadian work</h3>
+                <table><tbody><tr><td>12+ months, occupation at 2× median wage</td><td>+70</td></tr><tr><td>12+ months at 1.5×</td><td>+40</td></tr><tr><td>12+ months at 1.3×</td><td>+20</td></tr></tbody></table>
+              </div>
+              <div class="ee-rule"><h3>Points for a job offer</h3>
+                <table><tbody><tr><td>Offer in a 2× occupation</td><td>100</td></tr><tr><td>Offer in a 1.5× occupation</td><td>70</td></tr><tr><td>Offer in a 1.3× occupation</td><td>50</td></tr></tbody></table>
+              </div>
+              <div class="ee-rule"><h3>Timing</h3>
+                <table><tbody><tr><td>Rules took effect</td><td>Nov 3, 2026</td></tr><tr><td>Profiles rescored within</td><td>2 weeks</td></tr><tr><td>Invitation rounds</td><td>Paused</td></tr></tbody></table>
+              </div>
+            </div>
+            <div class="ee-prose ee-est">
+              <p>IRCC does not publish the pool's occupations or Canadian work experience directly. The defaults use only figures that describe the whole pool or every profile submitted, never just the people already invited, who are a selected group.</p>
+              <ul>
+                <li><b>High-wage occupations, about 56% of the pool:</b> of the 218,291 candidates in the pool on December 1, 2024, 41,880 qualified for STEM, 17,066 for healthcare, 7,742 for trades, 7,673 for transport and 3,124 for agriculture. Matching each category's occupations to the high-wage list gives 96% for STEM, 57% healthcare, 80% transport, 20% trades and 0% agriculture. The other 140,806 candidates are counted at 45%, the high-wage share of the remaining 294 occupations open to Express Entry. Occupations within a group are weighted equally.</li>
+                <li><b>Points tiers:</b> across the pool, high-wage candidates fall 15% in the 2× tier (+70), 52% in the 1.5× tier (+40) and 33% in the 1.3× tier (+20). Job offers use the same mix (100, 70 or 50 points).</li>
+                <li><b>Canadian work, about 36%:</b> no pool-wide count exists. The closest is the 36% of all 339,621 eligible profiles submitted in 2024 that claimed Canadian education, most of whom gain Canadian work through post-graduation work permits.</li>
+                <li><b>Work points, 20% by default:</b> 56% high-wage times 36% with Canadian work.</li>
+                <li><b>Job offers, 7% by default:</b> 12.3% of eligible profiles in 2024 claimed job-offer points; at the pool's 56% high-wage share that is 6.9%. Some of these people also earn work points, and the model counts the two groups separately, so this default leans high.</li>
+              </ul>
+              <p>Gains are spread evenly across score bands, and profiles entering during the pause are not counted. Only people with Canadian work can earn the work points, so Canadian Experience Class cut-offs may rise more than shown and other types less.</p>
+              <p class="ee-note">Sources: IRCC <a href="https://www.canada.ca/en/immigration-refugees-citizenship/corporate/publications-manuals/express-entry-year-end-report-2024.html" target="_blank" rel="noopener">Express Entry Year-End Report 2024</a> (tables 3 and 17a, and the category occupation annex), the <a href="https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/check-score/high-wage.html" target="_blank" rel="noopener">high-wage occupations list</a>, and Statistics Canada's <a href="https://www.statcan.gc.ca/en/subjects/standard/noc/2021/introductionV1" target="_blank" rel="noopener">NOC 2021</a>.</p>
+</div>
+          </div>
+        </div>
+        <div class="ee-card ee-s12" id="trend">
+          <div class="ee-card-h"><h2>IRCC pool counts since 2024</h2><span class="ee-hint">Scored under the rules of each date</span></div>
+          <div class="ee-card-b"><div class="ee-chart ee-tall" data-draw="trend-chart" data-source="pool_trend"></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Draws -->
+    <section class="ee-page" id="draws" hidden>
+      <div class="ee-grid">
+        <div class="ee-s12 ee-page-head">
+          <h1>All draws</h1>
+          <p>Every round of invitations since January 2024, as IRCC published it.</p>
+        </div>
+        <div class="ee-card ee-s12" id="bubbles">
+          <div class="ee-card-h"><h2>Cut-off and size of every draw</h2>
+            <div class="ee-legend"><span><span class="ee-sw sw-cec"></span>Canadian Experience Class</span><span><span class="ee-sw sw-pnp"></span>Provincial Nominee</span><span><span class="ee-sw sw-french"></span>French language</span><span><span class="ee-sw sw-other"></span>Other categories</span></div>
+          </div>
+          <div class="ee-card-b">
+            <div class="ee-chart ee-tall" data-draw="bubble-chart" data-source="draws"></div>
+            <p class="ee-note">Bubble area shows the number of invitations.</p>
+          </div>
+        </div>
+        <div class="ee-card ee-s12" id="draw-table">
+          <div class="ee-card-h"><h2>Draw list</h2><input class="ee-search" type="search" placeholder="Search by type, date or number" aria-label="Search draws"></div>
+          <div class="ee-card-b">
+            <div class="ee-table-wrap">
+              <table class="ee-table" data-source="draws" data-row-key="drawNumber">
+                <thead><tr>
+                  <th class="num" data-field="drawNumber"><button type="button" class="ee-sort" data-sort="drawNumber">Draw</button></th>
+                  <th data-field="drawDate"><button type="button" class="ee-sort" data-sort="drawDate">Date</button></th>
+                  <th data-field="category"><button type="button" class="ee-sort" data-sort="category">Type</button></th>
+                  <th class="num" data-field="drawSize"><button type="button" class="ee-sort" data-sort="drawSize">Invitations</button></th>
+                  <th class="num" data-field="drawCRS"><button type="button" class="ee-sort" data-sort="drawCRS">Cut-off</button></th>
+                </tr></thead>
+                <tbody data-draw="all-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Method -->
+    <section class="ee-page" id="method" hidden>
+      <div class="ee-grid">
+        <div class="ee-s12 ee-page-head">
+          <h1>Method and sources</h1>
+          <p>How every number on this dashboard is worked out.</p>
+        </div>
+        <div class="ee-card ee-s12">
+          <div class="ee-card-b ee-prose">
+            <p>The projection for a draw type adds three parts.</p>
+            <ol>
+              <li><b>Recent pattern.</b> The average of two estimates on the old scores: a weighted average of the last six cut-offs (the newest counts most), and the score in IRCC's latest pool snapshot where a usual-size draw would run out. For the second, we measure what share of profiles at or above each recent cut-off were eligible and invited, and use the median share and median draw size of the last four draws. Profiles are assumed to be spread evenly within each IRCC score band.</li>
+              <li><b>New points.</b> Past cut-offs were set under the old rules. This step is the same pool estimate run on the pool with the November 3 points added under your scenario, minus the estimate on IRCC's last old-rules count. Once IRCC publishes a count dated November 3 or later, that count already uses the new rules and this step adds nothing.</li>
+              <li><b>Draw size.</b> The pool estimate at the draw size you set, minus the estimate at the usual size, both under the new rules.</li>
+            </ol>
+            <p>The likely range comes from replaying the recent-pattern step on each type's last six draws and measuring how far off it was, widened by a quarter of the new-points and draw-size effects. The next date is the last draw plus the typical gap between draws of that type over the past year.</p>
+            <p>Provincial Nominee cut-offs sit above 600 and Physicians cut-offs below 301. IRCC reports those scores in one wide band each, so for those types only the recent-pattern step is used.</p>
+            <p>Data comes from IRCC's <a href="https://www.canada.ca/en/immigration-refugees-citizenship/corporate/mandate/policies-operational-instructions-agreements/ministerial-instructions/express-entry-rounds.html" target="_blank" rel="noopener">rounds of invitations</a> feed and is refreshed daily. Rule details come from IRCC's <a href="https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/changes.html" target="_blank" rel="noopener">2026 changes page</a>. These are statistical estimates, not IRCC guidance: IRCC picks each draw's size and type itself.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+  /* ---------- Calculations ---------- */
+  dash.calc('draws', {
+    inputs: ['rounds'],
+    title: 'Draws with their type',
+    description: 'Each IRCC round, labelled with a draw type taken from its name.',
+    fn: (rounds) => {
+      const types = [
+        [/provincial/i, 'pnp', 'Provincial Nominee Program'], [/canadian experience/i, 'cec', 'Canadian Experience Class'],
+        [/french/i, 'french', 'French language'], [/health/i, 'health', 'Healthcare & social services'],
+        [/trade/i, 'trades', 'Trades'], [/transport/i, 'transport', 'Transport'], [/stem/i, 'stem', 'STEM'],
+        [/education/i, 'education', 'Education'], [/agri/i, 'agri', 'Agriculture & agri-food'],
+        [/senior manager/i, 'senior', 'Senior managers'], [/physician/i, 'physicians', 'Physicians'],
+        [/military/i, 'military', 'Military recruits'], [/general/i, 'general', 'General'],
+      ];
+      return rounds.map((r) => {
+        const t = types.find(([re]) => re.test(r.drawName)) || [null, 'other', 'Other'];
+        return { ...r, drawNumber: Number(r.drawNumber), drawSize: Number(r.drawSize), drawCRS: Number(r.drawCRS), key: t[1], category: t[2] };
+      }).sort((a, b) => b.drawNumber - a.drawNumber);
+    },
+  });
+
+  dash.calc('monthly', {
+    inputs: ['draws'],
+    title: 'Invitations per month',
+    description: 'Invitations issued each month, split into Canadian Experience Class, Provincial Nominee, French language and other categories.',
+    fn: (draws) => {
+      const m = new Map();
+      draws.forEach((d) => {
+        const k = d.drawDate.slice(0, 7);
+        if (!m.has(k)) m.set(k, { month: k, cec: 0, pnp: 0, french: 0, other: 0, total: 0, draws: 0 });
+        const r = m.get(k), g = ['cec', 'pnp', 'french'].includes(d.key) ? d.key : 'other';
+        r[g] += d.drawSize; r.total += d.drawSize; r.draws += 1;
+      });
+      const keys = [...m.keys()].sort(), out = [];
+      const [y0, m0] = keys[0].split('-').map(Number), [y1, m1] = keys[keys.length - 1].split('-').map(Number);
+      for (let y = y0, mo = m0; y < y1 || (y === y1 && mo <= m1); mo === 12 ? (y++, mo = 1) : mo++) {
+        const k = y + '-' + String(mo).padStart(2, '0');
+        out.push(m.get(k) || { month: k, cec: 0, pnp: 0, french: 0, other: 0, total: 0, draws: 0 });
+      }
+      return out;
+    },
+  });
+
+  dash.calc('pool_summary', {
+    inputs: ['rounds'],
+    title: 'Pool totals',
+    description: 'Total profiles and profiles at 451+ and 501+ in the latest snapshot, against the one before.',
+    fn: (rounds) => {
+      const dates = [...new Set(rounds.map((r) => r.distributionAsOn))].sort();
+      const now = rounds.find((r) => r.distributionAsOn === dates[dates.length - 1]);
+      const prev = rounds.find((r) => r.distributionAsOn === dates[dates.length - 2]) || now;
+      const top = now.dd1 + now.dd2;
+      return [{ asOf: now.distributionAsOn, prevAsOf: prev.distributionAsOn, total: now.dd18, change: now.dd18 - prev.dd18,
+        above500: top, shareAbove500: top / now.dd18, above450: top + now.dd3, shareAbove450: (top + now.dd3) / now.dd18 }];
+    },
+  });
+
+  dash.calc('pool_trend', {
+    inputs: ['rounds'],
+    title: 'Pool over time',
+    description: 'Profiles by score range at each IRCC snapshot.',
+    fn: (rounds) => {
+      const seen = new Map();
+      rounds.forEach((r) => { if (!seen.has(r.distributionAsOn)) seen.set(r.distributionAsOn, r); });
+      return [...seen.values()].sort((a, b) => a.distributionAsOn.localeCompare(b.distributionAsOn)).map((r) => ({
+        asOf: r.distributionAsOn, b0: r.dd15 + r.dd16 + r.dd17, b401: r.dd9, b451: r.dd3, b501: r.dd2, b601: r.dd1, total: r.dd18,
+      }));
+    },
+  });
+
+  dash.calc('forecast', {
+    inputs: ['draws'],
+    title: 'Recent pattern by draw type',
+    description: 'For each draw type: the average of a pool-spread estimate and a weighted average of recent cut-offs, its usual draw size, eligible share and replayed accuracy.',
+    fn: (draws) => {
+      const bands = [['dd17', 0, 300], ['dd16', 301, 350], ['dd15', 351, 400], ['dd14', 401, 410], ['dd13', 411, 420], ['dd12', 421, 430], ['dd11', 431, 440], ['dd10', 441, 450],
+        ['dd8', 451, 460], ['dd7', 461, 470], ['dd6', 471, 480], ['dd5', 481, 490], ['dd4', 491, 500], ['dd2', 501, 600], ['dd1', 601, 1200]];
+      const day = 864e5, ms = (d) => Date.parse(d + 'T00:00:00Z'), iso = (t) => new Date(t).toISOString().slice(0, 10);
+      const median = (a) => { const s = [...a].sort((x, y) => x - y), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+      const atOrAbove = (r, x) => bands.reduce((s, [f, lo, hi]) => s + (x <= lo ? r[f] : x > hi ? 0 : r[f] * (hi - x + 1) / (hi - lo + 1)), 0);
+      const scoreFor = (r, n) => { let x = 0; for (let s = 0; s <= 1200; s++) if (atOrAbove(r, s) >= n) x = s; return x; };
+      const project = (hist, pool) => {
+        const last = hist.slice(-6), last4 = last.slice(-4);
+        const size = median(last4.map((d) => d.drawSize));
+        const momentum = last.reduce((m, d, i) => (i ? m * 0.5 + d.drawCRS * 0.5 : d.drawCRS), 0);
+        let poolBased = null, share = null;
+        if (last.every((d) => d.drawCRS > 300 && d.drawCRS <= 600)) {
+          share = median(last4.map((d) => d.drawSize / Math.max(1, atOrAbove(d, d.drawCRS))));
+          poolBased = scoreFor(pool, size / share);
+        }
+        return { size, momentum, poolBased, share, predicted: poolBased === null ? momentum : (poolBased + momentum) / 2 };
+      };
+      const latestDate = draws.reduce((m, d) => (d.drawDate > m ? d.drawDate : m), '');
+      const pool = draws.reduce((m, d) => (d.distributionAsOn > m.distributionAsOn ? d : m), draws[0]);
+      const keys = [...new Set(draws.map((d) => d.key))].filter((k) => k !== 'military' && k !== 'other');
+      return keys.map((key) => {
+        const all = draws.filter((d) => d.key === key).sort((a, b) => a.drawDate.localeCompare(b.drawDate));
+        const recent = all.filter((d) => ms(latestDate) - ms(d.drawDate) <= 365 * day);
+        if (recent.length < 2 || all.length < 3) return null;
+        const misses = [];
+        for (let i = Math.max(2, all.length - 6); i < all.length; i++) misses.push(Math.abs(all[i].drawCRS - project(all.slice(0, i), all[i]).predicted));
+        const miss = misses.reduce((s, v) => s + v, 0) / misses.length;
+        const p = project(all, pool);
+        const tail = recent.slice(-7), gaps = tail.slice(1).map((d, i) => (ms(d.drawDate) - ms(tail[i].drawDate)) / day);
+        const gap = Math.round(median(gaps)), last = all[all.length - 1], predicted = Math.round(p.predicted), spread = Math.max(4, Math.round(miss * 1.25));
+        return {
+          key, category: last.category, draws12m: recent.length, lastDate: last.drawDate, lastCRS: last.drawCRS, lastSize: last.drawSize,
+          gapDays: gap, nextDate: iso(ms(last.drawDate) + gap * day), expectedSize: Math.round(p.size),
+          poolBased: p.poolBased === null ? null : Math.round(p.poolBased), momentum: Math.round(p.momentum),
+          eligibleShare: p.share, predicted, low: predicted - spread, high: predicted + spread, backtestError: Math.round(miss * 10) / 10,
+        };
+      }).filter(Boolean).sort((a, b) => b.draws12m - a.draws12m || a.category.localeCompare(b.category));
+    },
+  });
+
+  dash.calc('outlook', {
+    inputs: ['draws'],
+    title: 'Pool rescored under the Nov 3 rules',
+    description: 'IRCC’s latest pool count with the November 3 high-wage points added, for each scenario of how many profiles gain them. Counts IRCC publishes on or after November 3 already use the new rules and are used as they are.',
+    fn: (draws) => {
+      const bands = [['dd17', '0–300', 0, 300], ['dd16', '301–350', 301, 350], ['dd15', '351–400', 351, 400],
+        ['dd14', '401–410', 401, 410], ['dd13', '411–420', 411, 420], ['dd12', '421–430', 421, 430], ['dd11', '431–440', 431, 440], ['dd10', '441–450', 441, 450],
+        ['dd8', '451–460', 451, 460], ['dd7', '461–470', 461, 470], ['dd6', '471–480', 471, 480], ['dd5', '481–490', 481, 490], ['dd4', '491–500', 491, 500],
+        ['dd2', '501–600', 501, 600], ['dd1', '601–1200', 601, 1200]];
+      // tier mix of high-wage candidates across the whole pool (scripts/assumptions.mjs: Table 17a + high-wage list)
+      const workMix = [[70, 0.15], [40, 0.52], [20, 0.33]], offerMix = [[100, 0.15], [70, 0.52], [50, 0.33]];
+      const pool = draws.reduce((m, d) => (d.distributionAsOn > m.distributionAsOn ? d : m), draws[0]);
+      const alreadyNewRules = pool.distributionAsOn >= '2026-11-03';
+      const bandOf = (s) => bands.findIndex((b) => s >= b[2] && s <= b[3]);
+      const move = {};
+      [0, 20, 40, 50, 70, 100].forEach((p) => {
+        move[p] = bands.map(([, , lo, hi]) => {
+          const out = bands.map(() => 0);
+          for (let s = lo; s <= hi; s++) out[bandOf(Math.min(1200, s + p))] += 1 / (hi - lo + 1);
+          return out;
+        });
+      });
+      const rows = [];
+      for (let e = 0; e <= 50; e += 5) for (let o = 0; o <= 10; o++) {
+        const mix = alreadyNewRules ? [[0, 1]] : [[0, 1 - e / 100 - o / 100]].concat(workMix.map(([p, w]) => [p, w * e / 100]), offerMix.map(([p, w]) => [p, w * o / 100]));
+        const after = bands.map(() => 0);
+        bands.forEach(([f], i) => mix.forEach(([p, w]) => move[p][i].forEach((fr, j) => { after[j] += pool[f] * w * fr; })));
+        bands.forEach(([f, band, lo, hi], j) => rows.push({ scenario: 'e' + e + '-o' + o, workShare: e, offerShare: o, band, lo, hi, before: pool[f], after: Math.round(after[j]) }));
+      }
+      return rows;
+    },
+  });
+
+  dash.calc('outlook_totals', {
+    inputs: ['outlook'],
+    title: 'Top of the pool under the new rules',
+    description: 'Profiles at 501+ and 451+ under the new rules, and in IRCC’s last count before the new points, for each scenario.',
+    fn: (outlook) => {
+      const by = new Map();
+      outlook.forEach((r) => { if (!by.has(r.scenario)) by.set(r.scenario, []); by.get(r.scenario).push(r); });
+      return [...by].map(([scenario, rows]) => {
+        const sum = (min, k) => rows.filter((r) => r.lo >= min).reduce((s, r) => s + r[k], 0);
+        const b501 = sum(501, 'before'), a501 = sum(501, 'after'), b451 = sum(451, 'before'), a451 = sum(451, 'after');
+        return { scenario, before501: b501, after501: a501, change501: a501 - b501, before451: b451, after451: a451, change451: a451 - b451 };
+      });
+    },
+  });
+
+  dash.calc('projection', {
+    inputs: ['outlook', 'forecast'],
+    title: 'Projected cut-off by scenario and draw size',
+    description: 'Recent pattern, plus the effect of the November 3 points and of the next draw size, for each scenario, draw type and draw size.',
+    fn: (outlook, forecast) => {
+      const sizes = [100, 250, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 5000, 6000, 7000, 8000, 10000];
+      const by = new Map();
+      outlook.forEach((r) => { if (!by.has(r.scenario)) by.set(r.scenario, []); by.get(r.scenario).push(r); });
+      const cum = (rows, k) => {
+        const a = new Array(1201).fill(0);
+        for (let s = 0; s <= 1200; s++) a[s] = rows.reduce((t, r) => t + (s <= r.lo ? r[k] : s > r.hi ? 0 : r[k] * (r.hi - s + 1) / (r.hi - r.lo + 1)), 0);
+        return a;
+      };
+      const scoreFor = (a, n) => { let x = 0; for (let s = 0; s <= 1200 && a[s] >= n; s++) x = s; return x; };
+      const today = cum(by.get('e0-o0'), 'before'), out = [];
+      by.forEach((rows, scenario) => {
+        const after = cum(rows, 'after');
+        forecast.forEach((f) => {
+          const spread = f.predicted - f.low;
+          [...new Set(sizes.filter((s) => s >= f.expectedSize / 4 && s <= f.expectedSize * 4).concat([f.expectedSize]))].sort((a, b) => a - b).forEach((size) => {
+            const base = { scenario, key: f.key, category: f.category, size, usual: size === f.expectedSize, lastCRS: f.lastCRS };
+            if (!f.eligibleShare) {
+              out.push({ ...base, modelled: false, ruleEffect: 0, sizeEffect: 0, projected: f.predicted, projectedToday: f.predicted, low: f.low, high: f.high });
+              return;
+            }
+            const n = (s) => s / f.eligibleShare;
+            const usualToday = scoreFor(today, n(f.expectedSize)), usualAfter = scoreFor(after, n(f.expectedSize));
+            const ruleEffect = usualAfter - usualToday, sizeEffect = scoreFor(after, n(size)) - usualAfter;
+            const projected = f.predicted + ruleEffect + sizeEffect, extra = Math.round(0.25 * (Math.abs(ruleEffect) + Math.abs(sizeEffect)));
+            out.push({ ...base, modelled: true, ruleEffect, sizeEffect, projected, projectedToday: f.predicted + scoreFor(today, n(size)) - usualToday,
+              low: projected - spread - extra, high: projected + spread + extra });
+          });
+        });
+      });
+      return out;
+    },
+  });
+</script>
+
+<script>
+  /* ---------- Shared helpers ---------- */
+  window.EE = (() => {
+    const root = () => document.querySelector('.ee');
+    const css = (name) => { const r = root(); return r ? getComputedStyle(r).getPropertyValue(name).trim() : ''; };
+    const typeVar = { cec: '--ee-blue', pnp: '--ee-magenta', french: '--ee-cyan', health: '--ee-green', trades: '--ee-orange', transport: '--ee-violet', senior: '--ee-coral', physicians: '--ee-slate' };
+    const groupVar = { cec: '--ee-blue', pnp: '--ee-magenta', french: '--ee-cyan' };
+    const p = () => dash.params();
+    return {
+      num: d3.format(','),
+      signed: (v) => (v > 0 ? '+' : v < 0 ? '−' : '±') + d3.format(',')(Math.abs(v)),
+      pct: d3.format('.1%'),
+      date: (s) => d3.utcFormat('%b %-d, %Y')(new Date(s + 'T00:00:00Z')),
+      shortDate: (s) => d3.utcFormat('%b %-d')(new Date(s + 'T00:00:00Z')),
+      toDate: (s) => new Date(s + 'T00:00:00Z'),
+      css,
+      typeColor: (k) => css(typeVar[k] || '--ee-slate') || '#9aa6bb',
+      groupColor: (k) => css(groupVar[k] || '--ee-orange'),
+      cat: () => p().cat || 'cec',
+      work: () => (p().work ?? 20),
+      offer: () => (p().offer ?? 7),
+      scen: () => 'e' + (p().work ?? 20) + '-o' + (p().offer ?? 7),
+      size: () => p().size ?? null,
+      span: () => p().span || 'all',
+      // the projection row for the current scenario, a draw type and a size (null = usual)
+      proj: (rows, key, size) => {
+        const s = 'e' + (p().work ?? 20) + '-o' + (p().offer ?? 7);
+        const mine = rows.filter((r) => r.scenario === s && r.key === key);
+        return mine.find((r) => (size == null ? r.usual : r.size === size)) || mine.find((r) => r.usual) || null;
+      },
+      tip: (box) => {
+        let t = box.querySelector(':scope > .ee-tip');
+        if (!t) { t = document.createElement('div'); t.className = 'ee-tip'; t.hidden = true; box.appendChild(t); }
+        return t;
+      },
+      placeTip: (box, tip, x, y) => {
+        tip.hidden = false;
+        const w = tip.offsetWidth, h = tip.offsetHeight, bw = box.clientWidth;
+        let left = x + 14; if (left + w > bw) left = Math.max(0, x - w - 14);
+        tip.style.left = left + 'px'; tip.style.top = Math.max(0, y - h - 10) + 'px';
+      },
+      line: (tip, cls, parts) => {
+        const div = document.createElement('div'); if (cls) div.className = cls;
+        parts.forEach((x) => div.appendChild(typeof x === 'string' ? document.createTextNode(x) : x));
+        tip.appendChild(div);
+      },
+      swatch: (color) => { const s = document.createElement('span'); s.className = 'ee-sw'; s.style.background = color; return s; },
+      empty: (el, text) => { const d = document.createElement('div'); d.className = 'ee-empty'; d.textContent = text; el.replaceChildren(d); },
+      // left axis that measures its own width; returns the left margin
+      yAxis: (svg, y, fmt, ticks) => {
+        const g = svg.append('g').call(d3.axisLeft(y).ticks(ticks || 5).tickSize(0).tickFormat(fmt || null)).attr('font-size', null).attr('font-family', null);
+        g.select('.domain').remove();
+        const ml = Math.ceil(d3.max(g.selectAll('text').nodes(), (n) => n.getComputedTextLength()) || 20) + 10;
+        g.attr('transform', `translate(${ml - 6},0)`);
+        return ml;
+      },
+      grid: (svg, y, x0, x1, ticks) => svg.insert('g', ':first-child').selectAll('line').data(y.ticks(ticks || 5)).join('line')
+        .attr('x1', x0).attr('x2', x1).attr('y1', (v) => y(v)).attr('y2', (v) => y(v)).style('stroke', css('--ee-line')),
+      // dark rounded callout above (cx, cy)
+      bubble: (g, cx, cy, text, fill, ink) => {
+        const b = g.append('g').attr('class', 'ee-bubble');
+        const t = b.append('text').attr('class', 'ee-t-bubble').attr('text-anchor', 'middle').text(text);
+        if (ink) t.style('fill', ink);
+        const w = t.node().getComputedTextLength() + 16, h = 20;
+        b.insert('path', 'text').attr('d', `M${-w / 2},${-h - 6} h${w} a4,4 0 0 1 4,4 v${h - 8} a4,4 0 0 1 -4,4 h${-w / 2 + 5} l-5,5 l-5,-5 h${-w / 2 + 5} a4,4 0 0 1 -4,-4 v${-h + 8} a4,4 0 0 1 4,-4z`)
+          .style('fill', fill || css('--ee-bubble'));
+        t.attr('y', -h / 2 - 2);
+        b.attr('transform', `translate(${cx},${cy - 6})`);
+        return w;
+      },
+    };
+  })();
+</script>
+
+<script>
+  /* ---------- Page navigation, scenario controls ---------- */
+  const pages = ['overview', 'forecast', 'pool', 'draws', 'method'];
+  const showPage = (id, scroll) => {
+    if (!pages.includes(id)) id = 'overview';
+    document.querySelectorAll('.ee-page').forEach((s) => { s.hidden = s.id !== id; });
+    document.querySelectorAll('.ee-nav button[data-page]').forEach((b) => { if (b.dataset.page === id) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
+    dash.setLink(id);
+    if (scroll) { const m = document.querySelector('.ee-main'); if (m) m.scrollIntoView({ block: 'start' }); }
+  };
+  document.querySelectorAll('.ee-nav button[data-page]').forEach((b) => b.addEventListener('click', () => showPage(b.dataset.page, true)));
+  document.querySelectorAll('.ee-go').forEach((a) => a.addEventListener('click', (ev) => { ev.preventDefault(); showPage(a.dataset.go, true); }));
+  showPage((location.hash || '').slice(1), false);
+  window.addEventListener('hashchange', () => { const h = (location.hash || '').slice(1); if (pages.includes(h)) showPage(h, false); });
+  // once IRCC publishes a snapshot scored under the new rules, the estimate is no longer needed
+  dash.onData(() => {
+    const d = dash.data('pool_summary');
+    const live = d.status === 'ok' && d.data.length && d.data[0].asOf >= '2026-11-03';
+    document.querySelectorAll('.ee-work, .ee-offer').forEach((i) => { i.disabled = !!live; });
+    document.querySelectorAll('.ee-est').forEach((n) => { n.hidden = !!live; });
+    document.querySelectorAll('.ee-live').forEach((n) => { n.hidden = !live; });
+  });
+
+  const bar = document.querySelector('.ee-bar'), sum = document.querySelector('.ee-bar-sum');
+  const toggleBar = () => { if (!bar) return; bar.classList.toggle('is-open'); if (sum) sum.setAttribute('aria-expanded', String(bar.classList.contains('is-open'))); };
+  if (sum) { sum.addEventListener('click', toggleBar); sum.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleBar(); } }); }
+
+  document.querySelectorAll('.ee-work').forEach((i) => i.addEventListener('input', () => dash.setParams({ work: Number(i.value) })));
+  document.querySelectorAll('.ee-offer').forEach((i) => i.addEventListener('input', () => dash.setParams({ offer: Number(i.value) })));
+  document.querySelectorAll('.ee-reset').forEach((b) => b.addEventListener('click', () => dash.resetParams()));
+  document.querySelectorAll('.ee-span').forEach((b) => b.addEventListener('click', () => dash.setParams({ span: b.dataset.span })));
+  dash.onData(() => {
+    document.querySelectorAll('.ee-work').forEach((i) => { if (i !== document.activeElement) i.value = String(EE.work()); });
+    document.querySelectorAll('.ee-offer').forEach((i) => { if (i !== document.activeElement) i.value = String(EE.offer()); });
+    document.querySelectorAll('.ee-span').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.span === EE.span())));
+  });
+
+  dash.draw('work-out', (el) => { el.textContent = EE.work() + '% gain'; });
+  dash.draw('offer-out', (el) => { el.textContent = EE.offer() + '% gain'; });
+
+  dash.draw('type-select', {
+    mount: (el) => {
+      const sel = document.createElement('select');
+      sel.id = 'ee-type'; sel.className = 'ee-select';
+      sel.addEventListener('change', () => dash.setParams({ cat: sel.value, size: null }));
+      el.appendChild(sel);
+      return sel;
+    },
+    update: (el, sel) => {
+      const d = dash.data('forecast');
+      const rows = d.status === 'ok' ? d.data : [];
+      const sig = rows.map((r) => r.key).join();
+      if (sel.dataset.sig !== sig) { sel.replaceChildren(...rows.map((r) => new Option(r.category, r.key))); sel.dataset.sig = sig; }
+      sel.value = EE.cat();
+      sel.disabled = !rows.length;
+    },
+  });
+
+  const sizeList = () => {
+    const d = dash.data('projection');
+    if (d.status !== 'ok') return [];
+    return d.data.filter((r) => r.scenario === 'e0-o0' && r.key === EE.cat()).sort((a, b) => a.size - b.size);
+  };
+  dash.draw('size-control', {
+    mount: (el) => {
+      const inp = document.createElement('input');
+      inp.type = 'range'; inp.className = 'ee-range'; inp.min = '0'; inp.step = '1'; inp.setAttribute('aria-label', 'Next draw size');
+      inp.addEventListener('input', () => { const list = sizeList(), r = list[Number(inp.value)]; if (r) dash.setParams({ size: r.usual ? null : r.size }); });
+      el.appendChild(inp);
+      return inp;
+    },
+    update: (el, inp) => {
+      const list = sizeList();
+      inp.max = String(Math.max(0, list.length - 1));
+      const want = EE.size(), idx = list.findIndex((r) => (want == null ? r.usual : r.size === want));
+      if (inp !== document.activeElement || idx >= 0) inp.value = String(Math.max(0, idx));
+      inp.disabled = !list.length || (list[0] && !list[0].modelled);
+    },
+  });
+  dash.draw('size-label', (el) => {
+    const d = dash.data('projection');
+    const r = d.status === 'ok' ? EE.proj(d.data, EE.cat(), EE.size()) : null;
+    el.textContent = !r ? '—' : !r.modelled ? 'Usual size (not modelled)' : EE.num(r.size) + (r.usual ? ' (usual)' : '');
+  });
+  dash.draw('bar-summary', (el) => {
+    const f = dash.data('forecast'), d = dash.data('projection');
+    const t = f.status === 'ok' ? f.data.find((x) => x.key === EE.cat()) : null, r = d.status === 'ok' ? EE.proj(d.data, EE.cat(), EE.size()) : null;
+    el.textContent = t && r ? t.category + ', ' + EE.num(r.size) + ' invitations, ' + EE.work() + '% / ' + EE.offer() + '% gain points' : '—';
+  });
+</script>
+
+<script>
+  /* ---------- Values ---------- */
+  const value = (name, src, read) => dash.draw(name, (el) => {
+    const d = dash.data(src);
+    const v = d.status === 'ok' && d.data.length ? read(d.data, el) : null;
+    el.textContent = v === null || v === undefined || v === '' ? '—' : v;
+  });
+  const first = (f) => (rows) => f(rows[0]);
+  const scenRow = (f) => (rows, el) => { const r = rows.find((x) => x.scenario === EE.scen()); if (!r) return null; el.dataset.where = 'scenario=' + r.scenario; return f(r); };
+  const projRow = (f) => (rows, el) => {
+    const r = EE.proj(rows, EE.cat(), EE.size()); if (!r) return null;
+    el.dataset.where = 'scenario=' + r.scenario + '&key=' + r.key + '&size=' + r.size; return f(r);
+  };
+  const typeRow = (f) => (rows, el) => { const r = rows.find((x) => x.key === EE.cat()); if (!r) return null; el.dataset.where = 'key=' + r.key; return f(r); };
+
+  value('rail-draw', 'draws', first((r) => '#' + r.drawNumber + ', ' + EE.shortDate(r.drawDate)));
+  value('rail-asof', 'pool_summary', first((r) => EE.shortDate(r.asOf)));
+  value('k-pool', 'pool_summary', first((r) => EE.num(r.total)));
+  value('k-pool-change', 'pool_summary', first((r) => EE.signed(r.change)));
+  value('k-top', 'outlook_totals', scenRow((r) => EE.num(r.after501)));
+  value('k-top-before', 'outlook_totals', scenRow((r) => EE.num(r.before501)));
+  value('r-501', 'outlook_totals', scenRow((r) => EE.num(r.after501)));
+  value('r-501-change', 'outlook_totals', scenRow((r) => EE.signed(r.change501)));
+  value('r-451', 'outlook_totals', scenRow((r) => EE.num(r.after451)));
+  value('r-451-change', 'outlook_totals', scenRow((r) => EE.signed(r.change451)));
+  value('k-next', 'projection', projRow((r) => r.projected));
+  value('k-next-low', 'projection', projRow((r) => r.low));
+  value('k-next-high', 'projection', projRow((r) => r.high));
+  value('k-next-size', 'projection', projRow((r) => EE.num(r.size)));
+  value('k-next-label', 'forecast', typeRow((r) => r.category));
+  value('k-last', 'forecast', typeRow((r) => r.lastCRS));
+  value('k-last-date', 'forecast', typeRow((r) => EE.date(r.lastDate)));
+  value('k-last-size', 'forecast', typeRow((r) => EE.num(r.lastSize)));
+  value('hero-title', 'forecast', typeRow((r) => r.category));
+  value('wf-title', 'forecast', typeRow((r) => r.category));
+  value('p-asof', 'pool_summary', first((r) => EE.shortDate(r.asOf)));
+  value('k-pool-2', 'pool_summary', first((r) => EE.num(r.total)));
+
+  dash.draw('k-pool-spark', (el) => {
+    const d = dash.data('pool_trend');
+    el.replaceChildren();
+    if (d.status !== 'ok' || !d.data.length) return;
+    const W = Math.max(120, el.clientWidth), H = 34, rows = d.data.map((r) => ({ t: EE.toDate(r.asOf), v: r.total }));
+    const x = d3.scaleUtc(d3.extent(rows, (r) => r.t), [2, W - 4]), y = d3.scaleLinear(d3.extent(rows, (r) => r.v), [H - 3, 3]);
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('aria-hidden', 'true');
+    svg.append('path').datum(rows).style('fill', 'none').style('stroke', EE.css('--ee-blue')).attr('stroke-width', 1.6).attr('stroke-linejoin', 'round')
+      .attr('d', d3.line((r) => x(r.t), (r) => y(r.v)));
+    const l = rows[rows.length - 1];
+    svg.append('circle').attr('cx', x(l.t)).attr('cy', y(l.v)).attr('r', 2.6).style('fill', EE.css('--ee-blue'));
+  });
+</script>
+
+<script>
+  /* ---------- Hero: cut-off history with the projection ---------- */
+  dash.draw('hero-chart', (el) => {
+    const dr = dash.data('draws'), pj = dash.data('projection');
+    el.replaceChildren();
+    if (dr.status !== 'ok' || pj.status !== 'ok') return;
+    const key = EE.cat(), r = EE.proj(pj.data, key, EE.size());
+    let pts = dr.data.filter((d) => d.key === key).map((d) => ({ ...d, t: EE.toDate(d.drawDate) })).sort((a, b) => a.t - b.t);
+    if (!pts.length || !r) { EE.empty(el, 'No draws of this type yet.'); return; }
+    const span = EE.span();
+    if (span !== 'all') { const cut = d3.utcMonth.offset(pts[pts.length - 1].t, -Number(span)); const k = pts.filter((p) => p.t >= cut); if (k.length >= 2) pts = k; }
+    const f = dash.data('forecast').data.find((x) => x.key === key);
+    // rounds are paused for rescoring until about two weeks after November 3
+    const nextT = new Date(Math.max(+d3.utcDay.offset(pts[pts.length - 1].t, Math.max(14, f ? f.gapDays : 14)), +EE.toDate('2026-11-17')));
+    const W = Math.max(280, el.clientWidth), H = W < 560 ? 280 : 330, mt = 44, mb = 30, mr = W < 560 ? 34 : 56;
+    const ys = pts.map((p) => p.drawCRS).concat([r.low, r.high]);
+    const pad = Math.max(8, (d3.max(ys) - d3.min(ys)) * 0.12);
+    const y = d3.scaleLinear([d3.min(ys) - pad, d3.max(ys) + pad], [H - mb, mt]).nice();
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', 'Cut-off history');
+    const ml = EE.yAxis(svg, y, null, 5);
+    const x = d3.scaleUtc([pts[0].t, nextT], [ml + 8, W - mr]);
+    EE.grid(svg, y, ml, W - 4, 5);
+    const id = 'eeg' + Math.random().toString(36).slice(2, 8);
+    const defs = svg.append('defs');
+    const lg = defs.append('linearGradient').attr('id', id).attr('x1', 0).attr('x2', 1).attr('y1', 0).attr('y2', 0);
+    lg.append('stop').attr('offset', '0%').style('stop-color', EE.css('--ee-magenta'));
+    lg.append('stop').attr('offset', '100%').style('stop-color', EE.css('--ee-orange'));
+    const fade = defs.append('linearGradient').attr('id', id + 'f').attr('x1', 0).attr('x2', 0).attr('y1', 0).attr('y2', 1);
+    [[0, 0.55], [0.6, 0.18], [1, 0.02]].forEach(([o, a]) => fade.append('stop').attr('offset', o).style('stop-color', '#fff').style('stop-opacity', a));
+    defs.append('mask').attr('id', id + 'm').append('rect').attr('x', 0).attr('y', 0).attr('width', W).attr('height', H).style('fill', `url(#${id}f)`);
+    svg.append('path').datum(pts).style('fill', `url(#${id})`).attr('mask', `url(#${id}m)`)
+      .attr('d', d3.area((p) => x(p.t), H - mb, (p) => y(p.drawCRS)));
+    svg.append('path').datum(pts).style('fill', 'none').style('stroke', `url(#${id})`).attr('stroke-width', 2.5).attr('stroke-linejoin', 'round').attr('stroke-linecap', 'round')
+      .attr('d', d3.line((p) => x(p.t), (p) => y(p.drawCRS)));
+    const xa = svg.append('g').attr('transform', `translate(0,${H - mb})`)
+      .call(d3.axisBottom(x).ticks(Math.max(2, Math.floor(W / 120))).tickSize(0).tickPadding(10).tickFormat(d3.utcFormat('%b %Y'))).attr('font-size', null).attr('font-family', null);
+    xa.select('.domain').style('stroke', EE.css('--ee-line'));
+    const last = pts[pts.length - 1], coral = EE.css('--ee-coral'), ruleT = EE.toDate('2026-11-03');
+    if (ruleT > x.domain()[0] && ruleT < x.domain()[1]) {
+      svg.append('line').attr('x1', x(ruleT)).attr('x2', x(ruleT)).attr('y1', mt - 14).attr('y2', H - mb).style('stroke', EE.css('--ee-orange')).attr('stroke-width', 1.5).attr('stroke-dasharray', '4 3');
+      svg.append('text').attr('x', x(ruleT) - 6).attr('y', mt - 18).attr('text-anchor', 'end').text('New rules, Nov 3');
+    }
+    svg.append('line').attr('x1', x(last.t)).attr('y1', y(last.drawCRS)).attr('x2', x(nextT)).attr('y2', y(r.projected)).style('stroke', coral).attr('stroke-width', 2).attr('stroke-dasharray', '5 4');
+    svg.append('line').attr('x1', x(nextT)).attr('x2', x(nextT)).attr('y1', y(r.low)).attr('y2', y(r.high)).style('stroke', coral).attr('stroke-width', 2).attr('opacity', 0.45);
+    [r.low, r.high].forEach((v) => svg.append('line').attr('x1', x(nextT) - 6).attr('x2', x(nextT) + 6).attr('y1', y(v)).attr('y2', y(v)).style('stroke', coral).attr('stroke-width', 2).attr('opacity', 0.45));
+    svg.append('g').selectAll('circle').data(pts).join('circle').attr('cx', (p) => x(p.t)).attr('cy', (p) => y(p.drawCRS)).attr('r', pts.length > 40 ? 2.6 : 3.6)
+      .style('fill', EE.css('--ee-card')).style('stroke', EE.css('--ee-magenta')).attr('stroke-width', 2);
+    // callouts: projection, plus the latest draws while there is room
+    const bubbles = svg.append('g');
+    const used = [];
+    const fits = (cx, w) => used.every(([a, b]) => cx + w / 2 + 6 < a || cx - w / 2 - 6 > b);
+    const pw = EE.bubble(bubbles, x(nextT), y(r.high) - 2, '≈ ' + r.projected, coral, '#fff');
+    used.push([x(nextT) - pw / 2, x(nextT) + pw / 2]);
+    svg.append('circle').attr('cx', x(nextT)).attr('cy', y(r.projected)).attr('r', 5.5).style('fill', EE.css('--ee-card')).style('stroke', coral).attr('stroke-width', 2.5);
+    pts.slice(-4).reverse().forEach((p) => {
+      const cx = x(p.t), probe = String(p.drawCRS).length * 7 + 16;
+      if (!fits(cx, probe)) return;
+      const w = EE.bubble(bubbles, cx, y(p.drawCRS) - 4, String(p.drawCRS));
+      used.push([cx - w / 2, cx + w / 2]);
+      svg.insert('line', 'g').attr('x1', cx).attr('x2', cx).attr('y1', y(p.drawCRS) + 5).attr('y2', H - mb).style('stroke', EE.css('--ee-faint')).attr('stroke-dasharray', '2 3');
+    });
+    const tip = EE.tip(el), hit = pts.map((p) => ({ x: x(p.t), y: y(p.drawCRS), p })).concat([{ x: x(nextT), y: y(r.projected), r }]);
+    const ring = svg.append('circle').attr('r', 7).style('fill', 'none').style('stroke', EE.css('--ee-ink')).attr('stroke-width', 1.5).attr('opacity', 0);
+    svg.append('rect').attr('x', ml).attr('y', 0).attr('width', W - ml).attr('height', H).style('fill', 'transparent')
+      .on('pointermove', (ev) => {
+        const [mx] = d3.pointer(ev), h = d3.least(hit, (q) => Math.abs(q.x - mx));
+        ring.attr('cx', h.x).attr('cy', h.y).attr('opacity', 1);
+        tip.replaceChildren();
+        if (h.p) {
+          EE.line(tip, 'ee-tip-h', [EE.date(h.p.drawDate) + ', draw #' + h.p.drawNumber]);
+          EE.line(tip, '', ['Cut-off ' + h.p.drawCRS + ', ' + EE.num(h.p.drawSize) + ' invitations']);
+        } else {
+          EE.line(tip, 'ee-tip-h', ['Next draw, after the rescoring pause']);
+          EE.line(tip, '', ['Cut-off ' + h.r.projected + ' (likely ' + h.r.low + ' to ' + h.r.high + ')']);
+          EE.line(tip, '', [EE.num(h.r.size) + ' invitations' + (h.r.usual ? ', usual size' : '')]);
+        }
+        const k = svg.node().getBoundingClientRect().width / W;
+        EE.placeTip(el, tip, h.x * k, h.y * k);
+      })
+      .on('pointerleave', () => { tip.hidden = true; ring.attr('opacity', 0); });
+  });
+</script>
+
+<script>
+  /* ---------- Overview: monthly invitations, pool mix, latest draws ---------- */
+  dash.draw('monthly-chart', (el) => {
+    const d = dash.data('monthly');
+    el.replaceChildren();
+    if (d.status !== 'ok' || !d.data.length) return;
+    const rows = d.data, keys = ['cec', 'pnp', 'french', 'other'];
+    const W = Math.max(280, el.clientWidth), H = 260, mt = 30, mb = 34;
+    const y = d3.scaleLinear([0, d3.max(rows, (r) => r.total)], [H - mb, mt]).nice();
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', 'Invitations per month');
+    const ml = EE.yAxis(svg, y, d3.format('~s'), 4);
+    const x = d3.scaleBand(rows.map((r) => r.month), [ml + 2, W - 2]).paddingInner(0.28).paddingOuter(0.1);
+    EE.grid(svg, y, ml, W - 2, 4);
+    const stack = d3.stack().keys(keys)(rows);
+    const bw = x.bandwidth();
+    svg.append('g').selectAll('g').data(stack).join('g').style('fill', (s) => EE.groupColor(s.key))
+      .selectAll('rect').data((s) => s).join('rect')
+      .attr('x', (p) => x(p.data.month)).attr('width', bw).attr('y', (p) => y(p[1])).attr('height', (p) => Math.max(0, y(p[0]) - y(p[1])));
+    const lab = rows.filter((r, i) => (bw < 14 ? r.month.endsWith('-01') || r.month.endsWith('-07') : bw < 24 ? /-(01|04|07|10)$/.test(r.month) : true));
+    svg.append('g').selectAll('text').data(lab).join('text').attr('x', (r) => x(r.month) + bw / 2).attr('y', H - mb + 16).attr('text-anchor', 'middle')
+      .text((r) => (r.month.endsWith('-01') || lab.length < 14 ? d3.utcFormat(r.month.endsWith('-01') ? '%b %Y' : '%b')(EE.toDate(r.month + '-01')) : d3.utcFormat('%b')(EE.toDate(r.month + '-01'))));
+    const max = rows.reduce((m, r) => (r.total > m.total ? r : m), rows[0]), lastM = rows[rows.length - 1];
+    EE.bubble(svg.append('g'), x(max.month) + bw / 2, y(max.total) - 2, d3.format('.3~s')(max.total));
+    if (lastM !== max) EE.bubble(svg.append('g'), x(lastM.month) + bw / 2, y(lastM.total) - 2, d3.format('.3~s')(lastM.total), EE.css('--ee-coral'), '#fff');
+    const tip = EE.tip(el);
+    svg.append('g').selectAll('rect').data(rows).join('rect').attr('x', (r) => x(r.month) - (x.step() - bw) / 2).attr('width', x.step()).attr('y', 0).attr('height', H - mb).style('fill', 'transparent')
+      .on('pointermove', (ev, r) => {
+        tip.replaceChildren();
+        EE.line(tip, 'ee-tip-h', [d3.utcFormat('%B %Y')(EE.toDate(r.month + '-01')) + ', ' + r.draws + (r.draws === 1 ? ' draw' : ' draws')]);
+        [['cec', 'Canadian Experience Class'], ['pnp', 'Provincial Nominee'], ['french', 'French language'], ['other', 'Other categories']]
+          .forEach(([k, n]) => { if (r[k]) EE.line(tip, '', [EE.swatch(EE.groupColor(k)), n + '  ' + EE.num(r[k])]); });
+        EE.line(tip, '', ['Total  ' + EE.num(r.total)]);
+        const k = svg.node().getBoundingClientRect().width / W;
+        EE.placeTip(el, tip, (x(r.month) + bw / 2) * k, y(r.total) * k);
+      })
+      .on('pointerleave', () => { tip.hidden = true; });
+  });
+
+  dash.draw('mix-chart', (el) => {
+    const d = dash.data('outlook');
+    el.replaceChildren();
+    if (d.status !== 'ok' || !d.data.length) return;
+    const bandRows = d.data.filter((x) => x.scenario === EE.scen()), sumW = (f) => bandRows.filter(f).reduce((t, x) => t + x.after, 0);
+    const r = { b601: sumW((x) => x.lo >= 601), b501: sumW((x) => x.lo === 501), b451: sumW((x) => x.lo >= 451 && x.lo <= 491), b401: sumW((x) => x.lo >= 401 && x.lo <= 441), b0: sumW((x) => x.lo <= 351) };
+    r.total = r.b601 + r.b501 + r.b451 + r.b401 + r.b0;
+    const parts = [['b601', '601 and above', '--ee-magenta'], ['b501', '501–600', '--ee-coral'], ['b451', '451–500', '--ee-orange'], ['b401', '401–450', '--ee-cyan'], ['b0', '400 or less', '--ee-blue']]
+      .map(([k, label, c]) => ({ k, label, v: r[k], color: EE.css(c) }));
+    const W = Math.max(240, el.clientWidth), side = W < 420, size = Math.min(190, side ? W - 20 : W * 0.5);
+    const H = side ? size + 150 : Math.max(size + 10, 220);
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', 'Pool by score range');
+    const cx = side ? W / 2 : size / 2 + 4, cy = size / 2 + 4, R = size / 2;
+    const arc = d3.arc().innerRadius(R * 0.7).outerRadius(R).cornerRadius(2).padAngle(0.012);
+    const g = svg.append('g').attr('transform', `translate(${cx},${cy})`);
+    g.selectAll('path').data(d3.pie().sort(null).value((p) => p.v)(parts)).join('path').attr('d', arc).style('fill', (a) => a.data.color);
+    g.append('text').attr('text-anchor', 'middle').attr('y', -4).text('Profiles');
+    g.append('text').attr('class', 'ee-t-ink').attr('text-anchor', 'middle').attr('y', 16).style('font-size', '20px').text(EE.num(r.total));
+    const lx = side ? 16 : size + 22, ly = side ? size + 22 : cy - parts.length * 13;
+    const leg = svg.append('g').attr('transform', `translate(${lx},${ly})`);
+    parts.forEach((p, i) => {
+      const row = leg.append('g').attr('transform', `translate(0,${i * 26})`);
+      row.append('rect').attr('width', 9).attr('height', 9).attr('y', -8).attr('rx', 2).style('fill', p.color);
+      row.append('text').attr('x', 16).text(p.label);
+      row.append('text').attr('class', 'ee-t-ink').attr('x', (side ? W - 32 : W - lx - 4)).attr('text-anchor', 'end').text(EE.pct(p.v / r.total));
+    });
+  });
+
+  const typeCell = EE.typeCell = (td, key, label) => {
+    const s = document.createElement('span'); s.className = 'ee-type';
+    const dot = document.createElement('span'); dot.className = 'ee-dot'; dot.style.background = EE.typeColor(key);
+    s.append(dot, document.createTextNode(label)); td.appendChild(s);
+  };
+  const drawRow = EE.drawRow = (r) => {
+    const tr = document.createElement('tr'); tr.dataset.key = String(r.drawNumber);
+    const cells = [[r.drawNumber, 'num'], [EE.date(r.drawDate)], [null], [EE.num(r.drawSize), 'num'], [null, 'num']];
+    cells.forEach(([v, c], i) => {
+      const td = document.createElement('td'); if (c) td.className = c;
+      if (i === 2) typeCell(td, r.key, r.category);
+      else if (i === 4) { const t = document.createElement('span'); t.className = 'ee-tag'; t.style.background = EE.typeColor(r.key); t.textContent = r.drawCRS; td.appendChild(t); }
+      else td.textContent = v;
+      tr.appendChild(td);
+    });
+    return tr;
+  };
+  dash.draw('recent-body', (tb) => {
+    const d = dash.data('draws');
+    tb.replaceChildren();
+    if (d.status !== 'ok') return;
+    d.data.slice(0, 8).forEach((r) => tb.appendChild(drawRow(r)));
+  });
+</script>
+
+<script>
+  /* ---------- Forecast page ---------- */
+  dash.draw('wf-chart', (el) => {
+    const fc = dash.data('forecast'), pj = dash.data('projection');
+    el.replaceChildren();
+    if (fc.status !== 'ok' || pj.status !== 'ok') return;
+    const f = fc.data.find((x) => x.key === EE.cat()), r = EE.proj(pj.data, EE.cat(), EE.size());
+    if (!f || !r) return;
+    const steps = [
+      { label: 'Last cut-off', abs: f.lastCRS },
+      { label: 'Recent pattern', d: f.predicted - f.lastCRS },
+      { label: 'New points', d: r.ruleEffect, off: !r.modelled },
+      { label: 'Draw size', d: r.sizeEffect, off: !r.modelled },
+      { label: 'Projected', abs: r.projected, end: true },
+    ];
+    let run = 0;
+    steps.forEach((s) => { if (s.abs != null) { s.y0 = s.abs; s.y1 = s.abs; run = s.abs; } else { s.y0 = run; run += s.d; s.y1 = run; } });
+    const vals = steps.flatMap((s) => [s.y0, s.y1]).concat([r.low, r.high]);
+    const lo = d3.min(vals), hi = d3.max(vals), pad = Math.max(6, (hi - lo) * 0.25);
+    const W = Math.max(260, el.clientWidth), H = 260, mt = 26, mb = 40;
+    const y = d3.scaleLinear([lo - pad, hi + pad], [H - mb, mt]).nice();
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', 'Projection steps');
+    const ml = EE.yAxis(svg, y, null, 5);
+    EE.grid(svg, y, ml, W - 4, 5);
+    const x = d3.scaleBand(steps.map((s) => s.label), [ml + 4, W - 4]).padding(0.32);
+    const base = y.domain()[0], coral = EE.css('--ee-coral'), green = EE.css('--ee-green'), blue = EE.css('--ee-blue'), slate = EE.css('--ee-slate');
+    steps.forEach((s, i) => {
+      const bx = x(s.label), bw = x.bandwidth();
+      let top, bot, fill;
+      if (s.abs != null) { top = y(s.abs); bot = y(base); fill = s.end ? blue : slate; }
+      else { top = y(Math.max(s.y0, s.y1)); bot = y(Math.min(s.y0, s.y1)); fill = s.d > 0 ? coral : s.d < 0 ? green : slate; if (bot - top < 2) { top -= 1; bot += 1; } }
+      svg.append('rect').attr('x', bx).attr('width', bw).attr('y', top).attr('height', Math.max(2, bot - top)).attr('rx', 3).style('fill', fill).attr('opacity', s.off ? 0.35 : 1);
+      if (i < steps.length - 1) svg.append('line').attr('x1', bx + bw).attr('x2', x(steps[i + 1].label)).attr('y1', y(s.y1)).attr('y2', y(s.y1)).style('stroke', EE.css('--ee-faint')).attr('stroke-dasharray', '3 3');
+      const txt = s.abs != null ? String(s.abs) : s.off ? 'n/a' : EE.signed(s.d);
+      svg.append('text').attr('class', 'ee-t-ink').attr('x', bx + bw / 2).attr('y', top - 7).attr('text-anchor', 'middle').text(txt);
+      const words = s.label.split(' ');
+      words.forEach((w, j) => svg.append('text').attr('x', bx + bw / 2).attr('y', H - mb + 16 + j * 13).attr('text-anchor', 'middle').text(w));
+    });
+    const ex = x('Projected') + x.bandwidth() / 2;
+    svg.append('line').attr('x1', ex).attr('x2', ex).attr('y1', y(r.high)).attr('y2', y(r.low)).style('stroke', EE.css('--ee-ink')).attr('stroke-width', 1.5).attr('opacity', 0.6);
+    [r.low, r.high].forEach((v) => svg.append('line').attr('x1', ex - 5).attr('x2', ex + 5).attr('y1', y(v)).attr('y2', y(v)).style('stroke', EE.css('--ee-ink')).attr('stroke-width', 1.5).attr('opacity', 0.6));
+  });
+
+  dash.draw('sens-chart', (el) => {
+    const pj = dash.data('projection');
+    el.replaceChildren();
+    if (pj.status !== 'ok') return;
+    const rows = pj.data.filter((r) => r.scenario === EE.scen() && r.key === EE.cat()).sort((a, b) => a.size - b.size);
+    if (!rows.length) return;
+    if (!rows[0].modelled) { EE.empty(el, 'Draw size is not modelled for this draw type: IRCC reports its scores in one wide band.'); return; }
+    const cur = EE.proj(pj.data, EE.cat(), EE.size()), usual = rows.find((r) => r.usual);
+    const W = Math.max(280, el.clientWidth), H = 260, mt = 26, mb = 36, mr = 12;
+    const ys = rows.map((r) => r.projected);
+    const y = d3.scaleLinear([d3.min(ys) - 6, d3.max(ys) + 6], [H - mb, mt]).nice();
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', 'Cut-off by draw size');
+    const ml = EE.yAxis(svg, y, null, 5);
+    const x = d3.scaleLog([rows[0].size, rows[rows.length - 1].size], [ml + 6, W - mr]);
+    EE.grid(svg, y, ml, W - mr, 5);
+    const xa = svg.append('g').attr('transform', `translate(0,${H - mb})`)
+      .call(d3.axisBottom(x).tickValues([100, 250, 500, 1000, 2500, 5000, 10000].filter((v) => v >= rows[0].size && v <= rows[rows.length - 1].size && (W > 420 || [100, 500, 2500, 10000].includes(v)))).tickFormat(d3.format('~s')).tickSize(0).tickPadding(10))
+      .attr('font-size', null).attr('font-family', null);
+    xa.select('.domain').style('stroke', EE.css('--ee-line'));
+    svg.append('text').attr('x', W - mr).attr('y', H - 4).attr('text-anchor', 'end').text('Invitations in the next draw');
+    svg.append('line').attr('x1', x(usual.size)).attr('x2', x(usual.size)).attr('y1', mt - 8).attr('y2', H - mb).style('stroke', EE.css('--ee-faint')).attr('stroke-dasharray', '3 3');
+    svg.append('text').attr('x', x(usual.size) + 4).attr('y', mt - 10).text('usual ' + EE.num(usual.size));
+    const ln = (k) => d3.line((r) => x(r.size), (r) => y(r[k]));
+    svg.append('path').datum(rows).style('fill', 'none').style('stroke', EE.css('--ee-blue')).attr('stroke-width', 2.5).attr('stroke-linejoin', 'round').attr('d', ln('projected'));
+    if (cur) {
+      svg.append('circle').attr('cx', x(cur.size)).attr('cy', y(cur.projected)).attr('r', 5.5).style('fill', EE.css('--ee-card')).style('stroke', EE.css('--ee-coral')).attr('stroke-width', 2.5);
+      EE.bubble(svg.append('g'), x(cur.size), y(cur.projected) - 6, cur.projected + ' at ' + d3.format('~s')(cur.size), EE.css('--ee-coral'), '#fff');
+    }
+    const tip = EE.tip(el);
+    svg.append('rect').attr('x', ml).attr('y', 0).attr('width', W - ml).attr('height', H).style('fill', 'transparent')
+      .on('pointermove', (ev) => {
+        const [mx] = d3.pointer(ev), h = d3.least(rows, (q) => Math.abs(x(q.size) - mx));
+        tip.replaceChildren();
+        EE.line(tip, 'ee-tip-h', [EE.num(h.size) + ' invitations' + (h.usual ? ' (usual)' : '')]);
+        EE.line(tip, '', ['Projected cut-off  ' + h.projected + ' (likely ' + h.low + ' to ' + h.high + ')']);
+        const k = svg.node().getBoundingClientRect().width / W;
+        EE.placeTip(el, tip, x(h.size) * k, y(h.projected) * k);
+      })
+      .on('pointerleave', () => { tip.hidden = true; });
+  });
+
+  dash.draw('types-body', (tb) => {
+    const pj = dash.data('projection');
+    tb.replaceChildren();
+    if (pj.status !== 'ok') return;
+    const cur = EE.cat(), keys = [...new Set(pj.data.map((r) => r.key))];
+    const rows = keys.map((k) => EE.proj(pj.data, k, k === cur ? EE.size() : null)).filter(Boolean);
+    const maxAbs = Math.max(20, d3.max(rows, (r) => Math.abs(r.projected - r.lastCRS)));
+    rows.forEach((r) => {
+      const tr = document.createElement('tr');
+      tr.dataset.key = r.scenario + ',' + r.key + ',' + r.size;
+      tr.className = 'ee-click' + (r.key === cur ? ' is-picked' : '');
+      const vals = [null, EE.num(r.size), r.projected, r.low, r.high, r.modelled ? EE.signed(r.ruleEffect) : 'n/a', r.modelled ? EE.signed(r.sizeEffect) : 'n/a', null];
+      vals.forEach((v, i) => {
+        const td = document.createElement('td');
+        if (i > 0 && i < 7) td.className = 'num';
+        if (i === 0) EE.typeCell(td, r.key, r.category);
+        else if (i === 7) {
+          const w = 150, h = 16, dlt = r.projected - r.lastCRS, s = d3.scaleLinear([-maxAbs, maxAbs], [0, w]);
+          const svg = d3.select(td).append('svg').attr('width', w + 46).attr('height', h).attr('aria-hidden', 'true');
+          svg.append('line').attr('x1', s(0)).attr('x2', s(0)).attr('y1', 0).attr('y2', h).style('stroke', EE.css('--ee-faint'));
+          svg.append('rect').attr('x', Math.min(s(0), s(dlt))).attr('width', Math.max(2, Math.abs(s(dlt) - s(0)))).attr('y', 4).attr('height', h - 8).attr('rx', 2)
+            .style('fill', dlt > 0 ? EE.css('--ee-coral') : EE.css('--ee-green'));
+          svg.append('text').attr('x', w + 6).attr('y', h - 4).style('font-size', '11.5px').style('fill', EE.css('--ee-ink')).text(EE.signed(dlt));
+        } else td.textContent = v;
+        tr.appendChild(td);
+      });
+      tr.addEventListener('click', () => dash.setParams({ cat: r.key, size: null }));
+      tb.appendChild(tr);
+    });
+  });
+</script>
+
+<script>
+  /* ---------- Pool charts ---------- */
+  const drawBands = (el, rows, a, b, colA, colB, labA, labB, mark) => {
+    el.replaceChildren();
+    const W = Math.max(280, el.clientWidth), H = W < 560 ? 280 : 320, mt = 24, mb = 44;
+    const y = d3.scaleLinear([0, d3.max(rows, (r) => Math.max(r[a], r[b]))], [H - mb, mt]).nice();
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', 'Profiles by score band');
+    const ml = EE.yAxis(svg, y, d3.format('~s'), 5);
+    EE.grid(svg, y, ml, W - 4, 5);
+    const x = d3.scaleBand(rows.map((r) => r.band), [ml + 2, W - 4]).padding(0.2);
+    const bw = x.bandwidth();
+    if (mark) {
+      const band = rows.find((r) => mark.v >= r.lo && mark.v <= r.hi);
+      if (band) {
+        const bx = x(band.band) + bw / 2;
+        svg.append('rect').attr('x', x(band.band) - (x.step() - bw) / 2).attr('width', x.step()).attr('y', mt - 6).attr('height', H - mb - mt + 6).style('fill', EE.css('--ee-chip'));
+        const t = svg.append('text').attr('class', 'ee-t-ink').attr('y', 12).text(mark.label);
+        const tw = t.node().getComputedTextLength();
+        t.attr('x', Math.min(W - tw - 2, Math.max(ml, bx - tw / 2)));
+      }
+    }
+    const g = svg.append('g').selectAll('g').data(rows).join('g').attr('transform', (r) => `translate(${x(r.band)},0)`);
+    g.append('rect').attr('x', 0).attr('width', bw).attr('y', (r) => y(r[b])).attr('height', (r) => y(0) - y(r[b])).attr('rx', 2)
+      .style('fill', colB.fill).style('stroke', colB.stroke || 'none').attr('stroke-width', 1);
+    g.append('rect').attr('x', bw * 0.22).attr('width', bw * 0.56).attr('y', (r) => y(r[a])).attr('height', (r) => y(0) - y(r[a])).attr('rx', 2).style('fill', colA);
+    const every = bw < 22 ? 2 : 1;
+    svg.append('g').selectAll('text').data(rows.filter((r, i) => i % every === 0 || i === rows.length - 1)).join('text')
+      .attr('x', (r) => x(r.band) + bw / 2).attr('y', H - mb + 16).attr('text-anchor', 'middle').text((r) => (r.lo === 0 ? '≤300' : r.lo === 601 ? '601+' : r.lo));
+    svg.append('text').attr('x', (ml + W) / 2).attr('y', H - 6).attr('text-anchor', 'middle').text('CRS score, start of band');
+    const tip = EE.tip(el);
+    svg.append('g').selectAll('rect').data(rows).join('rect').attr('x', (r) => x(r.band) - (x.step() - bw) / 2).attr('width', x.step()).attr('y', 0).attr('height', H - mb).style('fill', 'transparent')
+      .on('pointermove', (ev, r) => {
+        tip.replaceChildren();
+        EE.line(tip, 'ee-tip-h', ['CRS ' + r.band]);
+        EE.line(tip, '', [EE.swatch(colA), labA + '  ' + EE.num(r[a])]);
+        EE.line(tip, '', [EE.swatch(colB.stroke || colB.fill), labB + '  ' + EE.num(r[b])]);
+        EE.line(tip, '', ['Difference  ' + EE.signed(r[a] - r[b])]);
+        const k = svg.node().getBoundingClientRect().width / W;
+        EE.placeTip(el, tip, (x(r.band) + bw / 2) * k, y(Math.max(r[a], r[b])) * k);
+      })
+      .on('pointerleave', () => { tip.hidden = true; });
+  };
+
+  dash.draw('rescored-chart', (el) => {
+    const d = dash.data('outlook'), pj = dash.data('projection');
+    el.replaceChildren();
+    if (d.status !== 'ok') return;
+    const rows = d.data.filter((r) => r.scenario === EE.scen());
+    const r = pj.status === 'ok' ? EE.proj(pj.data, EE.cat(), EE.size()) : null;
+    const t = dash.data('forecast').data.find((x) => x.key === EE.cat());
+    drawBands(el, rows, 'after', 'before', EE.css('--ee-blue'), { fill: EE.css('--ee-track'), stroke: EE.css('--ee-slate') }, 'New rules', 'Before new points', r && t ? { v: r.projected, label: 'Next ' + t.category + ' ≈ ' + r.projected } : null);
+  });
+
+  dash.draw('trend-chart', (el) => {
+    const d = dash.data('pool_trend');
+    el.replaceChildren();
+    if (d.status !== 'ok' || !d.data.length) return;
+    const keys = [['b0', '400 or less', '--ee-blue'], ['b401', '401–450', '--ee-cyan'], ['b451', '451–500', '--ee-orange'], ['b501', '501–600', '--ee-coral'], ['b601', '601+', '--ee-magenta']];
+    const rows = d.data.map((r) => ({ ...r, t: EE.toDate(r.asOf) }));
+    const stack = d3.stack().keys(keys.map((k) => k[0]))(rows);
+    const W = Math.max(280, el.clientWidth), H = W < 560 ? 280 : 320, mt = 14, mb = 30;
+    const y = d3.scaleLinear([0, d3.max(rows, (r) => r.total)], [H - mb, mt]).nice();
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', 'Pool over time');
+    const ml = EE.yAxis(svg, y, d3.format('~s'), 5);
+    const probe = svg.append('text').text('400 or less'), mr = W < 480 ? 8 : Math.ceil(probe.node().getComputedTextLength()) + 14; probe.remove();
+    const x = d3.scaleUtc(d3.extent(rows, (r) => r.t), [ml + 2, W - mr]);
+    svg.append('g').attr('transform', `translate(0,${H - mb})`).call(d3.axisBottom(x).ticks(Math.max(2, Math.floor(W / 120))).tickSize(0).tickPadding(10).tickFormat(d3.utcFormat('%b %Y')))
+      .attr('font-size', null).attr('font-family', null).select('.domain').style('stroke', EE.css('--ee-line'));
+    svg.append('g').selectAll('path').data(stack).join('path').style('fill', (s, i) => EE.css(keys[i][2])).attr('opacity', 0.88)
+      .attr('d', d3.area((p) => x(p.data.t), (p) => y(p[0]), (p) => y(p[1])));
+    if (W >= 480) {
+      const li = rows.length - 1; let prevY = Infinity;
+      stack.map((s, i) => ({ i, yy: y((s[li][0] + s[li][1]) / 2) })).sort((a, b) => b.yy - a.yy).forEach((o) => {
+        const yy = Math.min(o.yy, prevY - 13); prevY = yy;
+        svg.append('text').attr('x', W - mr + 6).attr('y', yy + 4).text(keys[o.i][1]);
+      });
+    }
+    const tip = EE.tip(el), rule = svg.append('line').attr('y1', mt).attr('y2', H - mb).style('stroke', EE.css('--ee-ink')).attr('opacity', 0);
+    svg.append('rect').attr('x', ml).attr('y', 0).attr('width', W - mr - ml).attr('height', H).style('fill', 'transparent')
+      .on('pointermove', (ev) => {
+        const [mx] = d3.pointer(ev), r = d3.least(rows, (q) => Math.abs(x(q.t) - mx));
+        rule.attr('x1', x(r.t)).attr('x2', x(r.t)).attr('opacity', 0.35);
+        tip.replaceChildren();
+        EE.line(tip, 'ee-tip-h', [EE.date(r.asOf) + ', ' + EE.num(r.total) + ' profiles']);
+        keys.slice().reverse().forEach(([k, label, c]) => EE.line(tip, '', [EE.swatch(EE.css(c)), label + '  ' + EE.num(r[k])]));
+        const k = svg.node().getBoundingClientRect().width / W;
+        EE.placeTip(el, tip, x(r.t) * k, 50 * k);
+      })
+      .on('pointerleave', () => { tip.hidden = true; rule.attr('opacity', 0); });
+  });
+</script>
+
+<script>
+  /* ---------- All draws ---------- */
+  dash.draw('bubble-chart', (el) => {
+    const d = dash.data('draws');
+    el.replaceChildren();
+    if (d.status !== 'ok' || !d.data.length) return;
+    const rows = d.data.map((r) => ({ ...r, t: EE.toDate(r.drawDate) }));
+    const W = Math.max(280, el.clientWidth), H = W < 560 ? 300 : 360, mt = 16, mb = 30;
+    const y = d3.scaleLinear([d3.min(rows, (r) => r.drawCRS) - 20, d3.max(rows, (r) => r.drawCRS) + 20], [H - mb, mt]).nice();
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', 'Every draw');
+    const ml = EE.yAxis(svg, y, null, 6);
+    EE.grid(svg, y, ml, W - 4, 6);
+    const x = d3.scaleUtc(d3.extent(rows, (r) => r.t), [ml + 12, W - 14]);
+    svg.append('g').attr('transform', `translate(0,${H - mb})`).call(d3.axisBottom(x).ticks(Math.max(2, Math.floor(W / 120))).tickSize(0).tickPadding(10).tickFormat(d3.utcFormat('%b %Y')))
+      .attr('font-size', null).attr('font-family', null).select('.domain').style('stroke', EE.css('--ee-line'));
+    const r = d3.scaleSqrt([0, d3.max(rows, (q) => q.drawSize)], [0, W < 560 ? 11 : 16]);
+    svg.append('g').selectAll('circle').data(rows.slice().sort((a, b) => b.drawSize - a.drawSize)).join('circle')
+      .attr('cx', (q) => x(q.t)).attr('cy', (q) => y(q.drawCRS)).attr('r', (q) => Math.max(2, r(q.drawSize)))
+      .style('fill', (q) => EE.groupColor(q.key)).attr('fill-opacity', 0.55).style('stroke', (q) => EE.groupColor(q.key)).attr('stroke-width', 1);
+    const tip = EE.tip(el), pts = rows.map((q) => ({ q, px: x(q.t), py: y(q.drawCRS) })), dl = d3.Delaunay.from(pts, (p) => p.px, (p) => p.py);
+    svg.append('rect').attr('x', ml).attr('y', 0).attr('width', W - ml).attr('height', H - mb).style('fill', 'transparent')
+      .on('pointermove', (ev) => {
+        const [mx, my] = d3.pointer(ev), p = pts[dl.find(mx, my)];
+        tip.replaceChildren();
+        EE.line(tip, 'ee-tip-h', [EE.date(p.q.drawDate) + ', draw #' + p.q.drawNumber]);
+        EE.line(tip, '', [p.q.category]);
+        EE.line(tip, '', ['Cut-off ' + p.q.drawCRS + ', ' + EE.num(p.q.drawSize) + ' invitations']);
+        const k = svg.node().getBoundingClientRect().width / W;
+        EE.placeTip(el, tip, p.px * k, p.py * k);
+      })
+      .on('pointerleave', () => { tip.hidden = true; });
+  });
+
+  const search = document.querySelector('.ee-search');
+  const sortState = { k: 'drawNumber', dir: -1 };
+  if (search) search.addEventListener('input', () => dash.draw('all-body'));
+  document.querySelectorAll('.ee-sort').forEach((b) => b.addEventListener('click', () => {
+    const k = b.dataset.sort;
+    sortState.dir = sortState.k === k ? -sortState.dir : (k === 'category' ? 1 : -1); sortState.k = k;
+    document.querySelectorAll('.ee-sort').forEach((o) => { const th = o.closest('th'); if (th) th.setAttribute('aria-sort', o === b ? (sortState.dir > 0 ? 'ascending' : 'descending') : 'none'); });
+    dash.draw('all-body');
+  }));
+  dash.draw('all-body', (tb) => {
+    const d = dash.data('draws');
+    tb.replaceChildren();
+    if (d.status !== 'ok') return;
+    const q = (search && search.value || '').trim().toLowerCase();
+    const rows = d.data.filter((r) => !q || [r.drawNumber, r.drawDate, r.category, r.drawName, EE.date(r.drawDate)].join(' ').toLowerCase().includes(q))
+      .slice().sort((a, b) => { const va = a[sortState.k], vb = b[sortState.k]; return (va < vb ? -1 : va > vb ? 1 : 0) * sortState.dir; });
+    rows.forEach((r) => tb.appendChild(EE.drawRow(r)));
+  });
+</script>

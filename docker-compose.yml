@@ -1,0 +1,9 @@
+services:
+  ee-outlook:
+    build: .
+    image: ee-draw-outlook:latest
+    ports:
+      - "8080:8080"
+    environment:
+      REFRESH_HOURS: "6"
+    restart: unless-stopped

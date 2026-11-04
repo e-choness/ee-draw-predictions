@@ -1,3 +1,6 @@
+// Copyright 2026 Beili (Echo) Yin
+// SPDX-License-Identifier: Apache-2.0
+
 // Builds the whole-pool composition the dashboard rescores the pool with, and writes
 // data/pool_composition.json.
 //   node scripts/census.mjs        (optional: refresh the census counts from Statistics Canada)

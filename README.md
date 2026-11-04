@@ -99,4 +99,4 @@ The likely range adds the method's average miss when replayed on the type's rece
 
 ## License
 
-MIT
+Licensed under the [Apache License, Version 2.0](LICENSE).

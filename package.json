@@ -11,5 +11,5 @@
     "start": "node scripts/serve.mjs",
     "dev": "node scripts/build.mjs && REFRESH_ON_START=0 REFRESH_HOURS=0 node scripts/serve.mjs"
   },
-  "license": "MIT"
+  "license": "Apache-2.0"
 }

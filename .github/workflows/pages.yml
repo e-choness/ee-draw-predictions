@@ -1,3 +1,6 @@
+# Copyright 2026 Beili (Echo) Yin
+# SPDX-License-Identifier: Apache-2.0
+
 name: Refresh IRCC data and deploy to GitHub Pages
 
 on:

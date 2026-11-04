@@ -1,3 +1,6 @@
+// Copyright 2026 Beili (Echo) Yin
+// SPDX-License-Identifier: Apache-2.0
+
 // Downloads IRCC's Express Entry rounds feed and writes data/ee_rounds.json.
 // Keeps rounds since SINCE (default 2024-01-01) whose pool distribution adds up.
 // If the download fails, the existing file is left untouched and the script exits 1

@@ -1,3 +1,6 @@
+// Copyright 2026 Beili (Echo) Yin
+// SPDX-License-Identifier: Apache-2.0
+
 // Assembles the static site in dist/: the dashboard page inside a standalone shell,
 // the dash runtime shim and the data file.
 import { readFile, writeFile, mkdir, copyFile } from 'node:fs/promises';

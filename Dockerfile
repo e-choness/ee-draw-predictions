@@ -1,3 +1,6 @@
+# Copyright 2026 Beili (Echo) Yin
+# SPDX-License-Identifier: Apache-2.0
+
 # EE Outlook: static dashboard + a tiny Node server that refreshes IRCC data on a timer.
 FROM node:20-alpine
 WORKDIR /app

@@ -1,3 +1,6 @@
+// Copyright 2026 Beili (Echo) Yin
+// SPDX-License-Identifier: Apache-2.0
+
 // Zero-dependency static server for dist/, used by the Docker image.
 // Every REFRESH_HOURS (default 6) it re-downloads the IRCC feed and rebuilds the site.
 import { createServer } from 'node:http';

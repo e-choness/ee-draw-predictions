@@ -1,3 +1,6 @@
+// Copyright 2026 Beili (Echo) Yin
+// SPDX-License-Identifier: Apache-2.0
+
 // Downloads 2021 Census worker counts by occupation from Statistics Canada's Web Data Service
 // and writes data/census_noc_2021.json:
 //   node scripts/census.mjs

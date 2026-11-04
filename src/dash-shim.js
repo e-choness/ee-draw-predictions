@@ -10,8 +10,8 @@
   'use strict';
 
   var cfg = window.EE_CONFIG || {};
-  var datasetUrls = cfg.datasets || { rounds: 'data/ee_rounds.json' };
-  var defaults = cfg.params || { cat: 'cec', work: 15, offer: 2 };
+  var datasetUrls = cfg.datasets || { rounds: 'data/ee_rounds.json', composition: 'data/pool_composition.json' };
+  var defaults = cfg.params || { cat: 'cec' };
 
   var datasets = {};   // id -> {status, data, message}
   var calcs = {};      // id -> {inputs, fn, cache, sig}

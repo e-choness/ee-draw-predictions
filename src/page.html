@@ -130,6 +130,41 @@
   .ee-prose ol, .ee-prose ul { padding-left: 1.2rem; display: grid; gap: 6px; }
   .ee-prose a { color: var(--ee-blue); }
 
+  /* Calculator (Method page): inputs on the left, a receipt-style breakdown on the right */
+  .ee-calc { display: grid; grid-template-columns: minmax(0, 17rem) minmax(0, 1fr); gap: 22px; align-items: start; }
+  .ee-calc-in { display: grid; gap: 14px; align-content: start; }
+  .ee-calc-in .ee-btn { justify-self: start; }
+  .ee-num { font: inherit; font-size: 13.5px; color: var(--ee-ink); background: var(--ee-chip); border: 1px solid var(--ee-line); border-radius: 6px; padding: 6px 10px; width: 100%; font-variant-numeric: tabular-nums; }
+  .ee-num:focus-visible { outline: 2px solid var(--ee-blue); outline-offset: 1px; }
+  .ee-num:disabled { opacity: .55; }
+  .ee-receipt { border: 1px solid var(--ee-line); border-radius: 6px; background: var(--ee-chip); padding: 4px 16px 14px; font-variant-numeric: tabular-nums; min-width: 0; }
+  .ee-rc-head { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--ee-muted); padding: 14px 0 4px; }
+  .ee-rc-row { display: grid; grid-template-columns: 1.3em minmax(0, 1fr) auto; gap: 4px 10px; align-items: baseline; padding: 6px 0; border-bottom: 1px dashed var(--ee-line); }
+  .ee-rc-op { color: var(--ee-muted); font-weight: 700; text-align: center; }
+  .ee-rc-label { min-width: 0; }
+  .ee-rc-label small { display: block; color: var(--ee-muted); font-size: 11.5px; line-height: 1.4; margin-top: 1px; }
+  .ee-rc-val { font-weight: 600; text-align: right; white-space: nowrap; }
+  .ee-rc-indent .ee-rc-label { padding-left: 14px; color: var(--ee-muted); white-space: pre-wrap; }
+  .ee-rc-indent .ee-rc-val { font-weight: 400; }
+  .ee-rc-sub { border-bottom: 1px solid var(--ee-ink); }
+  .ee-rc-ladder .ee-rc-label, .ee-rc-ladder .ee-rc-val { color: var(--ee-muted); font-weight: 400; }
+  .ee-rc-cut { background: var(--ee-card); box-shadow: inset 3px 0 0 var(--ee-coral); margin: 0 -16px; padding-left: 16px; padding-right: 16px; }
+  .ee-rc-cut .ee-rc-op { color: var(--ee-coral); }
+  .ee-rc-total { border-bottom: 0; border-top: 2px solid var(--ee-ink); margin-top: 4px; padding-top: 10px; }
+  .ee-rc-total .ee-rc-label { font-weight: 600; }
+  .ee-rc-total .ee-rc-val { font-size: 24px; letter-spacing: -.01em; color: var(--ee-coral); }
+  .ee-sensi { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 9.5rem), 1fr)); gap: 8px; padding-top: 6px; }
+  .ee-sensi div { background: var(--ee-card); border: 1px solid var(--ee-line); border-radius: 6px; padding: 8px 10px; display: grid; gap: 2px; font-size: 12px; color: var(--ee-muted); }
+  .ee-sensi b { color: var(--ee-ink); font-size: 16px; font-weight: 600; }
+  .ee-mini { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .ee-mini th { text-align: left; font-weight: 400; color: var(--ee-muted); padding: 0 8px 6px 0; border-bottom: 1px solid var(--ee-line); }
+  .ee-mini td { padding: 7px 8px 7px 0; border-bottom: 1px solid var(--ee-line); vertical-align: top; }
+  .ee-mini td:first-child { font-weight: 600; white-space: nowrap; }
+  .ee-mini tr:last-child td { border-bottom: 0; }
+  .ee-src td { white-space: normal; vertical-align: top; min-width: 9rem; }
+  .ee-src td:last-child { min-width: 18rem; color: var(--ee-muted); }
+  .ee-src a { color: var(--ee-blue); }
+
   [data-dash-source-state=refreshing] { opacity: .55; transition: opacity .3s; }
   [data-dash-source-state=empty] { color: transparent; }
 
@@ -153,6 +188,10 @@
     .ee-bar.is-open .ee-bar-fields { display: grid; gap: 14px; padding: 0 16px 16px; }
     .ee-s6, .ee-s4, .ee-s3 { grid-column: span 12; }
     .ee-kpi-num { font-size: 26px; }
+    .ee-calc { grid-template-columns: minmax(0, 1fr); }
+    .ee-receipt { padding: 4px 12px 12px; }
+    .ee-rc-cut { margin: 0 -12px; padding-left: 12px; padding-right: 12px; }
+    .ee-rc-val { white-space: normal; }
   }
   @media (min-width: 861px) { .ee-bar-fields { display: contents; } }
   @media (prefers-reduced-motion: reduce) { .ee * { transition: none !important; animation: none !important; } }
@@ -183,20 +222,20 @@
       <div class="ee-bar-sum" role="button" tabindex="0" aria-expanded="false"><span>Scenario: <b data-draw="bar-summary">—</b></span><span class="ee-hint">Edit</span></div>
       <div class="ee-bar-fields">
         <div class="ee-field">
-          <label for="ee-type">Draw type</label>
-          <div data-draw="type-select" data-source="forecast"></div>
+          <span class="ee-field-label">Draw type</span>
+          <div data-draw="type-select" data-source="types"></div>
         </div>
         <div class="ee-field">
           <span class="ee-field-label"><span>Next draw size</span><span class="ee-val" data-draw="size-label">—</span></span>
-          <div data-draw="size-control" data-source="projection"></div>
+          <input class="ee-range" type="range" data-param="size" min="100" max="10000" step="50" aria-label="Next draw size">
         </div>
         <div class="ee-field">
-          <label for="ee-work"><span>High-wage work points</span><output data-draw="work-out">—</output></label>
-          <input id="ee-work" class="ee-range ee-work" type="range" min="0" max="50" step="5" value="20">
+          <label for="ee-hw"><span>Canadian work in high-wage jobs</span><output data-draw="hw-out">—</output></label>
+          <input id="ee-hw" class="ee-range ee-est-input" type="range" min="0" max="80" step="1" data-param="hw">
         </div>
         <div class="ee-field">
-          <label for="ee-offer"><span>High-wage job offers</span><output data-draw="offer-out">—</output></label>
-          <input id="ee-offer" class="ee-range ee-offer" type="range" min="0" max="10" step="1" value="7">
+          <label for="ee-jo"><span>Job offers, no Canadian work</span><output data-draw="jo-out">—</output></label>
+          <input id="ee-jo" class="ee-range ee-est-input" type="range" min="0" max="20" step="1" data-param="jo">
         </div>
         <button type="button" class="ee-btn ee-reset">Reset scenario</button>
       </div>
@@ -209,7 +248,7 @@
           <h1>Express Entry outlook</h1>
           <p>Where the pool stands, what the next cut-off could be, and what moves it.</p>
         </div>
-        <p class="ee-s12 ee-pause ee-est">Since November 3, 2026, CRS scores include new points for high-wage work and job offers, and IRCC has paused rounds for up to two weeks while it rescores the pool. IRCC has not yet published a pool count under the new rules, so scores here are estimated from its October 25 count and the scenario above. <a href="#pool" class="ee-go" data-go="pool">How scoring changed</a></p>
+        <p class="ee-s12 ee-pause ee-est">Since November 3, 2026, CRS scores include new points for high-wage work and job offers, and IRCC has paused rounds for up to two weeks while it rescores the pool. IRCC has not yet published a pool count under the new rules, so scores here are its <span data-draw="asof-long" data-source="snapshots">latest</span> count rescored with the scenario above. <a href="#pool" class="ee-go" data-go="pool">How scoring changed</a></p>
         <p class="ee-s12 ee-pause ee-live" hidden>Scores here come from IRCC's first pool counts under the scoring rules in force since November 3, 2026. <a href="#pool" class="ee-go" data-go="pool">How scoring changed</a></p>
 
         <div class="ee-card ee-kpi ee-s3" id="kpi-pool">
@@ -220,23 +259,23 @@
         </div>
         <div class="ee-card ee-kpi ee-s3" id="kpi-top">
           <span class="ee-kpi-label">Profiles scoring 501+</span>
-          <span class="ee-kpi-num" data-draw="k-top" data-source="outlook_totals" data-field="after501">—</span>
-          <span class="ee-kpi-sub ee-est">Estimated. IRCC's last count, before the new points: <span data-draw="k-top-before" data-source="outlook_totals" data-field="before501">—</span></span>
+          <span class="ee-kpi-num" data-draw="k-top" data-source="snapshots composition" data-field="after501">—</span>
+          <span class="ee-kpi-sub ee-est">Estimated. IRCC's last count, before the new points: <span data-draw="k-top-before" data-source="snapshots composition" data-field="before501">—</span></span>
         </div>
         <div class="ee-card ee-kpi ee-s3" id="kpi-next">
-          <span class="ee-kpi-label">Projected next <span data-draw="k-next-label" data-source="forecast" data-field="category">—</span> cut-off</span>
-          <span class="ee-kpi-num" data-draw="k-next" data-source="projection" data-field="projected">—</span>
-          <span class="ee-kpi-sub">Likely <b data-draw="k-next-low" data-source="projection" data-field="low">—</b> to <b data-draw="k-next-high" data-source="projection" data-field="high">—</b> at <span data-draw="k-next-size" data-source="projection" data-field="size">—</span> invitations</span>
+          <span class="ee-kpi-label">Projected next <span data-draw="k-next-label" data-source="types" data-field="category">—</span> cut-off</span>
+          <span class="ee-kpi-num" data-draw="k-next" data-source="types snapshots composition" data-field="projected">—</span>
+          <span class="ee-kpi-sub">Likely <b data-draw="k-next-low" data-source="types snapshots composition" data-field="low">—</b> to <b data-draw="k-next-high" data-source="types snapshots composition" data-field="high">—</b> at <span data-draw="k-next-size" data-source="types snapshots composition" data-field="size">—</span> invitations</span>
         </div>
         <div class="ee-card ee-kpi ee-s3" id="kpi-last">
           <span class="ee-kpi-label">Last draw of this type, old rules</span>
-          <span class="ee-kpi-num" data-draw="k-last" data-source="forecast" data-field="lastCRS">—</span>
-          <span class="ee-kpi-sub"><span data-draw="k-last-date" data-source="forecast" data-field="lastDate">—</span>, <span data-draw="k-last-size" data-source="forecast" data-field="lastSize">—</span> invitations</span>
+          <span class="ee-kpi-num" data-draw="k-last" data-source="types" data-field="lastCRS">—</span>
+          <span class="ee-kpi-sub"><span data-draw="k-last-date" data-source="types" data-field="lastDate">—</span>, <span data-draw="k-last-size" data-source="types" data-field="lastSize">—</span> invitations</span>
         </div>
 
         <div class="ee-card ee-s12" id="history">
           <div class="ee-card-h">
-            <h2><span data-draw="hero-title" data-source="forecast" data-field="category">—</span> cut-offs and the next draw</h2>
+            <h2><span data-draw="hero-title" data-source="types" data-field="category">—</span> cut-offs and the next draw</h2>
             <div class="ee-pills" role="group" aria-label="Time span">
               <button type="button" class="ee-pill ee-span" data-span="12">12 months</button>
               <button type="button" class="ee-pill ee-span" data-span="24">24 months</button>
@@ -244,7 +283,7 @@
             </div>
           </div>
           <div class="ee-card-b">
-            <div class="ee-chart ee-tall" data-draw="hero-chart" data-source="draws projection"></div>
+            <div class="ee-chart ee-tall" data-draw="hero-chart" data-source="draws types snapshots composition"></div>
           </div>
         </div>
 
@@ -256,7 +295,7 @@
         </div>
         <div class="ee-card ee-s4" id="mix">
           <div class="ee-card-h"><h2>Pool by score range</h2></div>
-          <div class="ee-card-b"><div class="ee-chart" data-draw="mix-chart" data-source="outlook"></div><p class="ee-note ee-est">Estimated under the new rules.</p></div>
+          <div class="ee-card-b"><div class="ee-chart" data-draw="mix-chart" data-source="snapshots composition"></div><p class="ee-note ee-est">Estimated under the new rules.</p></div>
         </div>
 
         <div class="ee-card ee-s12" id="recent">
@@ -278,34 +317,35 @@
       <div class="ee-grid">
         <div class="ee-s12 ee-page-head">
           <h1>Next draw forecast</h1>
-          <p>Past cut-offs were set under the old rules. The projection starts from them, then adds what the November 3 points and the next draw's size do to the pool.</p>
+          <p>The projection is worked out on the pool rescored under the November 3 rules: who is eligible for the round, who arrived since the last one, and who gains the new points. The steps show how far each part moves it from the last cut-off.</p>
         </div>
         <div class="ee-card ee-s5" id="waterfall">
-          <div class="ee-card-h"><h2>How the <span data-draw="wf-title" data-source="forecast" data-field="category">—</span> projection is built</h2></div>
+          <div class="ee-card-h"><h2>How the <span data-draw="wf-title" data-source="types" data-field="category">—</span> projection is built</h2></div>
           <div class="ee-card-b">
-            <div class="ee-chart" data-draw="wf-chart" data-source="forecast projection"></div>
-            <p class="ee-note">Higher is harder. Coral steps push the cut-off up; green steps bring it down. The first two steps use old-rule cut-offs.</p>
+            <div class="ee-chart" data-draw="wf-chart" data-source="types snapshots composition"></div>
+            <p class="ee-note">Higher is harder. Coral steps push the cut-off up; green steps bring it down. Pool and pause: the same calculation on old scores, with the profiles that arrive until the next round. New points: the change once the November 3 points are added. Draw size: from the usual size to the size you set.</p>
           </div>
         </div>
         <div class="ee-card ee-s7" id="sensitivity">
           <div class="ee-card-h"><h2>Invitations and the cut-off</h2>
           </div>
           <div class="ee-card-b">
-            <div class="ee-chart" data-draw="sens-chart" data-source="projection"></div>
-            <p class="ee-note">After the pause IRCC may issue more or fewer invitations than usual. A bigger draw reaches further down the pool and lowers the cut-off. Drag the draw size above to move the marker.</p>
+            <div class="ee-chart" data-draw="sens-chart" data-source="types snapshots composition"></div>
+            <p class="ee-note">A bigger round reaches further down the eligible profiles and lowers the cut-off. The dashed line is the same pool on old scores, before the new points. Drag the draw size in the scenario bar to move the marker.</p>
           </div>
         </div>
         <div class="ee-card ee-s12" id="all-types">
           <div class="ee-card-h"><h2>Every draw type</h2><span class="ee-hint">Each at its usual size, except the selected type. Select a row to explore it.</span></div>
           <div class="ee-card-b">
             <div class="ee-table-wrap">
-              <table class="ee-table" data-source="projection" data-row-key="scenario,key,size">
+              <table class="ee-table" data-source="types" data-row-key="key,size">
                 <thead><tr>
                   <th data-field="key">Draw type</th>
                   <th class="num" data-field="size">Invitations</th>
                   <th class="num" data-field="projected">Projected</th>
                   <th class="num" data-field="low">Low</th>
                   <th class="num" data-field="high">High</th>
+                  <th class="num" data-field="poolEffect">Pool and pause</th>
                   <th class="num" data-field="ruleEffect">New points</th>
                   <th class="num" data-field="sizeEffect">Draw size</th>
                   <th>Against last cut-off (old rules)</th>
@@ -328,13 +368,13 @@
         </div>
         <div class="ee-card ee-kpi ee-s4">
           <span class="ee-kpi-label">Profiles scoring 501+</span>
-          <span class="ee-kpi-num" data-draw="r-501" data-source="outlook_totals" data-field="after501">—</span>
-          <span class="ee-kpi-sub ee-est"><b data-draw="r-501-change" data-source="outlook_totals" data-field="change501">—</b> from the new points</span>
+          <span class="ee-kpi-num" data-draw="r-501" data-source="snapshots composition" data-field="after501">—</span>
+          <span class="ee-kpi-sub ee-est"><b data-draw="r-501-change" data-source="snapshots composition" data-field="change501">—</b> from the new points</span>
         </div>
         <div class="ee-card ee-kpi ee-s4">
           <span class="ee-kpi-label">Profiles scoring 451+</span>
-          <span class="ee-kpi-num" data-draw="r-451" data-source="outlook_totals" data-field="after451">—</span>
-          <span class="ee-kpi-sub ee-est"><b data-draw="r-451-change" data-source="outlook_totals" data-field="change451">—</b> from the new points</span>
+          <span class="ee-kpi-num" data-draw="r-451" data-source="snapshots composition" data-field="after451">—</span>
+          <span class="ee-kpi-sub ee-est"><b data-draw="r-451-change" data-source="snapshots composition" data-field="change451">—</b> from the new points</span>
         </div>
         <div class="ee-card ee-kpi ee-s4">
           <span class="ee-kpi-label">IRCC pool count used</span>
@@ -345,17 +385,17 @@
           <div class="ee-card-h"><h2>Profiles by score band</h2>
             <div class="ee-legend"><span><span class="ee-sw sw-after"></span>New rules<span class="ee-est">, estimated</span></span><span class="ee-est"><span class="ee-sw sw-prev"></span>IRCC's last count, before the new points</span></div>
           </div>
-          <div class="ee-card-b"><div class="ee-chart ee-tall" data-draw="rescored-chart" data-source="outlook projection"></div></div>
+          <div class="ee-card-b"><div class="ee-chart ee-tall" data-draw="rescored-chart" data-source="types snapshots composition"></div></div>
         </div>
         <div class="ee-card ee-s12">
           <div class="ee-card-h"><h2>How scoring changed on November 3</h2></div>
           <div class="ee-card-b">
-            <p class="ee-note">A labour market integration factor worth up to 150 points now counts either Canadian work or a job offer, whichever scores higher. High-wage means the occupation's national median wage is at least 1.3, 1.5 or 2 times the average; 186 occupations qualify. An LMIA is no longer needed for a job offer to count.</p>
+            <p class="ee-note">A new labour market integration factor, worth up to 150 points (140 with a spouse), takes the higher of two scores: Canadian work (the existing points for years worked, plus up to 70 for 12 months in high-wage occupations) or a qualifying job offer in a high-wage occupation. They are never added together. High-wage means the occupation's national median wage is at least 1.3, 1.5 or 2 times the average; 186 occupations qualify. An LMIA is no longer needed for a job offer to count.</p>
             <div class="ee-rules">
               <div class="ee-rule"><h3>Extra points for Canadian work</h3>
-                <table><tbody><tr><td>12+ months, occupation at 2× median wage</td><td>+70</td></tr><tr><td>12+ months at 1.5×</td><td>+40</td></tr><tr><td>12+ months at 1.3×</td><td>+20</td></tr></tbody></table>
+                <table><tbody><tr><td>12+ months in 2× occupations</td><td>+70</td></tr><tr><td>12+ months in 1.5× or higher</td><td>+40</td></tr><tr><td>12+ months in 1.3× or higher</td><td>+20</td></tr></tbody></table>
               </div>
-              <div class="ee-rule"><h3>Points for a job offer</h3>
+              <div class="ee-rule"><h3>Or, a job offer instead</h3>
                 <table><tbody><tr><td>Offer in a 2× occupation</td><td>100</td></tr><tr><td>Offer in a 1.5× occupation</td><td>70</td></tr><tr><td>Offer in a 1.3× occupation</td><td>50</td></tr></tbody></table>
               </div>
               <div class="ee-rule"><h3>Timing</h3>
@@ -363,17 +403,16 @@
               </div>
             </div>
             <div class="ee-prose ee-est">
-              <p>IRCC does not publish the pool's occupations or Canadian work experience directly. The defaults use only figures that describe the whole pool or every profile submitted, never just the people already invited, who are a selected group.</p>
+              <p>IRCC does not publish the pool's occupations or Canadian work directly. The estimate uses only figures that describe the whole pool or the whole workforce, never people already invited, who are a selected group.</p>
               <ul>
-                <li><b>High-wage occupations, about 56% of the pool:</b> of the 218,291 candidates in the pool on December 1, 2024, 41,880 qualified for STEM, 17,066 for healthcare, 7,742 for trades, 7,673 for transport and 3,124 for agriculture. Matching each category's occupations to the high-wage list gives 96% for STEM, 57% healthcare, 80% transport, 20% trades and 0% agriculture. The other 140,806 candidates are counted at 45%, the high-wage share of the remaining 294 occupations open to Express Entry. Occupations within a group are weighted equally.</li>
-                <li><b>Points tiers:</b> across the pool, high-wage candidates fall 15% in the 2× tier (+70), 52% in the 1.5× tier (+40) and 33% in the 1.3× tier (+20). Job offers use the same mix (100, 70 or 50 points).</li>
-                <li><b>Canadian work, about 36%:</b> no pool-wide count exists. The closest is the 36% of all 339,621 eligible profiles submitted in 2024 that claimed Canadian education, most of whom gain Canadian work through post-graduation work permits.</li>
-                <li><b>Work points, 20% by default:</b> 56% high-wage times 36% with Canadian work.</li>
-                <li><b>Job offers, 7% by default:</b> 12.3% of eligible profiles in 2024 claimed job-offer points; at the pool's 56% high-wage share that is 6.9%. Some of these people also earn work points, and the model counts the two groups separately, so this default leans high.</li>
+                <li><b>Canadian work, <span data-draw="c-cw">—</span>:</b> 159,675 of the 240,675 profiles in IRCC's 2025 pool count were eligible for the Canadian Experience Class, which needs 12 months of skilled Canadian work.</li>
+                <li><b>High-wage share of that work, <span data-draw="c-hw">—</span>:</b> temporary residents working in Canada in occupations open to Express Entry (2021 Census), weighted by how many people work in each occupation. Counting each occupation code once instead gives about 51%, because managers and professionals make up a third of the codes but fewer of the people; the pool's two largest occupations, food service supervisors and cooks, are not high-wage.</li>
+                <li><b>Points tiers:</b> <span data-draw="c-mix">—</span> of high-wage workers are in 2×, 1.5× and 1.3× occupations (+70, +40, +20).</li>
+                <li><b>Job offers, <span data-draw="c-jo">—</span> of profiles without Canadian work:</b> 12.3% of eligible profiles in 2024 claimed a job offer, times the high-wage share. For someone with Canadian work, an offer in the same tier never beats the work points, so offers only lift profiles without Canadian work.</li>
+                <li><b>Category rounds</b> use their own occupations, weighted the same way: <span data-draw="c-cats">—</span> of the jobs in each category are high-wage.</li>
               </ul>
-              <p>Gains are spread evenly across score bands, and profiles entering during the pause are not counted. Only people with Canadian work can earn the work points, so Canadian Experience Class cut-offs may rise more than shown and other types less.</p>
-              <p class="ee-note">Sources: IRCC <a href="https://www.canada.ca/en/immigration-refugees-citizenship/corporate/publications-manuals/express-entry-year-end-report-2024.html" target="_blank" rel="noopener">Express Entry Year-End Report 2024</a> (tables 3 and 17a, and the category occupation annex), the <a href="https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/check-score/high-wage.html" target="_blank" rel="noopener">high-wage occupations list</a>, and Statistics Canada's <a href="https://www.statcan.gc.ca/en/subjects/standard/noc/2021/introductionV1" target="_blank" rel="noopener">NOC 2021</a>.</p>
-</div>
+              <p>Shares are applied evenly across scores. Profiles that were above the last Canadian Experience Class cut-off were invited, so above it only recent arrivals are counted as having Canadian work. See <a href="#method" class="ee-go" data-go="method">Method and sources</a> for the calculator and every source.</p>
+            </div>
           </div>
         </div>
         <div class="ee-card ee-s12" id="trend">
@@ -424,19 +463,94 @@
       <div class="ee-grid">
         <div class="ee-s12 ee-page-head">
           <h1>Method and sources</h1>
-          <p>How every number on this dashboard is worked out.</p>
+          <p>How the next cut-off is worked out, step by step, with every input and where it comes from.</p>
         </div>
-        <div class="ee-card ee-s12">
+
+        <div class="ee-card ee-s12" id="calc">
+          <div class="ee-card-h"><h2>Calculator</h2><span class="ee-hint">Change any input. The scenario bar and every page use the same values.</span></div>
+          <div class="ee-card-b ee-calc">
+            <div class="ee-calc-in">
+              <div class="ee-field"><span class="ee-field-label">Draw type</span><div data-draw="type-select" data-source="types"></div></div>
+              <div class="ee-field"><label for="c-size">Invitations in the next round</label><input id="c-size" class="ee-num" type="number" min="1" max="20000" step="50" data-param="size"></div>
+              <div class="ee-field"><label for="c-next">Next round on</label><input id="c-next" class="ee-num" type="date" data-param="next"></div>
+              <div class="ee-field"><label for="c-cw"><span>Pool with 12+ months of Canadian work</span><span>%</span></label><input id="c-cw" class="ee-num ee-est-input" type="number" min="0" max="100" step="0.1" data-param="cw"></div>
+              <div class="ee-field"><label for="c-hw"><span>Of those, in high-wage jobs</span><span>%</span></label><input id="c-hw" class="ee-num ee-est-input" type="number" min="0" max="100" step="0.1" data-param="hw"></div>
+              <div class="ee-field"><label for="c-jo"><span>No Canadian work, high-wage job offer</span><span>%</span></label><input id="c-jo" class="ee-num ee-est-input" type="number" min="0" max="100" step="0.1" data-param="jo"></div>
+              <button type="button" class="ee-btn ee-reset">Reset to sourced defaults</button>
+              <p class="ee-note" data-draw="calc-defaults" data-source="composition"></p>
+            </div>
+            <div class="ee-receipt" data-draw="calc-receipt" data-source="types snapshots composition" aria-live="polite"></div>
+          </div>
+        </div>
+
+        <div class="ee-card ee-s7">
+          <div class="ee-card-h"><h2>How the projection works</h2></div>
           <div class="ee-card-b ee-prose">
-            <p>The projection for a draw type adds three parts.</p>
+            <p>The cut-off is the lowest score still invited once the round's invitations run out, counting from the top of the profiles eligible for that round. The dashboard works that out on the pool itself, under the rules in force since November 3, 2026.</p>
             <ol>
-              <li><b>Recent pattern.</b> The average of two estimates on the old scores: a weighted average of the last six cut-offs (the newest counts most), and the score in IRCC's latest pool snapshot where a usual-size draw would run out. For the second, we measure what share of profiles at or above each recent cut-off were eligible and invited, and use the median share and median draw size of the last four draws. Profiles are assumed to be spread evenly within each IRCC score band.</li>
-              <li><b>New points.</b> Past cut-offs were set under the old rules. This step is the same pool estimate run on the pool with the November 3 points added under your scenario, minus the estimate on IRCC's last old-rules count. Once IRCC publishes a count dated November 3 or later, that count already uses the new rules and this step adds nothing.</li>
-              <li><b>Draw size.</b> The pool estimate at the draw size you set, minus the estimate at the usual size, both under the new rules.</li>
+              <li><b>The pool.</b> IRCC's latest count of every profile by CRS band. Ten-point bands are spread evenly; the 501–600 band thins out from the 491–500 density instead of spreading its profiles over 100 equal steps.</li>
+              <li><b>Who is eligible below the last cut-off.</b> Everyone eligible above the type's last cut-off was invited in that round, so below it the type's share of the whole pool is used: 66% for Canadian Experience Class (profiles with 12+ months of Canadian work), and each category's share of the pool from IRCC's Table 17a.</li>
+              <li><b>Who arrived since.</b> Above the last cut-off only profiles that arrived since that round can be eligible. While a type's cut-off holds steady, each round takes out what arrived since the one before, so the arrival rate is the invitations per day over its recent rounds, times the days until the next round. The pause adds weeks of arrivals.</li>
+              <li><b>The new points.</b> Each eligible profile is rescored: with Canadian work, +70, +40 or +20 if it is in a 2×, 1.5× or 1.3× high-wage occupation; without Canadian work, 100, 70 or 50 for a high-wage job offer. The new factor takes the higher of the two, so for someone with Canadian work an offer in the same tier never adds anything.</li>
+              <li><b>Where the invitations run out.</b> Counting down from the top of the rescored eligible profiles, the cut-off is the score where the count reaches the round's size.</li>
             </ol>
-            <p>The likely range comes from replaying the recent-pattern step on each type's last six draws and measuring how far off it was, widened by a quarter of the new-points and draw-size effects. The next date is the last draw plus the typical gap between draws of that type over the past year.</p>
-            <p>Provincial Nominee cut-offs sit above 600 and Physicians cut-offs below 301. IRCC reports those scores in one wide band each, so for those types only the recent-pattern step is used.</p>
-            <p>Data comes from IRCC's <a href="https://www.canada.ca/en/immigration-refugees-citizenship/corporate/mandate/policies-operational-instructions-agreements/ministerial-instructions/express-entry-rounds.html" target="_blank" rel="noopener">rounds of invitations</a> feed and is refreshed daily. Rule details come from IRCC's <a href="https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/changes.html" target="_blank" rel="noopener">2026 changes page</a>. These are statistical estimates, not IRCC guidance: IRCC picks each draw's size and type itself.</p>
+            <p>The likely range adds how far the same calculation missed when replayed on the type's recent rounds, and how far the cut-off moves if the high-wage share is 10 points lower or higher.</p>
+            <p>Provincial Nominee rounds invite nearly every nominee, so their cut-off is just the lowest-scoring nominee: the dashboard uses the median of the last four. Senior managers and Physicians scores fall in IRCC's widest bands, so the pool can't place them; every eligible candidate in those rounds has Canadian work in a high-wage occupation, so their recent median gets the new points added (+70 for physicians).</p>
+          </div>
+        </div>
+
+        <div class="ee-card ee-s5">
+          <div class="ee-card-h"><h2>What the audit changed</h2></div>
+          <div class="ee-card-b">
+            <table class="ee-mini">
+              <thead><tr><th>Part</th><th>Before</th><th>Now</th></tr></thead>
+              <tbody>
+                <tr><td>Starting point</td><td>Average of past cut-offs under the old rules, plus adjustments</td><td>The whole pool, rescored under the new rules</td></tr>
+                <tr><td>Who is eligible</td><td>Invited ÷ every profile above the cut-off, the same at every score (CEC 12%)</td><td>Type's share of the whole pool below the last cut-off (CEC 66%); arrivals above it</td></tr>
+                <tr><td>Draw size</td><td>CEC 1,000 → 584, 4,000 → 512; French 8,000 → 5</td><td>Follows the eligible profiles near the cut-off; replayed on past rounds</td></tr>
+                <tr><td>501–600 band</td><td>100 equal steps</td><td>Thins out above 500</td></tr>
+                <tr><td>Canadian work</td><td>36%, from Canadian education</td><td>66%, CEC-eligible profiles in the pool</td></tr>
+                <tr><td>High-wage share</td><td>51–56%, each occupation code counted once</td><td>40%, weighted by people in each occupation</td></tr>
+                <tr><td>Job offers</td><td>7%, added on top of work points</td><td>5%, only for profiles without Canadian work</td></tr>
+                <tr><td>Pause</td><td>Not counted</td><td>Arrivals until the next round counted</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="ee-card ee-s12">
+          <div class="ee-card-h"><h2>Checked against past rounds</h2><span class="ee-hint">The same calculation on old scores, each round against the pool count IRCC published before it</span></div>
+          <div class="ee-card-b">
+            <div class="ee-table-wrap">
+              <table class="ee-table" data-source="types" data-row-key="key">
+                <thead><tr><th>Draw type</th><th>Method</th><th class="num">Rounds replayed</th><th class="num">Average miss</th><th class="num">Repeating the last cut-off</th><th>Eligible share</th></tr></thead>
+                <tbody data-draw="replay-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="ee-card ee-s12">
+          <div class="ee-card-h"><h2>Sources</h2><span class="ee-hint">Every input describes the whole pool or the whole workforce. None comes from people already invited.</span></div>
+          <div class="ee-card-b">
+            <div class="ee-table-wrap">
+              <table class="ee-table ee-src">
+                <thead><tr><th>Input</th><th>Value</th><th>Source</th></tr></thead>
+                <tbody>
+                  <tr><td>Profiles by CRS band, last cut-offs, round sizes</td><td>Every round since 2024</td><td>IRCC <a href="https://www.canada.ca/en/immigration-refugees-citizenship/corporate/mandate/policies-operational-instructions-agreements/ministerial-instructions/express-entry-rounds.html" target="_blank" rel="noopener">rounds of invitations</a>, refreshed daily</td></tr>
+                  <tr><td>Pool with 12+ months of Canadian work</td><td data-draw="src-cw">—</td><td>IRCC pool by program, 2025: 159,675 of 240,675 profiles CEC-eligible, as compiled by <a href="https://mapleimmigrationchronicles.ca/express-entry-2025-noc-analytics-top-20-occupations-in-the-system-as-of-april/" target="_blank" rel="noopener">Maple Immigration Chronicles</a> (secondary; the four programs add up to the total)</td></tr>
+                  <tr><td>Canadian work in high-wage jobs, and tier mix</td><td data-draw="src-hw">—</td><td>Statistics Canada, 2021 Census: non-permanent residents by occupation (<a href="https://doi.org/10.25318/9810058501-eng" target="_blank" rel="noopener">98-10-0585</a>, split into unit groups with <a href="https://doi.org/10.25318/9810044901-eng" target="_blank" rel="noopener">98-10-0449</a>), TEER 0–3, student assistant jobs excluded, matched to the high-wage list</td></tr>
+                  <tr><td>High-wage occupations</td><td>186: 31 at 2×, 89 at 1.5×, 66 at 1.3×</td><td>IRCC <a href="https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/check-score/high-wage.html" target="_blank" rel="noopener">high-wage occupations</a>, October 16, 2026. Checked against census median earnings (<a href="https://doi.org/10.25318/9810058601-eng" target="_blank" rel="noopener">98-10-0586</a>): 81% agree; IRCC's list is more generous, as it keeps the highest level an occupation reached in any recent year</td></tr>
+                  <tr><td>High-wage job offers, no Canadian work</td><td data-draw="src-jo">—</td><td>12.3% of 339,621 eligible profiles in 2024 claimed a job offer (IRCC <a href="https://www.canada.ca/en/immigration-refugees-citizenship/corporate/publications-manuals/express-entry-year-end-report-2024.html" target="_blank" rel="noopener">Year-End Report 2024</a>, Table 3), times the high-wage share. Leans high: offers no longer need an LMIA, but only offers entered in a profile by November 3 count at the rescoring</td></tr>
+                  <tr><td>Category shares of the pool</td><td>STEM 19%, healthcare 8%, trades 4%, transport 4%</td><td>Year-End Report 2024, Table 17a (218,291 candidates in the pool, December 2024); French 9% of eligible profiles (fact sheet)</td></tr>
+                  <tr><td>Category high-wage shares</td><td data-draw="src-cat">—</td><td>Same census weighting, over each category's occupations. This is the share of the category's jobs on the list; candidates also need 12+ months of that work in Canada</td></tr>
+                  <tr><td>Rules from November 3, 2026</td><td>Higher of work or offer; up to 150 points (140 with a spouse)</td><td>IRCC <a href="https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/changes.html" target="_blank" rel="noopener">2026 changes</a> and <a href="https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/check-score/crs-criteria.html" target="_blank" rel="noopener">CRS criteria</a>, as summarised by <a href="https://www.cicnews.com/2026/10/ircc-releases-updated-breakdown-of-express-entry-candidates-by-crs-score-1081904.html" target="_blank" rel="noopener">CIC News</a> and <a href="https://gowlingwlg.com/en-ca/insights-resources/articles/2026/canada-announces-changes-to-express-entry" target="_blank" rel="noopener">Gowling WLG</a></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="ee-prose" style="margin-top: 12px">
+              <p><b>Limits.</b> No public table splits the pool by occupation and score together, so the shares are applied evenly across scores. The census is from 2021, and IRCC's 2025 pool count shows more food service supervisors and cooks (neither high-wage) than the census suggests, so the high-wage share may lean high. Profiles entering during the pause and job offers added after November 3 are not counted. Once IRCC publishes a count under the new rules, the pool view uses it directly and draw types whose last round ran under the new rules need no rescoring. These are statistical estimates, not IRCC guidance: IRCC sets each round's size and type itself.</p>
+            </div>
           </div>
         </div>
       </div>
@@ -445,6 +559,66 @@
 </div>
 
 <script>
+  /* ---------- Model math, shared by the calculations and the drawings ---------- */
+  window.EEM = (() => {
+    const RULES = '2026-11-03', RESUME = '2026-11-17';
+    // IRCC's bands: field, label, lowest and highest score
+    const BANDS = [['dd17', '0–300', 0, 300], ['dd16', '301–350', 301, 350], ['dd15', '351–400', 351, 400],
+      ['dd14', '401–410', 401, 410], ['dd13', '411–420', 411, 420], ['dd12', '421–430', 421, 430], ['dd11', '431–440', 431, 440], ['dd10', '441–450', 441, 450],
+      ['dd8', '451–460', 451, 460], ['dd7', '461–470', 461, 470], ['dd6', '471–480', 471, 480], ['dd5', '481–490', 481, 490], ['dd4', '491–500', 491, 500],
+      ['dd2', '501–600', 501, 600], ['dd1', '601–1200', 601, 1200]];
+    const median = (a) => { const s = [...a].sort((x, y) => x - y), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+    // profiles at each score 0..1200, keeping every band total. Bands up to 50 points wide are spread evenly;
+    // 501-600 thins out from the 491-500 density (exponential), instead of 100 equal steps
+    const density = (snap) => {
+      const d = new Float64Array(1201);
+      BANDS.forEach(([f, , lo, hi]) => { for (let s = lo; s <= hi; s++) d[s] = (snap[f] || 0) / (hi - lo + 1); });
+      const f0 = (snap.dd4 || 0) / 10, tot = snap.dd2 || 0;
+      if (f0 > 0 && tot > 0 && tot < 100 * f0) {
+        let lo = 1e-6, hi = 3;
+        for (let it = 0; it < 60; it++) { const k = (lo + hi) / 2, s = f0 * Math.exp(-k) * (1 - Math.exp(-k * 100)) / (1 - Math.exp(-k)); if (s > tot) lo = k; else hi = k; }
+        const k = (lo + hi) / 2; let sum = 0;
+        for (let i = 0; i < 100; i++) { d[501 + i] = f0 * Math.exp(-k * (i + 1)); sum += d[501 + i]; }
+        for (let i = 0; i < 100; i++) d[501 + i] *= tot / sum;
+      }
+      return d;
+    };
+    // tail[s] = profiles at s or above
+    const tail = (a) => { const t = new Float64Array(1202); for (let s = 1200; s >= 0; s--) t[s] = t[s + 1] + a[s]; return t; };
+    // profiles eligible for a draw type when it runs: below the last cut-off c0, the type's whole-pool share;
+    // at or above c0, everyone eligible was invited, so only those who arrived since (inflow), spread like the pool
+    // up to 600. Scores of 601+ carry a provincial nomination and are invited in Provincial Nominee rounds.
+    const eligible = (d, share, c0, inflow) => {
+      const a = new Float64Array(1201), t = tail(d), top = c0 <= 600 ? 601 : 1201;
+      const up = (t[Math.min(1200, c0)] - (top <= 1200 ? t[top] : 0)) || 1, k = Math.min(1, inflow / up);
+      for (let s = 0; s <= 1200; s++) a[s] = s < c0 ? d[s] * share : s < top ? d[s] * k : 0;
+      return a;
+    };
+    // points gained under the Nov 3 rules: with Canadian work, +70/+40/+20 for 2x/1.5x/1.3x occupations;
+    // without Canadian work, a high-wage job offer gives 100/70/50. With Canadian work an offer in the same
+    // tier never beats the work points (factor takes the higher), so offers only count for the rest
+    const gains = (cw, hw, mix, jo, joMix) => {
+      const g = new Map(), add = (p, q) => { if (q > 0) g.set(p, (g.get(p) || 0) + q); };
+      add(0, cw * (1 - hw)); [70, 40, 20].forEach((p, i) => add(p, cw * hw * mix[i]));
+      add(0, (1 - cw) * (1 - jo)); [100, 70, 50].forEach((p, i) => add(p, (1 - cw) * jo * joMix[i]));
+      return [...g];
+    };
+    const shift = (a, g) => {
+      const out = new Float64Array(1201);
+      for (let s = 0; s <= 1200; s++) if (a[s]) g.forEach(([p, q]) => { out[Math.min(1200, s + p)] += a[s] * q; });
+      return out;
+    };
+    // the lowest score still invited when n profiles are invited from the top
+    const cutoff = (a, n) => {
+      const t = tail(a);
+      for (let s = 1200; s >= 0; s--) if (t[s] >= n) return { score: s, short: false };
+      let low = 0; while (low < 1200 && !a[low]) low++;
+      return { score: low, short: true };
+    };
+    const toBands = (a) => BANDS.map(([f, band, lo, hi]) => { let v = 0; for (let s = lo; s <= hi; s++) v += a[s]; return { f, band, lo, hi, v }; });
+    return { RULES, RESUME, BANDS, median, density, tail, eligible, gains, shift, cutoff, toBands };
+  })();
+
   /* ---------- Calculations ---------- */
   dash.calc('draws', {
     inputs: ['rounds'],
@@ -515,134 +689,72 @@
     },
   });
 
-  dash.calc('forecast', {
-    inputs: ['draws'],
-    title: 'Recent pattern by draw type',
-    description: 'For each draw type: the average of a pool-spread estimate and a weighted average of recent cut-offs, its usual draw size, eligible share and replayed accuracy.',
-    fn: (draws) => {
-      const bands = [['dd17', 0, 300], ['dd16', 301, 350], ['dd15', 351, 400], ['dd14', 401, 410], ['dd13', 411, 420], ['dd12', 421, 430], ['dd11', 431, 440], ['dd10', 441, 450],
-        ['dd8', 451, 460], ['dd7', 461, 470], ['dd6', 471, 480], ['dd5', 481, 490], ['dd4', 491, 500], ['dd2', 501, 600], ['dd1', 601, 1200]];
+  dash.calc('snapshots', {
+    inputs: ['rounds'],
+    title: 'IRCC pool counts',
+    description: 'Every distinct IRCC pool count (profiles by CRS band), oldest first, flagged when it was scored under the rules in force since November 3, 2026.',
+    fn: (rounds) => {
+      const seen = new Map();
+      rounds.forEach((r) => { if (!seen.has(r.distributionAsOn)) seen.set(r.distributionAsOn, r); });
+      return [...seen.values()].sort((a, b) => a.distributionAsOn.localeCompare(b.distributionAsOn)).map((r) => {
+        const o = { asOf: r.distributionAsOn, newRules: r.distributionAsOn >= EEM.RULES, total: r.dd18 };
+        EEM.BANDS.forEach(([f]) => { o[f] = r[f]; });
+        return o;
+      });
+    },
+  });
+
+  dash.calc('types', {
+    inputs: ['draws', 'composition'],
+    title: 'Draw types and their whole-pool inputs',
+    description: 'For each draw type: its last round, usual size, how fast eligible profiles arrive between rounds, its share of the whole pool and occupation mix, and how far the model was off when replayed on its recent rounds.',
+    fn: (draws, comp) => {
       const day = 864e5, ms = (d) => Date.parse(d + 'T00:00:00Z'), iso = (t) => new Date(t).toISOString().slice(0, 10);
-      const median = (a) => { const s = [...a].sort((x, y) => x - y), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
-      const atOrAbove = (r, x) => bands.reduce((s, [f, lo, hi]) => s + (x <= lo ? r[f] : x > hi ? 0 : r[f] * (hi - x + 1) / (hi - lo + 1)), 0);
-      const scoreFor = (r, n) => { let x = 0; for (let s = 0; s <= 1200; s++) if (atOrAbove(r, s) >= n) x = s; return x; };
-      const project = (hist, pool) => {
-        const last = hist.slice(-6), last4 = last.slice(-4);
-        const size = median(last4.map((d) => d.drawSize));
-        const momentum = last.reduce((m, d, i) => (i ? m * 0.5 + d.drawCRS * 0.5 : d.drawCRS), 0);
-        let poolBased = null, share = null;
-        if (last.every((d) => d.drawCRS > 300 && d.drawCRS <= 600)) {
-          share = median(last4.map((d) => d.drawSize / Math.max(1, atOrAbove(d, d.drawCRS))));
-          poolBased = scoreFor(pool, size / share);
-        }
-        return { size, momentum, poolBased, share, predicted: poolBased === null ? momentum : (poolBased + momentum) / 2 };
+      const byKey = new Map(comp.map((r) => [r.key, r])), pool = byKey.get('pool') || {};
+      const asc = [...draws].sort((a, b) => a.drawDate.localeCompare(b.drawDate) || a.drawNumber - b.drawNumber);
+      const latest = asc[asc.length - 1].drawDate;
+      // invitations per day over up to six gaps before index i: in a steady run of rounds, what each round
+      // takes out is what arrived above the last cut-off since the round before
+      const rateBefore = (list, i) => {
+        const w = list.slice(Math.max(0, i - 7), i);
+        if (w.length < 2) return w.length ? w[0].drawSize / 14 : 0;
+        return w.slice(1).reduce((s, d) => s + d.drawSize, 0) / Math.max(7, (ms(w[w.length - 1].drawDate) - ms(w[0].drawDate)) / day);
       };
-      const latestDate = draws.reduce((m, d) => (d.drawDate > m ? d.drawDate : m), '');
-      const pool = draws.reduce((m, d) => (d.distributionAsOn > m.distributionAsOn ? d : m), draws[0]);
-      const keys = [...new Set(draws.map((d) => d.key))].filter((k) => k !== 'military' && k !== 'other');
+      const keys = [...new Set(asc.map((d) => d.key))].filter((k) => k !== 'military' && k !== 'other');
       return keys.map((key) => {
-        const all = draws.filter((d) => d.key === key).sort((a, b) => a.drawDate.localeCompare(b.drawDate));
-        const recent = all.filter((d) => ms(latestDate) - ms(d.drawDate) <= 365 * day);
+        const all = asc.filter((d) => d.key === key);
+        const recent = all.filter((d) => ms(latest) - ms(d.drawDate) <= 365 * day);
         if (recent.length < 2 || all.length < 3) return null;
-        const misses = [];
-        for (let i = Math.max(2, all.length - 6); i < all.length; i++) misses.push(Math.abs(all[i].drawCRS - project(all.slice(0, i), all[i]).predicted));
-        const miss = misses.reduce((s, v) => s + v, 0) / misses.length;
-        const p = project(all, pool);
+        const c = byKey.get(key) || {}, last = all[all.length - 1];
+        const method = key === 'pnp' ? 'pattern' : c.eligibleShare ? 'pool' : c.hwShare != null ? 'shift' : 'pattern';
+        const share = key === 'cec' ? pool.cwShare : c.eligibleShare;
         const tail = recent.slice(-7), gaps = tail.slice(1).map((d, i) => (ms(d.drawDate) - ms(tail[i].drawDate)) / day);
-        const gap = Math.round(median(gaps)), last = all[all.length - 1], predicted = Math.round(p.predicted), spread = Math.max(4, Math.round(miss * 1.25));
+        const gap = Math.max(7, Math.round(EEM.median(gaps)));
+        const floor = latest >= EEM.RULES ? ms(latest) + day : ms(EEM.RESUME);
+        // replay the same model on this type's recent rounds, each against the pool count IRCC published before it
+        const errs = [], naive = [];
+        for (let i = Math.max(3, all.length - 8); i < all.length; i++) {
+          const cur = all[i], prev = all[i - 1];
+          if (prev.drawDate < EEM.RULES && cur.distributionAsOn >= EEM.RULES) continue;
+          let pred;
+          if (method === 'pool') {
+            const inflow = rateBefore(all, i) * (ms(cur.drawDate) - ms(prev.drawDate)) / day;
+            pred = EEM.cutoff(EEM.eligible(EEM.density(cur), share, prev.drawCRS, inflow), cur.drawSize).score;
+          } else pred = EEM.median(all.slice(Math.max(0, i - 4), i).map((d) => d.drawCRS));
+          errs.push(Math.abs(pred - cur.drawCRS));
+          naive.push(Math.abs(prev.drawCRS - cur.drawCRS));
+        }
+        const mean = (a) => (a.length ? Math.round((a.reduce((s, v) => s + v, 0) / a.length) * 10) / 10 : null);
         return {
-          key, category: last.category, draws12m: recent.length, lastDate: last.drawDate, lastCRS: last.drawCRS, lastSize: last.drawSize,
-          gapDays: gap, nextDate: iso(ms(last.drawDate) + gap * day), expectedSize: Math.round(p.size),
-          poolBased: p.poolBased === null ? null : Math.round(p.poolBased), momentum: Math.round(p.momentum),
-          eligibleShare: p.share, predicted, low: predicted - spread, high: predicted + spread, backtestError: Math.round(miss * 10) / 10,
+          key, category: last.category, method, draws12m: recent.length,
+          lastDate: last.drawDate, lastCRS: last.drawCRS, lastSize: last.drawSize, lastAsOf: last.distributionAsOn,
+          gapDays: gap, nextDate: iso(Math.max(ms(last.drawDate) + gap * day, floor)),
+          usualSize: Math.round(EEM.median(all.slice(-4).map((d) => d.drawSize))), ratePerDay: Math.round(rateBefore(all, all.length) * 10) / 10,
+          pattern: Math.round(EEM.median(all.slice(-4).map((d) => d.drawCRS))),
+          eligibleShare: share ?? null, cwShare: c.cwShare ?? null, hwShare: c.hwShare ?? null, mix: c.mix ?? null, basis: c.basis || '',
+          replayError: mean(errs), replayNaive: mean(naive), replayN: errs.length,
         };
       }).filter(Boolean).sort((a, b) => b.draws12m - a.draws12m || a.category.localeCompare(b.category));
-    },
-  });
-
-  dash.calc('outlook', {
-    inputs: ['draws'],
-    title: 'Pool rescored under the Nov 3 rules',
-    description: 'IRCC’s latest pool count with the November 3 high-wage points added, for each scenario of how many profiles gain them. Counts IRCC publishes on or after November 3 already use the new rules and are used as they are.',
-    fn: (draws) => {
-      const bands = [['dd17', '0–300', 0, 300], ['dd16', '301–350', 301, 350], ['dd15', '351–400', 351, 400],
-        ['dd14', '401–410', 401, 410], ['dd13', '411–420', 411, 420], ['dd12', '421–430', 421, 430], ['dd11', '431–440', 431, 440], ['dd10', '441–450', 441, 450],
-        ['dd8', '451–460', 451, 460], ['dd7', '461–470', 461, 470], ['dd6', '471–480', 471, 480], ['dd5', '481–490', 481, 490], ['dd4', '491–500', 491, 500],
-        ['dd2', '501–600', 501, 600], ['dd1', '601–1200', 601, 1200]];
-      // tier mix of high-wage candidates across the whole pool (scripts/assumptions.mjs: Table 17a + high-wage list)
-      const workMix = [[70, 0.15], [40, 0.52], [20, 0.33]], offerMix = [[100, 0.15], [70, 0.52], [50, 0.33]];
-      const pool = draws.reduce((m, d) => (d.distributionAsOn > m.distributionAsOn ? d : m), draws[0]);
-      const alreadyNewRules = pool.distributionAsOn >= '2026-11-03';
-      const bandOf = (s) => bands.findIndex((b) => s >= b[2] && s <= b[3]);
-      const move = {};
-      [0, 20, 40, 50, 70, 100].forEach((p) => {
-        move[p] = bands.map(([, , lo, hi]) => {
-          const out = bands.map(() => 0);
-          for (let s = lo; s <= hi; s++) out[bandOf(Math.min(1200, s + p))] += 1 / (hi - lo + 1);
-          return out;
-        });
-      });
-      const rows = [];
-      for (let e = 0; e <= 50; e += 5) for (let o = 0; o <= 10; o++) {
-        const mix = alreadyNewRules ? [[0, 1]] : [[0, 1 - e / 100 - o / 100]].concat(workMix.map(([p, w]) => [p, w * e / 100]), offerMix.map(([p, w]) => [p, w * o / 100]));
-        const after = bands.map(() => 0);
-        bands.forEach(([f], i) => mix.forEach(([p, w]) => move[p][i].forEach((fr, j) => { after[j] += pool[f] * w * fr; })));
-        bands.forEach(([f, band, lo, hi], j) => rows.push({ scenario: 'e' + e + '-o' + o, workShare: e, offerShare: o, band, lo, hi, before: pool[f], after: Math.round(after[j]) }));
-      }
-      return rows;
-    },
-  });
-
-  dash.calc('outlook_totals', {
-    inputs: ['outlook'],
-    title: 'Top of the pool under the new rules',
-    description: 'Profiles at 501+ and 451+ under the new rules, and in IRCC’s last count before the new points, for each scenario.',
-    fn: (outlook) => {
-      const by = new Map();
-      outlook.forEach((r) => { if (!by.has(r.scenario)) by.set(r.scenario, []); by.get(r.scenario).push(r); });
-      return [...by].map(([scenario, rows]) => {
-        const sum = (min, k) => rows.filter((r) => r.lo >= min).reduce((s, r) => s + r[k], 0);
-        const b501 = sum(501, 'before'), a501 = sum(501, 'after'), b451 = sum(451, 'before'), a451 = sum(451, 'after');
-        return { scenario, before501: b501, after501: a501, change501: a501 - b501, before451: b451, after451: a451, change451: a451 - b451 };
-      });
-    },
-  });
-
-  dash.calc('projection', {
-    inputs: ['outlook', 'forecast'],
-    title: 'Projected cut-off by scenario and draw size',
-    description: 'Recent pattern, plus the effect of the November 3 points and of the next draw size, for each scenario, draw type and draw size.',
-    fn: (outlook, forecast) => {
-      const sizes = [100, 250, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 5000, 6000, 7000, 8000, 10000];
-      const by = new Map();
-      outlook.forEach((r) => { if (!by.has(r.scenario)) by.set(r.scenario, []); by.get(r.scenario).push(r); });
-      const cum = (rows, k) => {
-        const a = new Array(1201).fill(0);
-        for (let s = 0; s <= 1200; s++) a[s] = rows.reduce((t, r) => t + (s <= r.lo ? r[k] : s > r.hi ? 0 : r[k] * (r.hi - s + 1) / (r.hi - r.lo + 1)), 0);
-        return a;
-      };
-      const scoreFor = (a, n) => { let x = 0; for (let s = 0; s <= 1200 && a[s] >= n; s++) x = s; return x; };
-      const today = cum(by.get('e0-o0'), 'before'), out = [];
-      by.forEach((rows, scenario) => {
-        const after = cum(rows, 'after');
-        forecast.forEach((f) => {
-          const spread = f.predicted - f.low;
-          [...new Set(sizes.filter((s) => s >= f.expectedSize / 4 && s <= f.expectedSize * 4).concat([f.expectedSize]))].sort((a, b) => a - b).forEach((size) => {
-            const base = { scenario, key: f.key, category: f.category, size, usual: size === f.expectedSize, lastCRS: f.lastCRS };
-            if (!f.eligibleShare) {
-              out.push({ ...base, modelled: false, ruleEffect: 0, sizeEffect: 0, projected: f.predicted, projectedToday: f.predicted, low: f.low, high: f.high });
-              return;
-            }
-            const n = (s) => s / f.eligibleShare;
-            const usualToday = scoreFor(today, n(f.expectedSize)), usualAfter = scoreFor(after, n(f.expectedSize));
-            const ruleEffect = usualAfter - usualToday, sizeEffect = scoreFor(after, n(size)) - usualAfter;
-            const projected = f.predicted + ruleEffect + sizeEffect, extra = Math.round(0.25 * (Math.abs(ruleEffect) + Math.abs(sizeEffect)));
-            out.push({ ...base, modelled: true, ruleEffect, sizeEffect, projected, projectedToday: f.predicted + scoreFor(today, n(size)) - usualToday,
-              low: projected - spread - extra, high: projected + spread + extra });
-          });
-        });
-      });
-      return out;
     },
   });
 </script>
@@ -666,17 +778,9 @@
       typeColor: (k) => css(typeVar[k] || '--ee-slate') || '#9aa6bb',
       groupColor: (k) => css(groupVar[k] || '--ee-orange'),
       cat: () => p().cat || 'cec',
-      work: () => (p().work ?? 20),
-      offer: () => (p().offer ?? 7),
-      scen: () => 'e' + (p().work ?? 20) + '-o' + (p().offer ?? 7),
-      size: () => p().size ?? null,
+      size: () => (p().size == null ? null : Number(p().size)),
       span: () => p().span || 'all',
-      // the projection row for the current scenario, a draw type and a size (null = usual)
-      proj: (rows, key, size) => {
-        const s = 'e' + (p().work ?? 20) + '-o' + (p().offer ?? 7);
-        const mine = rows.filter((r) => r.scenario === s && r.key === key);
-        return mine.find((r) => (size == null ? r.usual : r.size === size)) || mine.find((r) => r.usual) || null;
-      },
+      pctOf: (v) => (v * 100).toFixed(1).replace(/\.0$/, '') + '%',
       tip: (box) => {
         let t = box.querySelector(':scope > .ee-tip');
         if (!t) { t = document.createElement('div'); t.className = 'ee-tip'; t.hidden = true; box.appendChild(t); }
@@ -722,6 +826,119 @@
 </script>
 
 <script>
+  /* ---------- Projection under the rules in force since November 3, 2026 ---------- */
+  (() => {
+    const day = 864e5, ms = (d) => Date.parse(d + 'T00:00:00Z');
+    const ctx = () => {
+      const t = dash.data('types'), s = dash.data('snapshots'), c = dash.data('composition');
+      if (t.status !== 'ok' || s.status !== 'ok' || c.status !== 'ok' || !s.data.length) return null;
+      const pool = c.data.find((r) => r.key === 'pool');
+      if (!pool) return null;
+      const snaps = s.data, latest = snaps[snaps.length - 1], old = [...snaps].reverse().find((x) => !x.newRules) || null;
+      return { types: t.data, snaps, latest, old, live: latest.newRules, pool, comp: c.data, sig: t.data };
+    };
+    const share = (v, d) => (v == null || v === '' || Number.isNaN(Number(v)) ? d : Math.max(0, Math.min(100, Number(v))) / 100);
+    EE.ctx = ctx;
+    EE.hw = () => { const c = ctx(); return share(dash.params().hw, c ? c.pool.hwShare : 0.5); };
+    EE.jo = () => { const c = ctx(); return share(dash.params().jo, c ? c.pool.joShare : 0.06); };
+    EE.cw = () => { const c = ctx(); return share(dash.params().cw, c ? c.pool.cwShare : 0.66); };
+    EE.type = (key) => { const c = ctx(); return c ? c.types.find((t) => t.key === (key || EE.cat())) || null : null; };
+    EE.nextFor = (t) => { const n = dash.params().next; return t.key === EE.cat() && /^\d{4}-\d{2}-\d{2}$/.test(n || '') && n >= t.lastDate ? n : t.nextDate; };
+    EE.sizeRange = (t) => {
+      const lo = Math.max(50, Math.round(t.usualSize / 4 / 50) * 50), hi = Math.min(10000, Math.max(lo + 500, Math.round((t.usualSize * 4) / 250) * 250));
+      return { lo, hi, step: hi <= 2000 ? 50 : 250 };
+    };
+
+    let memoSig = null, memo = new Map();
+    const cached = (k, f) => {
+      const c = ctx(); if (!c) return null;
+      if (memoSig !== c.sig) { memoSig = c.sig; memo = new Map(); }
+      if (!memo.has(k)) memo.set(k, f(c));
+      return memo.get(k);
+    };
+
+    // eligible profiles of a type at its next round (old scores), and the gains the new points give them
+    const setup = (c, t, hw, jo, cw, next) => {
+      const rescore = !(c.live && t.lastDate >= EEM.RULES);
+      const snap = rescore && c.live ? c.old : c.latest;
+      if (!snap) return null;
+      const d = EEM.density(snap), sh = t.key === 'cec' ? cw : t.eligibleShare;
+      const days = Math.max(0, (ms(next) - ms(t.lastDate)) / day), inflow = t.ratePerDay * days;
+      const a = EEM.eligible(d, sh, t.lastCRS, inflow);
+      const cwT = t.key === 'cec' ? 1 : t.cwShare ?? cw, hwT = t.hwShare ?? hw, mixT = t.mix || c.pool.mix;
+      const g = (h) => (rescore ? EEM.gains(cwT, Math.max(0, Math.min(1, h)), mixT, jo, c.pool.mix) : [[0, 1]]);
+      return { snap, d, sh, days, inflow, a, cwT, hwT, mixT, rescore, g, after: EEM.shift(a, g(hwT)) };
+    };
+
+    // projection for a draw type at a size (null = usual), under the current scenario unless o overrides it
+    EE.project = (key, size, o = {}) => {
+      const hw = o.hw ?? EE.hw(), jo = o.jo ?? EE.jo(), cw = o.cw ?? EE.cw();
+      const t = EE.type(key); if (!t) return null;
+      const next = o.next || EE.nextFor(t), n = Math.max(1, Math.round(size ?? t.usualSize));
+      return cached([t.key, n, hw, jo, cw, next].join('|'), (c) => {
+        const base = { key: t.key, category: t.category, method: t.method, size: n, usual: n === t.usualSize, usualSize: t.usualSize, lastCRS: t.lastCRS, lastDate: t.lastDate, nextDate: next, t };
+        const err = Math.max(3, Math.round(t.replayError ?? 6));
+        if (t.method !== 'pool') {
+          const fresh = c.live && t.lastDate >= EEM.RULES, tiers = [70, 40, 20].filter((p, i) => t.mix && t.mix[i] > 0);
+          const shift = t.method === 'shift' && !fresh ? Math.round([70, 40, 20].reduce((s, p, i) => s + p * t.hwShare * t.mix[i], 0)) : 0;
+          const spread = t.method === 'shift' && !fresh && tiers.length ? Math.round((Math.max(...tiers) - Math.min(...tiers)) / 2) : 0;
+          const projected = t.pattern + shift;
+          return { ...base, modelled: false, projected, oldRule: t.pattern, poolEffect: t.pattern - t.lastCRS, ruleEffect: shift, sizeEffect: 0, err, spread, low: projected - err - spread, high: projected + err + spread };
+        }
+        const m = setup(c, t, hw, jo, cw, next);
+        if (!m) return null;
+        const oldN = EEM.cutoff(m.a, n), oldU = EEM.cutoff(m.a, t.usualSize), newU = EEM.cutoff(m.after, t.usualSize), cut = EEM.cutoff(m.after, n);
+        const lo = EEM.cutoff(EEM.shift(m.a, m.g(m.hwT - 0.1)), n).score, hi = EEM.cutoff(EEM.shift(m.a, m.g(m.hwT + 0.1)), n).score;
+        const stock = m.a.reduce((s, v) => s + v, 0), still = (m.g(m.hwT).find(([p]) => p === 0) || [0, 0])[1];
+        return {
+          ...base, modelled: true, short: cut.short, projected: cut.score, oldRule: oldN.score,
+          poolEffect: oldU.score - t.lastCRS, ruleEffect: newU.score - oldU.score, sizeEffect: cut.score - newU.score,
+          low: Math.min(lo, cut.score) - err, high: Math.max(hi, cut.score) + err, err, hwLo: lo, hwHi: hi,
+          snapAsOf: m.snap.asOf, poolTotal: m.snap.total, belowLast: m.d.slice(0, t.lastCRS).reduce((s, v) => s + v, 0),
+          share: m.sh, backlog: m.a.slice(0, t.lastCRS).reduce((s, v) => s + v, 0), days: m.days, inflow: m.inflow, stock,
+          cwT: m.cwT, hwT: m.hwT, mixT: m.mixT, jo, rescore: m.rescore, gains: m.g(m.hwT), gainers: stock * (1 - still), a: m.a, after: m.after,
+        };
+      });
+    };
+    EE.cur = () => EE.project(EE.cat(), EE.size());
+
+    // the whole pool under the new rules: profiles with Canadian work gain the work points, the rest a job offer
+    const rescorePool = (c, snap, hw, jo, cw) => {
+      const d = EEM.density(snap), cec = c.types.find((t) => t.key === 'cec');
+      const c0 = cec ? cec.lastCRS : 1201, inflow = cec ? cec.ratePerDay * Math.max(0, (ms(snap.asOf) - ms(cec.lastDate)) / day) * cw : 0;
+      const work = EEM.eligible(d, cw, c0, inflow);
+      for (let s = 601; s <= 1200; s++) work[s] = d[s] * cw; // nominees: not cleared by CEC rounds
+      const rest = d.map((v, s) => v - work[s]);
+      const a = EEM.shift(work, EEM.gains(1, hw, c.pool.mix, 0, c.pool.mix)), b = EEM.shift(rest, EEM.gains(0, 0, c.pool.mix, jo, c.pool.mix));
+      return EEM.toBands(a.map((v, s) => v + b[s]));
+    };
+    EE.poolView = () => {
+      const hw = EE.hw(), jo = EE.jo(), cw = EE.cw();
+      return cached(['pool', hw, jo, cw].join('|'), (c) => {
+        const bandsOf = (snap) => EEM.BANDS.map(([f, band, lo, hi]) => ({ band, lo, hi, v: snap[f] }));
+        const before = bandsOf(c.live && c.old ? c.old : c.latest);
+        const after = c.live ? bandsOf(c.latest) : rescorePool(c, c.latest, hw, jo, cw);
+        const rows = before.map((r, i) => ({ band: r.band, lo: r.lo, hi: r.hi, before: r.v, after: Math.round(after[i].v) }));
+        const sum = (min, k) => rows.filter((r) => r.lo >= min).reduce((s, r) => s + r[k], 0);
+        return { live: c.live, asOf: c.latest.asOf, beforeAsOf: (c.live && c.old ? c.old : c.latest).asOf, rows,
+          before501: sum(501, 'before'), after501: sum(501, 'after'), before451: sum(451, 'before'), after451: sum(451, 'after') };
+      });
+    };
+    // once IRCC publishes a count under the new rules: the high-wage share that best turns its last old count into it
+    EE.impliedHw = () => cached('implied|' + EE.jo() + '|' + EE.cw(), (c) => {
+      if (!c.live || !c.old) return null;
+      const cuts = [451, 471, 491, 501, 601], want = cuts.map((x) => EEM.BANDS.filter((b) => b[2] >= x).reduce((s, b) => s + c.latest[b[0]], 0));
+      let best = null;
+      for (let h = 0; h <= 1.0001; h += 0.01) {
+        const got = rescorePool(c, c.old, h, EE.jo(), EE.cw()), err = cuts.reduce((s, x, i) => { const g = got.filter((b) => b.lo >= x).reduce((t, b) => t + b.v, 0); return s + ((g - want[i]) / want[i]) ** 2; }, 0);
+        if (!best || err < best.err) best = { h, err };
+      }
+      return best ? Math.round(best.h * 100) / 100 : null;
+    });
+  })();
+</script>
+
+<script>
   /* ---------- Page navigation, scenario controls ---------- */
   const pages = ['overview', 'forecast', 'pool', 'draws', 'method'];
   const showPage = (id, scroll) => {
@@ -735,12 +952,10 @@
   document.querySelectorAll('.ee-go').forEach((a) => a.addEventListener('click', (ev) => { ev.preventDefault(); showPage(a.dataset.go, true); }));
   showPage((location.hash || '').slice(1), false);
   window.addEventListener('hashchange', () => { const h = (location.hash || '').slice(1); if (pages.includes(h)) showPage(h, false); });
-  // once IRCC publishes a snapshot scored under the new rules, the estimate is no longer needed
+  // once IRCC publishes a count scored under the new rules, the rescoring estimate is no longer needed
   dash.onData(() => {
-    const d = dash.data('pool_summary');
-    const live = d.status === 'ok' && d.data.length && d.data[0].asOf >= '2026-11-03';
-    document.querySelectorAll('.ee-work, .ee-offer').forEach((i) => { i.disabled = !!live; });
-    document.querySelectorAll('.ee-est').forEach((n) => { n.hidden = !!live; });
+    const c = EE.ctx(), live = !!(c && c.live);
+    document.querySelectorAll('.ee-est').forEach((n) => { n.hidden = live; });
     document.querySelectorAll('.ee-live').forEach((n) => { n.hidden = !live; });
   });
 
@@ -748,29 +963,47 @@
   const toggleBar = () => { if (!bar) return; bar.classList.toggle('is-open'); if (sum) sum.setAttribute('aria-expanded', String(bar.classList.contains('is-open'))); };
   if (sum) { sum.addEventListener('click', toggleBar); sum.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleBar(); } }); }
 
-  document.querySelectorAll('.ee-work').forEach((i) => i.addEventListener('input', () => dash.setParams({ work: Number(i.value) })));
-  document.querySelectorAll('.ee-offer').forEach((i) => i.addEventListener('input', () => dash.setParams({ offer: Number(i.value) })));
+  // percentage inputs (sliders and number boxes) bound to a scenario parameter
+  const pctParams = { hw: () => EE.hw(), jo: () => EE.jo(), cw: () => EE.cw() };
+  document.querySelectorAll('[data-param]').forEach((i) => i.addEventListener('input', () => {
+    const k = i.dataset.param;
+    if (k === 'next') { dash.setParams({ next: i.value || null }); return; }
+    if (k === 'size') { const t = EE.type(); const v = Math.round(Number(i.value)); if (t && v > 0) dash.setParams({ size: v === t.usualSize ? null : v }); return; }
+    if (i.value === '') return;
+    dash.setParams({ [k]: Math.max(0, Math.min(Number(i.max || 100), Number(i.value))) });
+  }));
   document.querySelectorAll('.ee-reset').forEach((b) => b.addEventListener('click', () => dash.resetParams()));
   document.querySelectorAll('.ee-span').forEach((b) => b.addEventListener('click', () => dash.setParams({ span: b.dataset.span })));
   dash.onData(() => {
-    document.querySelectorAll('.ee-work').forEach((i) => { if (i !== document.activeElement) i.value = String(EE.work()); });
-    document.querySelectorAll('.ee-offer').forEach((i) => { if (i !== document.activeElement) i.value = String(EE.offer()); });
+    const t = EE.type(), r = t ? EE.cur() : null;
+    document.querySelectorAll('[data-param]').forEach((i) => {
+      if (i === document.activeElement) return;
+      const k = i.dataset.param;
+      if (pctParams[k]) i.value = String(Math.round(pctParams[k]() * 1000) / 10);
+      else if (k === 'next') i.value = t ? EE.nextFor(t) : '';
+      else if (k === 'size' && t) {
+        const sr = EE.sizeRange(t);
+        if (i.type === 'range') { i.min = String(sr.lo); i.max = String(sr.hi); i.step = String(sr.step); }
+        i.value = String(r ? r.size : t.usualSize);
+        i.disabled = t.method !== 'pool';
+      }
+    });
     document.querySelectorAll('.ee-span').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.span === EE.span())));
   });
 
-  dash.draw('work-out', (el) => { el.textContent = EE.work() + '% gain'; });
-  dash.draw('offer-out', (el) => { el.textContent = EE.offer() + '% gain'; });
+  dash.draw('hw-out', (el) => { el.textContent = EE.pctOf(EE.hw()); });
+  dash.draw('jo-out', (el) => { el.textContent = EE.pctOf(EE.jo()); });
 
   dash.draw('type-select', {
     mount: (el) => {
       const sel = document.createElement('select');
-      sel.id = 'ee-type'; sel.className = 'ee-select';
-      sel.addEventListener('change', () => dash.setParams({ cat: sel.value, size: null }));
+      sel.className = 'ee-select'; sel.setAttribute('aria-label', 'Draw type');
+      sel.addEventListener('change', () => dash.setParams({ cat: sel.value, size: null, next: null }));
       el.appendChild(sel);
       return sel;
     },
     update: (el, sel) => {
-      const d = dash.data('forecast');
+      const d = dash.data('types');
       const rows = d.status === 'ok' ? d.data : [];
       const sig = rows.map((r) => r.key).join();
       if (sel.dataset.sig !== sig) { sel.replaceChildren(...rows.map((r) => new Option(r.category, r.key))); sel.dataset.sig = sig; }
@@ -778,37 +1011,13 @@
       sel.disabled = !rows.length;
     },
   });
-
-  const sizeList = () => {
-    const d = dash.data('projection');
-    if (d.status !== 'ok') return [];
-    return d.data.filter((r) => r.scenario === 'e0-o0' && r.key === EE.cat()).sort((a, b) => a.size - b.size);
-  };
-  dash.draw('size-control', {
-    mount: (el) => {
-      const inp = document.createElement('input');
-      inp.type = 'range'; inp.className = 'ee-range'; inp.min = '0'; inp.step = '1'; inp.setAttribute('aria-label', 'Next draw size');
-      inp.addEventListener('input', () => { const list = sizeList(), r = list[Number(inp.value)]; if (r) dash.setParams({ size: r.usual ? null : r.size }); });
-      el.appendChild(inp);
-      return inp;
-    },
-    update: (el, inp) => {
-      const list = sizeList();
-      inp.max = String(Math.max(0, list.length - 1));
-      const want = EE.size(), idx = list.findIndex((r) => (want == null ? r.usual : r.size === want));
-      if (inp !== document.activeElement || idx >= 0) inp.value = String(Math.max(0, idx));
-      inp.disabled = !list.length || (list[0] && !list[0].modelled);
-    },
-  });
   dash.draw('size-label', (el) => {
-    const d = dash.data('projection');
-    const r = d.status === 'ok' ? EE.proj(d.data, EE.cat(), EE.size()) : null;
+    const r = EE.cur();
     el.textContent = !r ? '—' : !r.modelled ? 'Usual size (not modelled)' : EE.num(r.size) + (r.usual ? ' (usual)' : '');
   });
   dash.draw('bar-summary', (el) => {
-    const f = dash.data('forecast'), d = dash.data('projection');
-    const t = f.status === 'ok' ? f.data.find((x) => x.key === EE.cat()) : null, r = d.status === 'ok' ? EE.proj(d.data, EE.cat(), EE.size()) : null;
-    el.textContent = t && r ? t.category + ', ' + EE.num(r.size) + ' invitations, ' + EE.work() + '% / ' + EE.offer() + '% gain points' : '—';
+    const r = EE.cur();
+    el.textContent = r ? r.category + ', ' + EE.num(r.size) + ' invitations, ' + EE.pctOf(EE.hw()) + ' high-wage' : '—';
   });
 </script>
 
@@ -820,33 +1029,30 @@
     el.textContent = v === null || v === undefined || v === '' ? '—' : v;
   });
   const first = (f) => (rows) => f(rows[0]);
-  const scenRow = (f) => (rows, el) => { const r = rows.find((x) => x.scenario === EE.scen()); if (!r) return null; el.dataset.where = 'scenario=' + r.scenario; return f(r); };
-  const projRow = (f) => (rows, el) => {
-    const r = EE.proj(rows, EE.cat(), EE.size()); if (!r) return null;
-    el.dataset.where = 'scenario=' + r.scenario + '&key=' + r.key + '&size=' + r.size; return f(r);
-  };
-  const typeRow = (f) => (rows, el) => { const r = rows.find((x) => x.key === EE.cat()); if (!r) return null; el.dataset.where = 'key=' + r.key; return f(r); };
+  // values from the projection for the selected type and size, and from the pool under the new rules
+  const pval = (name, read) => dash.draw(name, (el) => { const r = EE.cur(), v = r ? read(r) : null; el.textContent = v == null || v === '' ? '—' : v; });
+  const poolVal = (name, read) => dash.draw(name, (el) => { const r = EE.poolView(), v = r ? read(r) : null; el.textContent = v == null ? '—' : v; });
 
   value('rail-draw', 'draws', first((r) => '#' + r.drawNumber + ', ' + EE.shortDate(r.drawDate)));
   value('rail-asof', 'pool_summary', first((r) => EE.shortDate(r.asOf)));
   value('k-pool', 'pool_summary', first((r) => EE.num(r.total)));
   value('k-pool-change', 'pool_summary', first((r) => EE.signed(r.change)));
-  value('k-top', 'outlook_totals', scenRow((r) => EE.num(r.after501)));
-  value('k-top-before', 'outlook_totals', scenRow((r) => EE.num(r.before501)));
-  value('r-501', 'outlook_totals', scenRow((r) => EE.num(r.after501)));
-  value('r-501-change', 'outlook_totals', scenRow((r) => EE.signed(r.change501)));
-  value('r-451', 'outlook_totals', scenRow((r) => EE.num(r.after451)));
-  value('r-451-change', 'outlook_totals', scenRow((r) => EE.signed(r.change451)));
-  value('k-next', 'projection', projRow((r) => r.projected));
-  value('k-next-low', 'projection', projRow((r) => r.low));
-  value('k-next-high', 'projection', projRow((r) => r.high));
-  value('k-next-size', 'projection', projRow((r) => EE.num(r.size)));
-  value('k-next-label', 'forecast', typeRow((r) => r.category));
-  value('k-last', 'forecast', typeRow((r) => r.lastCRS));
-  value('k-last-date', 'forecast', typeRow((r) => EE.date(r.lastDate)));
-  value('k-last-size', 'forecast', typeRow((r) => EE.num(r.lastSize)));
-  value('hero-title', 'forecast', typeRow((r) => r.category));
-  value('wf-title', 'forecast', typeRow((r) => r.category));
+  poolVal('k-top', (r) => EE.num(r.after501));
+  poolVal('k-top-before', (r) => EE.num(r.before501));
+  poolVal('r-501', (r) => EE.num(r.after501));
+  poolVal('r-501-change', (r) => EE.signed(r.after501 - r.before501));
+  poolVal('r-451', (r) => EE.num(r.after451));
+  poolVal('r-451-change', (r) => EE.signed(r.after451 - r.before451));
+  pval('k-next', (r) => r.projected);
+  pval('k-next-low', (r) => r.low);
+  pval('k-next-high', (r) => r.high);
+  pval('k-next-size', (r) => EE.num(r.size));
+  pval('k-next-label', (r) => r.category);
+  pval('k-last', (r) => r.lastCRS);
+  pval('k-last-date', (r) => EE.date(r.lastDate));
+  pval('k-last-size', (r) => EE.num(r.t.lastSize));
+  pval('hero-title', (r) => r.category);
+  pval('wf-title', (r) => r.category);
   value('p-asof', 'pool_summary', first((r) => EE.shortDate(r.asOf)));
   value('k-pool-2', 'pool_summary', first((r) => EE.num(r.total)));
 
@@ -867,17 +1073,16 @@
 <script>
   /* ---------- Hero: cut-off history with the projection ---------- */
   dash.draw('hero-chart', (el) => {
-    const dr = dash.data('draws'), pj = dash.data('projection');
+    const dr = dash.data('draws');
     el.replaceChildren();
-    if (dr.status !== 'ok' || pj.status !== 'ok') return;
-    const key = EE.cat(), r = EE.proj(pj.data, key, EE.size());
+    if (dr.status !== 'ok') return;
+    const key = EE.cat(), r = EE.cur();
     let pts = dr.data.filter((d) => d.key === key).map((d) => ({ ...d, t: EE.toDate(d.drawDate) })).sort((a, b) => a.t - b.t);
     if (!pts.length || !r) { EE.empty(el, 'No draws of this type yet.'); return; }
     const span = EE.span();
     if (span !== 'all') { const cut = d3.utcMonth.offset(pts[pts.length - 1].t, -Number(span)); const k = pts.filter((p) => p.t >= cut); if (k.length >= 2) pts = k; }
-    const f = dash.data('forecast').data.find((x) => x.key === key);
-    // rounds are paused for rescoring until about two weeks after November 3
-    const nextT = new Date(Math.max(+d3.utcDay.offset(pts[pts.length - 1].t, Math.max(14, f ? f.gapDays : 14)), +EE.toDate('2026-11-17')));
+    // the next round: the type's usual gap, and no earlier than the end of the rescoring pause
+    const nextT = EE.toDate(r.nextDate);
     const W = Math.max(280, el.clientWidth), H = W < 560 ? 280 : 330, mt = 44, mb = 30, mr = W < 560 ? 34 : 56;
     const ys = pts.map((p) => p.drawCRS).concat([r.low, r.high]);
     const pad = Math.max(8, (d3.max(ys) - d3.min(ys)) * 0.12);
@@ -936,7 +1141,7 @@
           EE.line(tip, 'ee-tip-h', [EE.date(h.p.drawDate) + ', draw #' + h.p.drawNumber]);
           EE.line(tip, '', ['Cut-off ' + h.p.drawCRS + ', ' + EE.num(h.p.drawSize) + ' invitations']);
         } else {
-          EE.line(tip, 'ee-tip-h', ['Next draw, after the rescoring pause']);
+          EE.line(tip, 'ee-tip-h', ['Next draw, about ' + EE.date(h.r.nextDate)]);
           EE.line(tip, '', ['Cut-off ' + h.r.projected + ' (likely ' + h.r.low + ' to ' + h.r.high + ')']);
           EE.line(tip, '', [EE.num(h.r.size) + ' invitations' + (h.r.usual ? ', usual size' : '')]);
         }
@@ -986,10 +1191,10 @@
   });
 
   dash.draw('mix-chart', (el) => {
-    const d = dash.data('outlook');
+    const pv = EE.poolView();
     el.replaceChildren();
-    if (d.status !== 'ok' || !d.data.length) return;
-    const bandRows = d.data.filter((x) => x.scenario === EE.scen()), sumW = (f) => bandRows.filter(f).reduce((t, x) => t + x.after, 0);
+    if (!pv) return;
+    const bandRows = pv.rows, sumW = (f) => bandRows.filter(f).reduce((t, x) => t + x.after, 0);
     const r = { b601: sumW((x) => x.lo >= 601), b501: sumW((x) => x.lo === 501), b451: sumW((x) => x.lo >= 451 && x.lo <= 491), b401: sumW((x) => x.lo >= 401 && x.lo <= 441), b0: sumW((x) => x.lo <= 351) };
     r.total = r.b601 + r.b501 + r.b451 + r.b401 + r.b0;
     const parts = [['b601', '601 and above', '--ee-magenta'], ['b501', '501–600', '--ee-coral'], ['b451', '451–500', '--ee-orange'], ['b401', '401–450', '--ee-cyan'], ['b0', '400 or less', '--ee-blue']]
@@ -1041,15 +1246,13 @@
 <script>
   /* ---------- Forecast page ---------- */
   dash.draw('wf-chart', (el) => {
-    const fc = dash.data('forecast'), pj = dash.data('projection');
+    const r = EE.cur();
     el.replaceChildren();
-    if (fc.status !== 'ok' || pj.status !== 'ok') return;
-    const f = fc.data.find((x) => x.key === EE.cat()), r = EE.proj(pj.data, EE.cat(), EE.size());
-    if (!f || !r) return;
+    if (!r) return;
     const steps = [
-      { label: 'Last cut-off', abs: f.lastCRS },
-      { label: 'Recent pattern', d: f.predicted - f.lastCRS },
-      { label: 'New points', d: r.ruleEffect, off: !r.modelled },
+      { label: 'Last cut-off', abs: r.lastCRS },
+      { label: r.modelled ? 'Pool and pause' : 'Recent pattern', d: r.poolEffect },
+      { label: 'New points', d: r.ruleEffect, off: r.method === 'pattern' },
       { label: 'Draw size', d: r.sizeEffect, off: !r.modelled },
       { label: 'Projected', abs: r.projected, end: true },
     ];
@@ -1082,40 +1285,40 @@
   });
 
   dash.draw('sens-chart', (el) => {
-    const pj = dash.data('projection');
     el.replaceChildren();
-    if (pj.status !== 'ok') return;
-    const rows = pj.data.filter((r) => r.scenario === EE.scen() && r.key === EE.cat()).sort((a, b) => a.size - b.size);
-    if (!rows.length) return;
-    if (!rows[0].modelled) { EE.empty(el, 'Draw size is not modelled for this draw type: IRCC reports its scores in one wide band.'); return; }
-    const cur = EE.proj(pj.data, EE.cat(), EE.size()), usual = rows.find((r) => r.usual);
+    const cur = EE.cur(), t = EE.type();
+    if (!cur || !t) return;
+    if (!cur.modelled) { EE.empty(el, cur.method === 'shift' ? 'Draw size is not modelled for this type: IRCC reports its scores in one wide band, so only the new points are added to its recent cut-offs.' : 'Draw size is not modelled for Provincial Nominee rounds: nearly every nominee is invited, so the cut-off is the lowest-scoring nominee.'); return; }
+    const sr = EE.sizeRange(t), n = 22, sizes = new Set([t.usualSize, cur.size]);
+    for (let i = 0; i <= n; i++) sizes.add(Math.round(sr.lo * Math.pow(sr.hi / sr.lo, i / n) / 10) * 10);
+    const rows = [...sizes].sort((a, b) => a - b).map((s) => EE.project(t.key, s)).filter(Boolean);
     const W = Math.max(280, el.clientWidth), H = 260, mt = 26, mb = 36, mr = 12;
-    const ys = rows.map((r) => r.projected);
+    const ys = rows.flatMap((r) => [r.projected, r.oldRule]);
     const y = d3.scaleLinear([d3.min(ys) - 6, d3.max(ys) + 6], [H - mb, mt]).nice();
     const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', 'Cut-off by draw size');
     const ml = EE.yAxis(svg, y, null, 5);
     const x = d3.scaleLog([rows[0].size, rows[rows.length - 1].size], [ml + 6, W - mr]);
     EE.grid(svg, y, ml, W - mr, 5);
     const xa = svg.append('g').attr('transform', `translate(0,${H - mb})`)
-      .call(d3.axisBottom(x).tickValues([100, 250, 500, 1000, 2500, 5000, 10000].filter((v) => v >= rows[0].size && v <= rows[rows.length - 1].size && (W > 420 || [100, 500, 2500, 10000].includes(v)))).tickFormat(d3.format('~s')).tickSize(0).tickPadding(10))
+      .call(d3.axisBottom(x).tickValues([50, 100, 250, 500, 1000, 2500, 5000, 10000].filter((v) => v >= rows[0].size && v <= rows[rows.length - 1].size && (W > 420 || [100, 500, 2500, 10000].includes(v)))).tickFormat(d3.format('~s')).tickSize(0).tickPadding(10))
       .attr('font-size', null).attr('font-family', null);
     xa.select('.domain').style('stroke', EE.css('--ee-line'));
     svg.append('text').attr('x', W - mr).attr('y', H - 4).attr('text-anchor', 'end').text('Invitations in the next draw');
-    svg.append('line').attr('x1', x(usual.size)).attr('x2', x(usual.size)).attr('y1', mt - 8).attr('y2', H - mb).style('stroke', EE.css('--ee-faint')).attr('stroke-dasharray', '3 3');
-    svg.append('text').attr('x', x(usual.size) + 4).attr('y', mt - 10).text('usual ' + EE.num(usual.size));
+    svg.append('line').attr('x1', x(t.usualSize)).attr('x2', x(t.usualSize)).attr('y1', mt - 8).attr('y2', H - mb).style('stroke', EE.css('--ee-faint')).attr('stroke-dasharray', '3 3');
+    svg.append('text').attr('x', x(t.usualSize) + 4).attr('y', mt - 10).text('usual ' + EE.num(t.usualSize));
     const ln = (k) => d3.line((r) => x(r.size), (r) => y(r[k]));
+    svg.append('path').datum(rows).style('fill', 'none').style('stroke', EE.css('--ee-slate')).attr('stroke-width', 1.8).attr('stroke-dasharray', '5 4').attr('d', ln('oldRule'));
     svg.append('path').datum(rows).style('fill', 'none').style('stroke', EE.css('--ee-blue')).attr('stroke-width', 2.5).attr('stroke-linejoin', 'round').attr('d', ln('projected'));
-    if (cur) {
-      svg.append('circle').attr('cx', x(cur.size)).attr('cy', y(cur.projected)).attr('r', 5.5).style('fill', EE.css('--ee-card')).style('stroke', EE.css('--ee-coral')).attr('stroke-width', 2.5);
-      EE.bubble(svg.append('g'), x(cur.size), y(cur.projected) - 6, cur.projected + ' at ' + d3.format('~s')(cur.size), EE.css('--ee-coral'), '#fff');
-    }
+    svg.append('circle').attr('cx', x(cur.size)).attr('cy', y(cur.projected)).attr('r', 5.5).style('fill', EE.css('--ee-card')).style('stroke', EE.css('--ee-coral')).attr('stroke-width', 2.5);
+    EE.bubble(svg.append('g'), x(cur.size), y(cur.projected) - 6, cur.projected + ' at ' + d3.format('~s')(cur.size), EE.css('--ee-coral'), '#fff');
     const tip = EE.tip(el);
     svg.append('rect').attr('x', ml).attr('y', 0).attr('width', W - ml).attr('height', H).style('fill', 'transparent')
       .on('pointermove', (ev) => {
         const [mx] = d3.pointer(ev), h = d3.least(rows, (q) => Math.abs(x(q.size) - mx));
         tip.replaceChildren();
         EE.line(tip, 'ee-tip-h', [EE.num(h.size) + ' invitations' + (h.usual ? ' (usual)' : '')]);
-        EE.line(tip, '', ['Projected cut-off  ' + h.projected + ' (likely ' + h.low + ' to ' + h.high + ')']);
+        EE.line(tip, '', [EE.swatch(EE.css('--ee-blue')), 'New rules  ' + h.projected + ' (likely ' + h.low + ' to ' + h.high + ')']);
+        EE.line(tip, '', [EE.swatch(EE.css('--ee-slate')), 'Same pool, old rules  ' + h.oldRule]);
         const k = svg.node().getBoundingClientRect().width / W;
         EE.placeTip(el, tip, x(h.size) * k, y(h.projected) * k);
       })
@@ -1123,22 +1326,22 @@
   });
 
   dash.draw('types-body', (tb) => {
-    const pj = dash.data('projection');
+    const td0 = dash.data('types');
     tb.replaceChildren();
-    if (pj.status !== 'ok') return;
-    const cur = EE.cat(), keys = [...new Set(pj.data.map((r) => r.key))];
-    const rows = keys.map((k) => EE.proj(pj.data, k, k === cur ? EE.size() : null)).filter(Boolean);
+    if (td0.status !== 'ok') return;
+    const cur = EE.cat();
+    const rows = td0.data.map((t) => EE.project(t.key, t.key === cur ? EE.size() : null)).filter(Boolean);
     const maxAbs = Math.max(20, d3.max(rows, (r) => Math.abs(r.projected - r.lastCRS)));
     rows.forEach((r) => {
       const tr = document.createElement('tr');
-      tr.dataset.key = r.scenario + ',' + r.key + ',' + r.size;
+      tr.dataset.key = r.key + ',' + r.size;
       tr.className = 'ee-click' + (r.key === cur ? ' is-picked' : '');
-      const vals = [null, EE.num(r.size), r.projected, r.low, r.high, r.modelled ? EE.signed(r.ruleEffect) : 'n/a', r.modelled ? EE.signed(r.sizeEffect) : 'n/a', null];
+      const vals = [null, EE.num(r.size), r.projected, r.low, r.high, EE.signed(r.poolEffect), r.method === 'pattern' ? 'n/a' : EE.signed(r.ruleEffect), r.modelled ? EE.signed(r.sizeEffect) : 'n/a', null];
       vals.forEach((v, i) => {
         const td = document.createElement('td');
-        if (i > 0 && i < 7) td.className = 'num';
+        if (i > 0 && i < 8) td.className = 'num';
         if (i === 0) EE.typeCell(td, r.key, r.category);
-        else if (i === 7) {
+        else if (i === 8) {
           const w = 150, h = 16, dlt = r.projected - r.lastCRS, s = d3.scaleLinear([-maxAbs, maxAbs], [0, w]);
           const svg = d3.select(td).append('svg').attr('width', w + 46).attr('height', h).attr('aria-hidden', 'true');
           svg.append('line').attr('x1', s(0)).attr('x2', s(0)).attr('y1', 0).attr('y2', h).style('stroke', EE.css('--ee-faint'));
@@ -1198,13 +1401,10 @@
   };
 
   dash.draw('rescored-chart', (el) => {
-    const d = dash.data('outlook'), pj = dash.data('projection');
+    const pv = EE.poolView(), r = EE.cur();
     el.replaceChildren();
-    if (d.status !== 'ok') return;
-    const rows = d.data.filter((r) => r.scenario === EE.scen());
-    const r = pj.status === 'ok' ? EE.proj(pj.data, EE.cat(), EE.size()) : null;
-    const t = dash.data('forecast').data.find((x) => x.key === EE.cat());
-    drawBands(el, rows, 'after', 'before', EE.css('--ee-blue'), { fill: EE.css('--ee-track'), stroke: EE.css('--ee-slate') }, 'New rules', 'Before new points', r && t ? { v: r.projected, label: 'Next ' + t.category + ' ≈ ' + r.projected } : null);
+    if (!pv) return;
+    drawBands(el, pv.rows, 'after', 'before', EE.css('--ee-blue'), { fill: EE.css('--ee-track'), stroke: EE.css('--ee-slate') }, pv.live ? 'IRCC, new rules' : 'New rules, estimated', pv.live ? 'IRCC, old rules' : 'IRCC count, old rules', r ? { v: r.projected, label: 'Next ' + r.category + ' ≈ ' + r.projected } : null);
   });
 
   dash.draw('trend-chart', (el) => {
@@ -1296,5 +1496,122 @@
     const rows = d.data.filter((r) => !q || [r.drawNumber, r.drawDate, r.category, r.drawName, EE.date(r.drawDate)].join(' ').toLowerCase().includes(q))
       .slice().sort((a, b) => { const va = a[sortState.k], vb = b[sortState.k]; return (va < vb ? -1 : va > vb ? 1 : 0) * sortState.dir; });
     rows.forEach((r) => tb.appendChild(EE.drawRow(r)));
+  });
+</script>
+
+<script>
+  /* ---------- Method: calculator, replay check, sourced values ---------- */
+  const comp = () => { const c = EE.ctx(); return c ? c.pool : null; };
+  const pc = (v) => (v == null ? '—' : EE.pctOf(v));
+  const mixText = (m) => (m ? m.map((v) => Math.round(v * 100) + '%').join(' / ') : '—');
+  const cats = () => { const c = EE.ctx(); if (!c) return '—'; const g = (k) => c.comp.find((r) => r.key === k); return [['health', 'healthcare'], ['trades', 'trades'], ['transport', 'transport'], ['stem', 'STEM']].map(([k, n]) => (g(k) ? n + ' ' + pc(g(k).hwShare) : null)).filter(Boolean).join(', '); };
+  [['c-cw', () => pc(comp() && comp().cwShare)], ['c-hw', () => pc(comp() && comp().hwShare)], ['c-jo', () => pc(comp() && comp().joShare)], ['c-mix', () => mixText(comp() && comp().mix)], ['c-cats', cats],
+    ['src-cw', () => pc(comp() && comp().cwShare)], ['src-hw', () => (comp() ? pc(comp().hwShare) + ' (' + mixText(comp().mix) + ')' : '—')], ['src-jo', () => pc(comp() && comp().joShare)], ['src-cat', cats],
+  ].forEach(([name, f]) => dash.draw(name, (el) => { el.textContent = f(); }));
+  dash.draw('asof-long', (el) => { const c = EE.ctx(); el.textContent = c ? EE.date((c.live && c.old ? c.old : c.latest).asOf) : 'latest'; });
+  dash.draw('calc-defaults', (el) => {
+    const c = comp(), imp = EE.impliedHw();
+    el.textContent = !c ? '' : 'Sourced defaults: ' + pc(c.cwShare) + ' with Canadian work, ' + pc(c.hwShare) + ' of them in high-wage jobs, ' + pc(c.joShare) + ' job offers.'
+      + (imp != null ? ' IRCC’s first count under the new rules fits a high-wage share of about ' + pc(imp) + '.' : '');
+  });
+
+  // one line of the receipt: operator, label (with an optional note), value
+  const line = (box, op, label, val, opts = {}) => {
+    const row = document.createElement('div'); row.className = 'ee-rc-row' + (opts.cls ? ' ' + opts.cls : '');
+    const o = document.createElement('span'); o.className = 'ee-rc-op'; o.textContent = op || '';
+    const l = document.createElement('span'); l.className = 'ee-rc-label'; l.textContent = label;
+    if (opts.note) { const s = document.createElement('small'); s.textContent = opts.note; l.appendChild(s); }
+    const v = document.createElement('span'); v.className = 'ee-rc-val'; v.textContent = val;
+    row.append(o, l, v); box.appendChild(row);
+  };
+  const head = (box, text) => { const h = document.createElement('div'); h.className = 'ee-rc-head'; h.textContent = text; box.appendChild(h); };
+  const n0 = (v) => EE.num(Math.round(v));
+  const delta = (a, b) => (a == null || b == null ? '—' : EE.signed(a - b));
+
+  dash.draw('calc-receipt', (box) => {
+    box.replaceChildren();
+    const r = EE.cur();
+    if (!r) { const e = document.createElement('div'); e.className = 'ee-empty'; e.textContent = 'Loading IRCC data…'; box.appendChild(e); return; }
+    const t = r.t;
+    if (!r.modelled) {
+      head(box, r.category + ': recent rounds');
+      line(box, '', 'Median cut-off of the last four rounds', String(t.pattern), { note: 'Old rules. Last round ' + EE.date(t.lastDate) + ' at ' + t.lastCRS });
+      if (r.method === 'shift') {
+        line(box, '+', 'New points for every eligible candidate', EE.signed(r.ruleEffect), { note: 'All have 12+ months of Canadian work in high-wage occupations (' + mixText(t.mix) + ' in 2× / 1.5× / 1.3×), so the whole group moves up together' });
+      } else {
+        line(box, '', 'New points', 'not added', { note: 'Nearly every nominee is invited, so the cut-off is the lowest-scoring nominee. Pool counts can’t place that score: 601+ is one IRCC band' });
+      }
+      line(box, '=', 'Projected cut-off', String(r.projected), { cls: 'ee-rc-total' });
+      line(box, '', 'Likely range', r.low + ' to ' + r.high, { note: 'Average miss of this method on recent rounds: ' + (t.replayError ?? '—') + ' points' });
+      return;
+    }
+    const isCec = r.key === 'cec';
+    head(box, 'Who can be invited');
+    line(box, '', 'IRCC pool count, ' + EE.date(r.snapAsOf), n0(r.poolTotal), { note: 'Every profile in the pool, by CRS band' });
+    line(box, '', 'Below the last cut-off, ' + r.lastCRS, n0(r.belowLast), { note: 'Last ' + r.category + ' round ' + EE.date(r.lastDate) + '; everyone eligible above it was invited' });
+    line(box, '×', isCec ? 'Share with 12+ months of Canadian work' : 'Share eligible for this round', pc(r.share), { note: isCec ? 'CEC-eligible share of the whole pool' : t.basis });
+    line(box, '=', 'Eligible, waiting below ' + r.lastCRS, n0(r.backlog));
+    line(box, '+', 'Arrivals above ' + r.lastCRS + ' until ' + EE.date(r.nextDate), n0(r.inflow), { note: EE.num(t.ratePerDay) + ' a day (invitations per day over recent rounds) × ' + Math.round(r.days) + ' days' });
+    line(box, '=', 'Eligible at the next round', n0(r.stock), { cls: 'ee-rc-sub' });
+
+    head(box, 'New points, rules from November 3');
+    if (r.rescore) {
+      const withWork = r.stock * r.cwT;
+      line(box, '×', 'With Canadian work', pc(r.cwT) + ' = ' + n0(withWork), { note: isCec ? 'Every CEC candidate has Canadian work' : 'Whole-pool share' });
+      line(box, '×', 'Of those, in high-wage occupations', pc(r.hwT), { note: isCec ? 'Scenario value' : 'This category’s occupations, weighted by people' });
+      [70, 40, 20].forEach((pts, i) => line(box, '', '  +' + pts + ' points (' + ['2×', '1.5×', '1.3×'][i] + ' occupations, ' + Math.round(r.mixT[i] * 100) + '%)', n0(withWork * r.hwT * r.mixT[i]), { cls: 'ee-rc-indent' }));
+      if (r.cwT < 1) {
+        const without = r.stock * (1 - r.cwT);
+        line(box, '×', 'No Canadian work, high-wage job offer', pc(r.jo) + ' of ' + n0(without), { note: '100, 70 or 50 points; the factor takes the higher of work or offer, so offers only lift these profiles' });
+      }
+      line(box, '=', 'Profiles gaining points', n0(r.gainers) + ' (' + pc(r.gainers / r.stock) + ')', { cls: 'ee-rc-sub' });
+    } else {
+      line(box, '', 'Already in IRCC’s count', 'no rescoring', { note: 'The last round and the pool count both use the new rules' });
+    }
+
+    head(box, 'Where ' + EE.num(r.size) + ' invitations run out');
+    const tl = EEM.tail(r.after), tlOld = EEM.tail(r.a), c = r.projected;
+    [c + 10, c + 5, c + 2, c + 1, c, c - 1, c - 5].filter((s) => s >= 0 && s <= 1200).forEach((s) => {
+      line(box, s === c ? '◀' : '', 'Eligible scoring ' + s + ' or more', n0(tl[s]), { cls: s === c ? 'ee-rc-cut' : 'ee-rc-ladder', note: (s === c ? 'First score where the count reaches ' + EE.num(r.size) + '. ' : '') + 'Before the new points: ' + n0(tlOld[s]) });
+    });
+    line(box, '=', 'Projected cut-off', String(r.projected), { cls: 'ee-rc-total' });
+    line(box, '', 'Likely range', r.low + ' to ' + r.high, { note: 'High-wage share ±10 points gives ' + r.hwLo + ' to ' + r.hwHi + '; plus the ' + r.err + '-point average miss on recent rounds' });
+
+    head(box, 'From the last cut-off');
+    line(box, '', 'Last cut-off, old rules', String(r.lastCRS));
+    line(box, '+', 'Pool and pause', EE.signed(r.poolEffect), { note: 'Same pool on old scores at the usual size (' + EE.num(r.usualSize) + '): ' + (r.lastCRS + r.poolEffect) });
+    line(box, '+', 'New points', EE.signed(r.ruleEffect));
+    line(box, '+', 'Draw size', EE.signed(r.sizeEffect), { note: r.usual ? 'Usual size' : EE.num(r.size) + ' instead of ' + EE.num(r.usualSize) });
+    line(box, '=', 'Projected', String(r.projected), { cls: 'ee-rc-sub' });
+
+    head(box, 'What moves it');
+    const sens = document.createElement('div'); sens.className = 'ee-sensi';
+    const chip = (label, v) => { const d = document.createElement('div'); const a = document.createElement('span'); a.textContent = label; const b = document.createElement('b'); b.textContent = v; d.append(a, b); sens.appendChild(d); };
+    const up = EE.project(r.key, r.size + 1000), down = r.size > 1000 ? EE.project(r.key, r.size - 1000) : null;
+    chip('1,000 more invitations', up ? delta(up.projected, c) : '—');
+    chip('1,000 fewer invitations', down ? delta(down.projected, c) : '—');
+    chip('High-wage share +10 points', delta(r.hwHi, c));
+    if (isCec) { const cw = EE.project(r.key, r.size, { cw: Math.min(1, EE.cw() + 0.1) }); chip('Canadian work share +10 points', cw ? delta(cw.projected, c) : '—'); }
+    else { const jo = EE.project(r.key, r.size, { jo: Math.min(1, EE.jo() + 0.05) }); chip('Job offers +5 points', jo ? delta(jo.projected, c) : '—'); }
+    const wk = EE.project(r.key, r.size, { next: new Date(Date.parse(r.nextDate + 'T00:00:00Z') + 7 * 864e5).toISOString().slice(0, 10) });
+    chip('Round a week later', wk ? delta(wk.projected, c) : '—');
+    box.appendChild(sens);
+  });
+
+  dash.draw('replay-body', (tb) => {
+    tb.replaceChildren();
+    const d = dash.data('types');
+    if (d.status !== 'ok') return;
+    const names = { pool: 'Pool calculation', shift: 'Recent median + new points', pattern: 'Recent median' };
+    d.data.forEach((t) => {
+      const tr = document.createElement('tr'); tr.dataset.key = t.key;
+      [null, names[t.method], t.replayN, t.replayError == null ? '—' : t.replayError.toFixed(1), t.replayNaive == null ? '—' : t.replayNaive.toFixed(1), t.method === 'pool' ? pc(t.eligibleShare) : 'n/a'].forEach((v, i) => {
+        const td = document.createElement('td');
+        if (i >= 2 && i <= 4) td.className = 'num';
+        if (i === 0) EE.typeCell(td, t.key, t.category); else td.textContent = v;
+        tr.appendChild(td);
+      });
+      tb.appendChild(tr);
+    });
   });
 </script>

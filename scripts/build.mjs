@@ -16,6 +16,7 @@ await mkdir(join(out, 'data'), { recursive: true });
 await writeFile(join(out, 'index.html'), shell.replace('<!-- PAGE -->', scoped(page)));
 await copyFile(join(root, 'src/dash-shim.js'), join(out, 'dash-shim.js'));
 await copyFile(join(root, 'data/ee_rounds.json'), join(out, 'data/ee_rounds.json'));
+await copyFile(join(root, 'data/pool_composition.json'), join(out, 'data/pool_composition.json'));
 await writeFile(join(out, '.nojekyll'), '');
 const data = JSON.parse(await readFile(join(root, 'data/ee_rounds.json'), 'utf8'));
 console.log(`Built ${out}: ${data.rows.length} draws, latest #${data.rows[0]?.drawNumber} (${data.rows[0]?.drawDate}), fetched ${data.fetchedAt}`);

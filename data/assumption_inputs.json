@@ -1,16 +1,36 @@
 {
-  "note": "Whole-pool inputs for the high-wage scenario defaults. No figure here comes from invited candidates.",
+  "note": "Whole-pool inputs for the pool composition defaults. Every figure describes the whole pool or every profile submitted; none comes from invited candidates.",
   "pool": {
     "source": "IRCC Express Entry Year-End Report 2024, Table 17a: candidates in the pool who qualify for CBS criteria, as of Dec 1, 2024",
     "url": "https://www.canada.ca/en/immigration-refugees-citizenship/corporate/publications-manuals/express-entry-year-end-report-2024.html",
     "total": 218291,
     "byCategory": { "STEM": 41880, "Health": 17066, "Trade": 7742, "Transport": 7673, "Agri": 3124 }
   },
+  "poolByProgram": {
+    "source": "IRCC Express Entry pool by program and NOC, 2025 snapshot, as compiled by Maple Immigration Chronicles (Express Entry 2025: NOC Analytics). Secondary compilation; the four programs add up to the stated total.",
+    "url": "https://mapleimmigrationchronicles.ca/express-entry-2025-noc-analytics-top-20-occupations-in-the-system-as-of-april/",
+    "total": 240675,
+    "CEC": 159675,
+    "FSW": 79965,
+    "FST": 505,
+    "PNP": 530
+  },
+  "largestPoolOccupations": {
+    "source": "Same 2025 pool snapshot: the most common primary occupations in the pool",
+    "total": 240675,
+    "occupations": [
+      { "noc": "62020", "name": "Food service supervisors", "profiles": 13900 },
+      { "noc": "63200", "name": "Cooks", "profiles": 8970 },
+      { "noc": "21231", "name": "Software engineers and designers", "profiles": 6900 }
+    ]
+  },
   "profiles2024": {
-    "source": "IRCC Express Entry Year-End Report 2024, Table 3: eligible profiles by additional point type, 2024",
+    "source": "IRCC Express Entry Year-End Report 2024, Table 3 (eligible profiles by additional point type) and fact sheet (category shares of eligible profiles)",
+    "factSheet": "https://www.canada.ca/en/immigration-refugees-citizenship/corporate/publications-manuals/express-entry-year-end-report-2024/fact-sheet-2024.html",
     "eligibleProfiles": 339621,
     "educationInCanada": 123387,
-    "arrangedEmployment": 41899
+    "arrangedEmployment": 41899,
+    "frenchCategoryShare": 0.09
   },
   "categoryOccupations": {
     "source": "IRCC Express Entry Year-End Report 2024, Annex: category-based selection occupations (NOC 2021)",
@@ -19,6 +39,11 @@
     "Agri": ["63201","82030","82031"],
     "Trade": ["72014","72106","72200","72300","72310","72400","72402","72405","72406","73200"],
     "Transport": ["70020","72403","72404","72600","72601","72602","72603","72604","73300","93200"]
+  },
+  "singleOccupationDraws": {
+    "source": "IRCC rounds of invitations: eligibility for the Senior managers and Physicians rounds (Canadian work experience in these occupations is required)",
+    "senior": ["00010","00011","00012","00013","00014","00015"],
+    "physicians": ["31100","31101","31102"]
   },
   "expressEntryEligibleOccupations": {
     "source": "Statistics Canada NOC 2021 Version 1.0: unit groups in TEER 0 (48), 1 (97), 2 (162) and 3 (69)",

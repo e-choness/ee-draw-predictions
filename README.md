@@ -33,7 +33,7 @@ The defaults use only figures that describe the whole pool or the whole workforc
 
 ## Run it locally
 
-Requires Node.js 20 or later. No dependencies to install.
+Requires Node.js 22 or later (the Docker image and the Pages workflow use Node 26 LTS). No dependencies to install.
 
 ```bash
 npm run fetch   # download the latest rounds from IRCC into data/ee_rounds.json

@@ -4,7 +4,7 @@
   "private": true,
   "description": "Express Entry pool composition and next-draw CRS cut-off projections from IRCC's published rounds of invitations.",
   "type": "module",
-  "engines": { "node": ">=20" },
+  "engines": { "node": ">=22" },
   "scripts": {
     "fetch": "node scripts/fetch-ircc.mjs",
     "build": "node scripts/build.mjs",

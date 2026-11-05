@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # EE Outlook: static dashboard + a tiny Node server that refreshes IRCC data on a timer.
-FROM node:20-alpine
+FROM node:26-alpine
 WORKDIR /app
 ENV NODE_ENV=production PORT=8080 REFRESH_HOURS=6
 COPY package.json ./

@@ -96,6 +96,13 @@
   .ee-empty { display: flex; align-items: center; justify-content: center; min-height: inherit; color: var(--ee-muted); font-size: 12.5px; text-align: center; padding: 16px; }
   .ee-tip { position: absolute; pointer-events: none; z-index: 3; background: var(--ee-card); border: 1px solid var(--ee-line); border-radius: 6px; box-shadow: 0 6px 18px rgba(20, 26, 46, .16); padding: 6px 10px; font-size: 12px; line-height: 1.5; white-space: nowrap; font-variant-numeric: tabular-nums; }
   .ee-tip-h { color: var(--ee-muted); }
+  .ee-tip-b { font-weight: 600; }
+  .ee-chart:focus { outline: none; }
+  .ee-chart:focus-visible { outline: 2px solid var(--ee-blue); outline-offset: 4px; border-radius: 4px; }
+  /* the Clear button sits on the header's bottom border, out of the layout, so nothing moves when it appears */
+  .ee-card-h { position: relative; }
+  .ee-pin-clear { position: absolute; right: 14px; bottom: -10px; z-index: 2; background: var(--ee-card); padding: 1px 9px; font-size: 11px; line-height: 1.3; }
+  .ee-pin-clear:hover { border-color: var(--ee-muted); }
   .ee-sw { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 6px; vertical-align: baseline; }
   .ee-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: var(--ee-muted); }
   .ee-legend span { display: inline-flex; align-items: center; }
@@ -210,7 +217,7 @@
     <nav class="ee-nav">
       <span class="ee-nav-label">Outlook</span>
       <button type="button" data-page="overview"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>Overview</button>
-      <button type="button" data-page="forecast"><svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>Next draw forecast</button>
+      <button type="button" data-page="forecast"><svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>Forecast</button>
       <button type="button" data-page="pool"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg>Pool scores<span class="ee-badge">New rules</span></button>
       <span class="ee-nav-label">Data</span>
       <button type="button" data-page="draws"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>All draws</button>
@@ -228,8 +235,8 @@
           <div data-draw="type-select" data-source="types"></div>
         </div>
         <div class="ee-field">
-          <span class="ee-field-label"><span>Next draw size</span><span class="ee-val" data-draw="size-label">—</span></span>
-          <input class="ee-range" type="range" data-param="size" min="100" max="10000" step="50" aria-label="Next draw size">
+          <span class="ee-field-label"><span>Invitations per round</span><span class="ee-val" data-draw="size-label">—</span></span>
+          <input class="ee-range" type="range" data-param="size" min="100" max="10000" step="50" aria-label="Invitations per round">
         </div>
         <div class="ee-field">
           <label for="ee-hw"><span>Canadian work in high-wage jobs</span><output data-draw="hw-out">—</output></label>
@@ -270,14 +277,14 @@
           <span class="ee-kpi-sub">Likely <b data-draw="k-next-low" data-source="types snapshots composition" data-field="low">—</b> to <b data-draw="k-next-high" data-source="types snapshots composition" data-field="high">—</b> at <span data-draw="k-next-size" data-source="types snapshots composition" data-field="size">—</span> invitations</span>
         </div>
         <div class="ee-card ee-kpi ee-s3" id="kpi-last">
-          <span class="ee-kpi-label">Last draw of this type, old rules</span>
+          <span class="ee-kpi-label">Last draw of this type</span>
           <span class="ee-kpi-num" data-draw="k-last" data-source="types" data-field="lastCRS">—</span>
-          <span class="ee-kpi-sub"><span data-draw="k-last-date" data-source="types" data-field="lastDate">—</span>, <span data-draw="k-last-size" data-source="types" data-field="lastSize">—</span> invitations</span>
+          <span class="ee-kpi-sub"><span data-draw="k-last-date" data-source="types" data-field="lastDate">—</span>, <span data-draw="k-last-size" data-source="types" data-field="lastSize">—</span> invitations, <span data-draw="k-last-rules" data-source="types" data-field="lastDate">—</span></span>
         </div>
 
         <div class="ee-card ee-s12" id="history">
           <div class="ee-card-h">
-            <h2><span data-draw="hero-title" data-source="types" data-field="category">—</span> cut-offs and the next draw</h2>
+            <h2><span data-draw="hero-title" data-source="types" data-field="category">—</span> cut-offs and projected rounds</h2>
             <div class="ee-pills" role="group" aria-label="Time span">
               <button type="button" class="ee-pill ee-span" data-span="12">12 months</button>
               <button type="button" class="ee-pill ee-span" data-span="24">24 months</button>
@@ -286,6 +293,7 @@
           </div>
           <div class="ee-card-b">
             <div class="ee-chart ee-tall" data-draw="hero-chart" data-source="draws types snapshots composition"></div>
+            <p class="ee-note">Dashed: every projected round through <span data-draw="horizon-2">—</span>, with the likely range shaded. Rings mark what the dashboard projected before each round under the new rules. After each new IRCC round, the rounds after it are projected again. On every chart, click or tap a point, bar or slice to pin its figure on the chart, or drag across a stretch to pin all of it. <a href="#forecast" class="ee-go" data-go="forecast">All projected rounds</a></p>
           </div>
         </div>
 
@@ -318,14 +326,59 @@
     <section class="ee-page" id="forecast" hidden>
       <div class="ee-grid">
         <div class="ee-s12 ee-page-head">
-          <h1>Next draw forecast</h1>
-          <p>The projection is worked out on the pool rescored under the November 3 rules: who is eligible for the round, who arrived since the last one, and who gains the new points. The steps show how far each part moves it from the last cut-off.</p>
+          <h1>Forecast</h1>
+          <p>Every round through <span data-draw="horizon-3">—</span>, worked out on the pool rescored under the November 3 rules and carried from one round to the next. After each round IRCC publishes, the rounds after it are projected again from what IRCC drew.</p>
+        </div>
+        <div class="ee-card ee-s12" id="rounds">
+          <div class="ee-card-h"><h2>Projected rounds through <span data-draw="horizon">—</span></h2>
+            <div class="ee-pills" role="group" aria-label="Rounds shown">
+              <button type="button" class="ee-pill ee-view" data-view="all">All types</button>
+              <button type="button" class="ee-pill ee-view" data-view="type">Selected type</button>
+            </div>
+          </div>
+          <div class="ee-card-b">
+            <div class="ee-table-wrap">
+              <table class="ee-table" data-source="types snapshots composition" data-row-key="key,date">
+                <thead><tr>
+                  <th data-field="date">Round, about</th>
+                  <th data-field="key">Draw type</th>
+                  <th class="num" data-field="size">Invitations</th>
+                  <th class="num" data-field="projected">Projected cut-off</th>
+                  <th class="num" data-field="low">Likely range</th>
+                  <th class="num" data-field="change">Change</th>
+                  <th class="num" data-field="withPoints">Invited with new points</th>
+                </tr></thead>
+                <tbody data-draw="rounds-body"></tbody>
+              </table>
+            </div>
+            <p class="ee-note">Each type keeps its usual gap and size; the selected type uses the invitations per round set above. Rounds that would fall on a weekend or in the year-end break move to the next weekday or the first week of January. Each round starts from the one before: the profiles it invited are gone, new ones have arrived, and those that replace the invited carry the new points only as often as the pool does. The range widens with each round ahead. Provincial Nominee, Senior managers and Physicians rounds follow their recent cut-offs, so they stay level. Select a row to explore its type.</p>
+          </div>
+        </div>
+        <div class="ee-card ee-s12" id="track">
+          <div class="ee-card-h"><h2>Projected before each round, and what IRCC drew</h2><span class="ee-hint">Rounds under the new rules</span></div>
+          <div class="ee-card-b">
+            <p class="ee-note" data-draw="track-note" data-source="types snapshots composition"></p>
+            <div class="ee-table-wrap">
+              <table class="ee-table" data-source="types snapshots composition" data-row-key="drawNumber">
+                <thead><tr>
+                  <th class="num" data-field="drawNumber">Draw</th>
+                  <th data-field="date">Date</th>
+                  <th data-field="key">Draw type</th>
+                  <th class="num" data-field="size">Invitations</th>
+                  <th class="num" data-field="projected">Projected before</th>
+                  <th class="num" data-field="actual">Cut-off drawn</th>
+                  <th class="num" data-field="miss">Miss</th>
+                </tr></thead>
+                <tbody data-draw="track-body"></tbody>
+              </table>
+            </div>
+          </div>
         </div>
         <div class="ee-card ee-s5" id="waterfall">
-          <div class="ee-card-h"><h2>How the <span data-draw="wf-title" data-source="types" data-field="category">—</span> projection is built</h2></div>
+          <div class="ee-card-h"><h2>How the next <span data-draw="wf-title" data-source="types" data-field="category">—</span> projection is built</h2></div>
           <div class="ee-card-b">
             <div class="ee-chart" data-draw="wf-chart" data-source="types snapshots composition"></div>
-            <p class="ee-note">Higher is harder. Coral steps push the cut-off up; green steps bring it down. Pool and pause: the same calculation on old scores, with the profiles that arrive until the next round. New points: the change once the November 3 points are added. Draw size: from the usual size to the size you set.</p>
+            <p class="ee-note">Higher is harder. Coral steps push the cut-off up; green steps bring it down. Pool and pause: the same calculation on old scores, with the profiles that arrive until the next round. New points: the change once the November 3 points are added. Draw size: from the usual size to the size you set. Once a type has had rounds under the new rules, Pool since carries the pool through them, with the new points already in it. Recent pattern: the median of the last four cut-offs, plus what rounds under the new rules have taught.</p>
           </div>
         </div>
         <div class="ee-card ee-s7" id="sensitivity">
@@ -347,10 +400,10 @@
                   <th class="num" data-field="projected">Projected</th>
                   <th class="num" data-field="low">Low</th>
                   <th class="num" data-field="high">High</th>
-                  <th class="num" data-field="poolEffect">Pool and pause</th>
+                  <th class="num" data-field="poolEffect">Pool</th>
                   <th class="num" data-field="ruleEffect">New points</th>
                   <th class="num" data-field="sizeEffect">Draw size</th>
-                  <th>Against last cut-off (old rules)</th>
+                  <th>Against last cut-off</th>
                 </tr></thead>
                 <tbody data-draw="types-body"></tbody>
               </table>
@@ -473,7 +526,7 @@
           <div class="ee-card-b ee-calc">
             <div class="ee-calc-in">
               <div class="ee-field"><span class="ee-field-label">Draw type</span><div data-draw="type-select" data-source="types"></div></div>
-              <div class="ee-field"><label for="c-size">Invitations in the next round</label><input id="c-size" class="ee-num" type="number" min="1" max="20000" step="50" data-param="size"></div>
+              <div class="ee-field"><label for="c-size">Invitations per round</label><input id="c-size" class="ee-num" type="number" min="1" max="20000" step="50" data-param="size"></div>
               <div class="ee-field"><label for="c-next">Next round on</label><input id="c-next" class="ee-num" type="date" data-param="next"></div>
               <div class="ee-field"><label for="c-cw"><span>Pool with 12+ months of Canadian work</span><span>%</span></label><input id="c-cw" class="ee-num ee-est-input" type="number" min="0" max="100" step="0.1" data-param="cw"></div>
               <div class="ee-field"><label for="c-hw"><span>Of those, in high-wage jobs</span><span>%</span></label><input id="c-hw" class="ee-num ee-est-input" type="number" min="0" max="100" step="0.1" data-param="hw"></div>
@@ -497,6 +550,20 @@
               <li><b>Where the invitations run out.</b> Counting down from the top of the rescored eligible profiles, the cut-off is the score where the count reaches the round's size.</li>
             </ol>
             <p>The likely range adds how far the same calculation missed when replayed on the type's recent rounds, and how far the cut-off moves if the high-wage share is 10 points lower or higher.</p>
+            <p><b>Rounds after the next.</b> Each round starts from the pool the one before left behind:</p>
+            <ul>
+              <li><b>Invited profiles leave.</b> Every profile from the top down to the cut-off is gone; at the cut-off, as many as the round's size allows.</li>
+              <li><b>New profiles arrive</b> above the type's last cut-off at its recent rate, carrying the new points at the pool's rate.</li>
+              <li><b>Profiles below the last cut-off are replaced</b> as rounds reach into them, at the type's turnover: the rate that best replays its old-rules rounds two to four rounds ahead. The replacements carry the new points only as often as the pool does, not as often as the profiles invited did. Twelve months in a high-wage job or a high-wage offer is a higher bar than the old turnover had to clear, so high-wage profiles become scarcer round by round.</li>
+              <li><b>Dates and sizes.</b> Each type keeps its usual gap and size; rounds that fall on a weekend or in the year-end break move to the next weekday or the first week of January. The range widens with the square root of the rounds ahead.</li>
+            </ul>
+            <p><b>After each new round.</b> When IRCC publishes a round, the projection corrects itself in three ways:</p>
+            <ul>
+              <li><b>It continues from what IRCC drew.</b> The pool is carried through every round held under the new rules at the sizes IRCC drew, from the type's last old-rules round and IRCC's last old-rules count. Half of the last round's miss is carried into the next projection, a quarter into the one after.</li>
+              <li><b>It refits the high-wage share.</b> The share starts at the sourced default, or at the share that turns IRCC's last old count into its first count under the new rules once that is published. After each round it is refitted to every round held so far. Each miss is weighed against the type's usual miss. Moving the share 10 points costs as much as a 5-point miss, so one round can't swing it far. A share you set in the scenario stays fixed.</li>
+              <li><b>It learns the offset for pattern rounds.</b> Provincial Nominee, Senior managers and Physicians rounds add their average miss under the new rules, shrunk toward zero: half of it after one round.</li>
+            </ul>
+            <p>Every round under the new rules is listed on the Forecast page with what the dashboard projected before it, using only the rounds before it.</p>
             <p>Provincial Nominee rounds invite nearly every nominee, so their cut-off is just the lowest-scoring nominee: the dashboard uses the median of the last four. Senior managers and Physicians scores fall in IRCC's widest bands, so the pool can't place them; every eligible candidate in those rounds has Canadian work in a high-wage occupation, so their recent median gets the new points added (+70 for physicians).</p>
           </div>
         </div>
@@ -515,6 +582,11 @@
                 <tr><td>High-wage share</td><td>51–56%, each occupation code counted once</td><td>40%, weighted by people in each occupation</td></tr>
                 <tr><td>Job offers</td><td>7%, added on top of work points</td><td>5%, only for profiles without Canadian work</td></tr>
                 <tr><td>Pause</td><td>Not counted</td><td>Arrivals until the next round counted</td></tr>
+                <tr><td>Rounds projected</td><td>The next round only</td><td>Every round through February 2027, the pool carried from one to the next</td></tr>
+                <tr><td>Profiles replacing the invited</td><td>Not modelled</td><td>At each type's fitted turnover, carrying the new points at the pool's rate</td></tr>
+                <tr><td>After each new round</td><td>Next round from the new data</td><td>High-wage share refitted to every round so far; continues from the sizes drawn; misses listed</td></tr>
+                <tr><td>Same count under two dates</td><td>Counted twice (Dec 14 and 15, 2025)</td><td>Counted once</td></tr>
+                <tr><td>Round dates</td><td>Could land in the year-end break (Senior managers, Dec 23)</td><td>Weekdays outside the break</td></tr>
               </tbody>
             </table>
           </div>
@@ -525,7 +597,7 @@
           <div class="ee-card-b">
             <div class="ee-table-wrap">
               <table class="ee-table" data-source="types" data-row-key="key">
-                <thead><tr><th>Draw type</th><th>Method</th><th class="num">Rounds replayed</th><th class="num">Average miss</th><th class="num">Repeating the last cut-off</th><th>Eligible share</th></tr></thead>
+                <thead><tr><th>Draw type</th><th>Method</th><th class="num">Rounds replayed</th><th class="num">Average miss</th><th class="num">Repeating the last cut-off</th><th>Eligible share</th><th>Waiting profiles replaced in</th></tr></thead>
                 <tbody data-draw="replay-body"></tbody>
               </table>
             </div>
@@ -551,7 +623,7 @@
               </table>
             </div>
             <div class="ee-prose" style="margin-top: 12px">
-              <p><b>Limits.</b> No public table splits the pool by occupation and score together, so the shares are applied evenly across scores. The census is from 2021, and IRCC's 2025 pool count shows more food service supervisors and cooks (neither high-wage) than the census suggests, so the high-wage share may lean high. Profiles entering during the pause and job offers added after November 3 are not counted. Once IRCC publishes a count under the new rules, the pool view uses it directly and draw types whose last round ran under the new rules need no rescoring. These are statistical estimates, not IRCC guidance: IRCC sets each round's size and type itself.</p>
+              <p><b>Limits.</b> No public table splits the pool by occupation and score together, so the shares are applied evenly across scores. The census is from 2021, and IRCC's 2025 pool count shows more food service supervisors and cooks (neither high-wage) than the census suggests, so the high-wage share may lean high. Profiles entering during the pause and job offers added after November 3 are not counted. Once IRCC publishes a count under the new rules, the pool view uses it directly, and the high-wage share starts from the share that turns IRCC's last old count into it. Projections keep starting from the last old count and carry it through the rounds held since, because only an old count can be split into who gained which points. The turnover is an effective rate fitted to old-rules rounds: it also covers profiles that become eligible by changing (another year of work, a new test result), not only new profiles. Rounds further ahead assume each type keeps its usual size and gap. These are statistical estimates, not IRCC guidance: IRCC sets each round's size and type itself.</p>
             </div>
           </div>
         </div>
@@ -618,7 +690,74 @@
       return { score: low, short: true };
     };
     const toBands = (a) => BANDS.map(([f, band, lo, hi]) => { let v = 0; for (let s = lo; s <= hi; s++) v += a[s]; return { f, band, lo, hi, v }; });
-    return { RULES, RESUME, BANDS, median, density, tail, eligible, gains, shift, cutoff, toBands };
+
+    // the day a projected round falls on: IRCC holds rounds on weekdays, and none over the year-end break
+    // (none from December 19 to January 4 since 2024). A round in the break moves to the same weekday in the
+    // first week of January; one on a weekend moves to the Monday after.
+    const offBreak = (iso) => {
+      const [y, m, dd] = iso.split('-').map(Number);
+      let t = Date.UTC(y, m - 1, dd);
+      if ((m === 12 && dd >= 19) || (m === 1 && dd <= 4)) {
+        const wd = new Date(t).getUTCDay();
+        t = Date.UTC(m === 12 ? y + 1 : y, 0, 5);
+        while (new Date(t).getUTCDay() !== wd) t += 864e5;
+      }
+      const wd = new Date(t).getUTCDay();
+      if (wd === 6 || wd === 0) t += (wd === 6 ? 2 : 1) * 864e5;
+      return new Date(t).toISOString().slice(0, 10);
+    };
+
+    // Rounds after the next: the eligible profiles carried from round to round.
+    // Profiles are kept by their old-rules score and the points they gain (g: [[points, share], ...]), and a
+    // round invites from the top of score plus points. Below the last cut-off c0 the eligible profiles are the
+    // type's share of the pool (target). When rounds reach into them they recover at rate mu a day, but the
+    // profiles that replace them carry the new points only at the population rate g, not at the rate of those
+    // invited: 12 months in a high-wage job or a high-wage offer is a higher bar than the old turnover had.
+    // Above c0, profiles arrive at `rate` a day, spread like the pool up to 600 and never more than the pool
+    // count holds there. With no round before it, the first round equals the single-round calculation.
+    const path = ({ d, share, c0, t0, rate, g, mu, rounds, keep = -1 }) => {
+      const N = 1201, K = g.length, top = c0 <= 600 ? 601 : 1201, tl = tail(d);
+      const up = (tl[Math.min(1200, c0)] - (top <= 1200 ? tl[top] : 0)) || 1;
+      const target = new Float64Array(N), arr = new Float64Array(N);
+      for (let s = 0; s < N; s++) { if (s < c0) target[s] = d[s] * share; else if (s < top) arr[s] = d[s] / up; }
+      const W = g.map(([, p]) => target.map((v) => v * p)), A = g.map(() => new Float64Array(N));
+      let t = Date.parse(t0 + 'T00:00:00Z');
+      return rounds.map((r, i) => {
+        const days = Math.max(0, (Date.parse(r.date + 'T00:00:00Z') - t) / 864e5), f = 1 - Math.exp(-mu * days);
+        t = Date.parse(r.date + 'T00:00:00Z');
+        for (let s = 0; s < N; s++) {
+          if (target[s] > 0) {
+            let have = 0; for (let k = 0; k < K; k++) have += W[k][s];
+            const gap = target[s] - have;
+            if (gap > 0) for (let k = 0; k < K; k++) W[k][s] += f * gap * g[k][1];
+          }
+          if (arr[s] > 0) {
+            let have = 0; for (let k = 0; k < K; k++) have += A[k][s];
+            const add = Math.min(arr[s] * rate * days, Math.max(0, d[s] - have));
+            if (add > 0) for (let k = 0; k < K; k++) A[k][s] += add * g[k][1];
+          }
+        }
+        const T = new Float64Array(N);
+        for (let k = 0; k < K; k++) { const p = g[k][0]; for (let s = 0; s < N; s++) { const v = W[k][s] + A[k][s]; if (v) T[Math.min(1200, s + p)] += v; } }
+        const c = cutoff(T, r.size), tt = tail(T), eligibleN = tt[0];
+        const frac = c.short || !T[c.score] ? 1 : Math.min(1, Math.max(0, (r.size - (c.score < 1200 ? tt[c.score + 1] : 0)) / T[c.score]));
+        let invited = 0, withPoints = 0;
+        for (let k = 0; k < K; k++) {
+          const p = g[k][0];
+          for (let s = 0; s < N; s++) {
+            const ns = Math.min(1200, s + p);
+            if (ns < c.score) continue;
+            const take = ns === c.score ? frac : 1, v = (W[k][s] + A[k][s]) * take;
+            invited += v; if (p > 0) withPoints += v;
+            W[k][s] *= 1 - take; A[k][s] *= 1 - take;
+          }
+        }
+        return { date: r.date, size: r.size, cut: c.score, short: c.short, eligible: eligibleN, withPoints: invited ? withPoints / invited : 0, T: i === keep ? T : null };
+      });
+    };
+    // turnover rates tried when fitting each draw type's history (per day)
+    const TURNOVER = [1 / 365, 1 / 180, 1 / 90, 1 / 60, 1 / 40, 1 / 25, 1 / 15, 1 / 10];
+    return { RULES, RESUME, BANDS, median, density, tail, eligible, gains, shift, cutoff, toBands, offBreak, path, TURNOVER };
   })();
 
   /* ---------- Calculations ---------- */
@@ -664,14 +803,22 @@
     },
   });
 
+  // IRCC's pool counts, oldest first, one per date. IRCC sometimes cites the same count under two dates
+  // (December 14 and 15, 2025 hold identical numbers): a count identical to the one before it is kept once.
+  const distinctCounts = (rounds) => {
+    const seen = new Map();
+    rounds.forEach((r) => { if (!seen.has(r.distributionAsOn)) seen.set(r.distributionAsOn, r); });
+    const sig = (r) => Array.from({ length: 18 }, (_, i) => r['dd' + (i + 1)]).join();
+    return [...seen.values()].sort((a, b) => a.distributionAsOn.localeCompare(b.distributionAsOn)).filter((r, i, all) => i === 0 || sig(r) !== sig(all[i - 1]));
+  };
+
   dash.calc('pool_summary', {
     inputs: ['rounds'],
     title: 'Pool totals',
     description: 'Total profiles and profiles at 451+ and 501+ in the latest snapshot, against the one before.',
     fn: (rounds) => {
-      const dates = [...new Set(rounds.map((r) => r.distributionAsOn))].sort();
-      const now = rounds.find((r) => r.distributionAsOn === dates[dates.length - 1]);
-      const prev = rounds.find((r) => r.distributionAsOn === dates[dates.length - 2]) || now;
+      const counts = distinctCounts(rounds);
+      const now = counts[counts.length - 1], prev = counts[counts.length - 2] || now;
       const top = now.dd1 + now.dd2;
       return [{ asOf: now.distributionAsOn, prevAsOf: prev.distributionAsOn, total: now.dd18, change: now.dd18 - prev.dd18,
         above500: top, shareAbove500: top / now.dd18, above450: top + now.dd3, shareAbove450: (top + now.dd3) / now.dd18 }];
@@ -682,28 +829,20 @@
     inputs: ['rounds'],
     title: 'Pool over time',
     description: 'Profiles by score range at each IRCC snapshot.',
-    fn: (rounds) => {
-      const seen = new Map();
-      rounds.forEach((r) => { if (!seen.has(r.distributionAsOn)) seen.set(r.distributionAsOn, r); });
-      return [...seen.values()].sort((a, b) => a.distributionAsOn.localeCompare(b.distributionAsOn)).map((r) => ({
-        asOf: r.distributionAsOn, b0: r.dd15 + r.dd16 + r.dd17, b401: r.dd9, b451: r.dd3, b501: r.dd2, b601: r.dd1, total: r.dd18,
-      }));
-    },
+    fn: (rounds) => distinctCounts(rounds).map((r) => ({
+      asOf: r.distributionAsOn, b0: r.dd15 + r.dd16 + r.dd17, b401: r.dd9, b451: r.dd3, b501: r.dd2, b601: r.dd1, total: r.dd18,
+    })),
   });
 
   dash.calc('snapshots', {
     inputs: ['rounds'],
     title: 'IRCC pool counts',
     description: 'Every distinct IRCC pool count (profiles by CRS band), oldest first, flagged when it was scored under the rules in force since November 3, 2026.',
-    fn: (rounds) => {
-      const seen = new Map();
-      rounds.forEach((r) => { if (!seen.has(r.distributionAsOn)) seen.set(r.distributionAsOn, r); });
-      return [...seen.values()].sort((a, b) => a.distributionAsOn.localeCompare(b.distributionAsOn)).map((r) => {
-        const o = { asOf: r.distributionAsOn, newRules: r.distributionAsOn >= EEM.RULES, total: r.dd18 };
-        EEM.BANDS.forEach(([f]) => { o[f] = r[f]; });
-        return o;
-      });
-    },
+    fn: (rounds) => distinctCounts(rounds).map((r) => {
+      const o = { asOf: r.distributionAsOn, newRules: r.distributionAsOn >= EEM.RULES, total: r.dd18 };
+      EEM.BANDS.forEach(([f]) => { o[f] = r[f]; });
+      return o;
+    }),
   });
 
   dash.calc('types', {
@@ -723,7 +862,7 @@
         return w.slice(1).reduce((s, d) => s + d.drawSize, 0) / Math.max(7, (ms(w[w.length - 1].drawDate) - ms(w[0].drawDate)) / day);
       };
       const keys = [...new Set(asc.map((d) => d.key))].filter((k) => k !== 'military' && k !== 'other');
-      return keys.map((key) => {
+      const out = keys.map((key) => {
         const all = asc.filter((d) => d.key === key);
         const recent = all.filter((d) => ms(latest) - ms(d.drawDate) <= 365 * day);
         if (recent.length < 2 || all.length < 3) return null;
@@ -747,16 +886,41 @@
           naive.push(Math.abs(prev.drawCRS - cur.drawCRS));
         }
         const mean = (a) => (a.length ? Math.round((a.reduce((s, v) => s + v, 0) / a.length) * 10) / 10 : null);
+        // turnover: how fast eligible profiles below the last cut-off are replaced once rounds reach into them.
+        // Replayed on old-rules rounds of the last two years: from each round, the next two to four rounds at
+        // their real dates and sizes, each against the pool count IRCC published before the first of them.
+        // Only the second round on depends on turnover, so those are scored.
+        const turnoverErr = method !== 'pool' ? null : EEM.TURNOVER.map((mu) => {
+          let e = 0, n = 0;
+          for (let i = 3; i < all.length - 2; i++) {
+            const start = all[i], next = all.slice(i + 1, i + 5).filter((x) => x.drawDate < EEM.RULES);
+            if (start.drawDate < iso(ms(latest) - 730 * day) || next.length < 2) continue;
+            const p = EEM.path({ d: EEM.density(next[0]), share, c0: start.drawCRS, t0: start.drawDate, rate: rateBefore(all, i + 1), g: [[0, 1]], mu, rounds: next.map((x) => ({ date: x.drawDate, size: x.drawSize })) });
+            for (let j = 1; j < p.length; j++) { e += Math.abs(p[j].cut - next[j].drawCRS); n++; }
+          }
+          return { mu, e, n };
+        });
+        const fitted = turnoverErr && turnoverErr[0].n >= 6 ? turnoverErr.reduce((b, x) => (x.e < b.e ? x : b)) : null;
+        // the starting point for rounds under the new rules: the type's last round under the old rules
+        const firstNew = all.findIndex((d) => d.drawDate >= EEM.RULES), baseIdx = firstNew < 0 ? all.length - 1 : firstNew - 1;
+        const base = baseIdx >= 0 ? { date: all[baseIdx].drawDate, crs: all[baseIdx].drawCRS, size: all[baseIdx].drawSize, rate: rateBefore(all, baseIdx + 1) } : null;
         return {
-          key, category: last.category, method, draws12m: recent.length,
-          lastDate: last.drawDate, lastCRS: last.drawCRS, lastSize: last.drawSize, lastAsOf: last.distributionAsOn,
-          gapDays: gap, nextDate: iso(Math.max(ms(last.drawDate) + gap * day, floor)),
+          key, category: last.category, method: base ? method : 'pattern', draws12m: recent.length,
+          lastDate: last.drawDate, lastCRS: last.drawCRS, lastSize: last.drawSize, lastAsOf: last.distributionAsOn, lastNumber: last.drawNumber,
+          gapDays: gap, nextDate: EEM.offBreak(iso(Math.max(ms(last.drawDate) + gap * day, floor))),
           usualSize: Math.round(EEM.median(all.slice(-4).map((d) => d.drawSize))), ratePerDay: Math.round(rateBefore(all, all.length) * 10) / 10,
           pattern: Math.round(EEM.median(all.slice(-4).map((d) => d.drawCRS))),
           eligibleShare: share ?? null, cwShare: c.cwShare ?? null, hwShare: c.hwShare ?? null, mix: c.mix ?? null, basis: c.basis || '',
           replayError: mean(errs), replayNaive: mean(naive), replayN: errs.length,
+          turnover: fitted ? fitted.mu : null, turnoverErr, turnoverOwn: !!fitted,
+          base, since: (firstNew < 0 ? [] : all.slice(firstNew)).map((d) => ({ drawNumber: d.drawNumber, date: d.drawDate, size: d.drawSize, crs: d.drawCRS, asOf: d.distributionAsOn })),
+          history: all.map((d) => ({ date: d.drawDate, crs: d.drawCRS, size: d.drawSize, drawNumber: d.drawNumber })),
         };
       }).filter(Boolean).sort((a, b) => b.draws12m - a.draws12m || a.category.localeCompare(b.category));
+      // types with too little history take the turnover that fits every pool type's replays together
+      const pooled = EEM.TURNOVER.map((mu, i) => ({ mu, e: out.reduce((s, t) => s + (t.turnoverErr ? t.turnoverErr[i].e : 0), 0) })).reduce((b, x) => (x.e < b.e ? x : b));
+      out.forEach((t) => { if (t.method === 'pool' && t.turnover == null) t.turnover = pooled.mu; delete t.turnoverErr; });
+      return out;
     },
   });
 </script>
@@ -811,18 +975,180 @@
       },
       grid: (svg, y, x0, x1, ticks) => svg.insert('g', ':first-child').selectAll('line').data(y.ticks(ticks || 5)).join('line')
         .attr('x1', x0).attr('x2', x1).attr('y1', (v) => y(v)).attr('y2', (v) => y(v)).style('stroke', css('--ee-line')),
-      // dark rounded callout above (cx, cy)
-      bubble: (g, cx, cy, text, fill, ink) => {
+      // rounded callout whose tip points at (cx, cy), above it or below it; the body slides to stay inside 0..W.
+      // Returns the group and its box [x0, y0, x1, y1].
+      tag: (g, cx, cy, text, { fill, ink, below, W } = {}) => {
         const b = g.append('g').attr('class', 'ee-bubble');
         const t = b.append('text').attr('class', 'ee-t-bubble').attr('text-anchor', 'middle').text(text);
         if (ink) t.style('fill', ink);
-        const w = t.node().getComputedTextLength() + 16, h = 20;
-        b.insert('path', 'text').attr('d', `M${-w / 2},${-h - 6} h${w} a4,4 0 0 1 4,4 v${h - 8} a4,4 0 0 1 -4,4 h${-w / 2 + 5} l-5,5 l-5,-5 h${-w / 2 + 5} a4,4 0 0 1 -4,-4 v${-h + 8} a4,4 0 0 1 4,-4z`)
-          .style('fill', fill || css('--ee-bubble'));
-        t.attr('y', -h / 2 - 2);
-        b.attr('transform', `translate(${cx},${cy - 6})`);
-        return w;
+        const w = t.node().getComputedTextLength() + 16, half = w / 2 + 4;
+        let dx = 0;
+        if (W) { if (cx - half < 1) dx = 1 - (cx - half); else if (cx + half > W - 1) dx = W - 1 - (cx + half); }
+        dx = Math.max(6 - w / 2, Math.min(w / 2 - 6, dx));
+        const xl = dx - w / 2, xr = dx + w / 2;
+        b.insert('path', 'text').attr('d', `M${xl},-32H${xr}a4,4 0 0 1 4,4V-16a4,4 0 0 1 -4,4H5l-5,5l-5,-5H${xl}a4,4 0 0 1 -4,-4V-28a4,4 0 0 1 4,-4Z`)
+          .attr('transform', below ? 'scale(1,-1)' : null).style('fill', fill || css('--ee-bubble'));
+        t.attr('x', dx).attr('y', below ? 26 : -18);
+        b.attr('transform', `translate(${cx},${cy})`);
+        return { node: b, box: [cx + xl - 4, below ? cy + 7 : cy - 32, cx + xr + 4, below ? cy + 32 : cy - 7] };
       },
+    };
+  })();
+</script>
+
+<script>
+  /* ---------- Chart selection: hover for details, click or tap to pin a figure on the chart, drag to pin a stretch ---------- */
+  (() => {
+    const store = new Map();
+    const pinsOf = (name) => { if (!store.has(name)) store.set(name, new Set()); return store.get(name); };
+    const hits = (a, b) => a[0] < b[2] + 2 && a[2] + 2 > b[0] && a[1] < b[3] + 2 && a[3] + 2 > b[1];
+    const listOf = (m) => (m.label ? [].concat(m.label).filter(Boolean) : []);
+    const shape = (g, s, pinned) => {
+      let n;
+      if (s.circle) n = g.append('circle').attr('cx', s.circle[0]).attr('cy', s.circle[1]).attr('r', s.circle[2]);
+      else if (s.rect) n = g.append('rect').attr('x', s.rect[0]).attr('y', s.rect[1]).attr('width', s.rect[2]).attr('height', Math.max(1, s.rect[3])).attr('rx', 3);
+      else if (s.path) n = g.append('path').attr('d', s.path).attr('transform', s.transform || null);
+      else if (s.vline) n = g.append('line').attr('x1', s.vline[0]).attr('x2', s.vline[0]).attr('y1', s.vline[1]).attr('y2', s.vline[2]);
+      else return;
+      n.style('fill', 'none').style('stroke', EE.css('--ee-ink')).attr('stroke-width', 1.5).attr('opacity', s.vline ? (pinned ? 0.5 : 0.3) : pinned ? 1 : 0.55);
+    };
+
+    // o: { marks, find(mx, my) -> mark or null, area: [x0, y0, x1, y1], brush: 'x' | 'xy', obstacles: [[x0, y0, x1, y1]], linear }
+    // a mark: { id, x, y, tip(el), hl: shapes outlined on hover and while pinned, label: { text, y, by, fill, ink, below } or a list
+    //   (pinning shows them all; a default shows the first), def: priority of a label shown without pinning,
+    //   drop: baseline for a dashed line under a label, brush: false to leave it out of a drag, tx/ty: where the tooltip goes }
+    EE.pick = (el, svg, W, H, o) => {
+      const name = el.getAttribute('data-draw'), pins = pinsOf(name), tip = EE.tip(el);
+      const marks = o.marks.filter(Boolean), byId = new Map(marks.map((m) => [m.id, m]));
+      const area = o.area || [0, 0, W, H];
+      const under = svg.insert('g', 'g'), hlPin = svg.append('g'), hlHover = svg.append('g'), labels = svg.append('g');
+      [under, hlPin, hlHover, labels].forEach((g) => g.style('pointer-events', 'none'));
+      const band = svg.append('rect').attr('display', 'none').style('pointer-events', 'none').style('fill', EE.css('--ee-blue')).attr('fill-opacity', 0.1)
+        .style('stroke', EE.css('--ee-blue')).attr('stroke-opacity', 0.5);
+      const hit = svg.append('rect').attr('x', area[0]).attr('y', area[1]).attr('width', area[2] - area[0]).attr('height', area[3] - area[1])
+        .style('fill', 'transparent').style('cursor', o.brush ? 'crosshair' : 'pointer');
+
+      // the card header carries a button that clears this chart's pins
+      const head = el.closest('.ee-card') && el.closest('.ee-card').querySelector(':scope > .ee-card-h');
+      let clear = head && head.querySelector(':scope > .ee-pin-clear');
+      if (head && !clear) {
+        clear = document.createElement('button'); clear.type = 'button'; clear.className = 'ee-pill ee-pin-clear'; clear.hidden = true;
+        head.appendChild(clear);
+      }
+
+      const paint = () => {
+        under.selectAll('*').remove(); hlPin.selectAll('*').remove(); labels.selectAll('*').remove();
+        const placed = (o.obstacles || []).slice();
+        const put = (m, l, tries, force) => {
+          const lx = l.x == null ? m.x : l.x;
+          const at = (below) => (below ? (l.by == null ? m.y + 4 : l.by) : (l.y == null ? m.y - 4 : l.y));
+          const draw = (below) => EE.tag(labels, lx, at(below), l.text, { fill: l.fill, ink: l.ink, below, W });
+          const keep = (r, below) => {
+            placed.push(r.box);
+            if (m.drop != null && !below) {
+              under.append('line').attr('x1', lx).attr('x2', lx).attr('y1', m.y + 5).attr('y2', m.drop).style('stroke', EE.css('--ee-faint')).attr('stroke-dasharray', '2 3');
+              placed.push([lx - 1, m.y + 5, lx + 1, m.drop]);
+            }
+          };
+          for (const below of tries) {
+            const r = draw(below);
+            if (r.box[1] > -2 && r.box[3] < H + 10 && !placed.some((p) => hits(r.box, p))) { keep(r, below); return; }
+            r.node.remove();
+          }
+          // the latest pin always shows, even where it overlaps
+          if (force) keep(draw(tries[0]), tries[0]);
+        };
+        const on = [...pins].reverse().map((id) => byId.get(id)).filter(Boolean);
+        on.forEach((m) => (m.hl || []).forEach((s) => shape(hlPin, s, true)));
+        on.forEach((m, i) => listOf(m).forEach((l, j) => put(m, l, l.below ? [true, false] : [false, true], i === 0 && j === 0)));
+        marks.filter((m) => m.def != null && !pins.has(m.id)).sort((a, b) => a.def - b.def)
+          .forEach((m) => { const l = listOf(m)[0]; if (l) put(m, l, [!!l.below], false); });
+        if (clear) {
+          const text = 'Clear selection (' + on.length + ')';
+          if (clear.hidden !== !on.length) clear.hidden = !on.length;
+          if (clear.textContent !== text) clear.textContent = text;
+        }
+      };
+      const toggle = (ids) => {
+        const all = ids.length && ids.every((id) => pins.has(id));
+        ids.forEach((id) => (all ? pins.delete(id) : pins.add(id)));
+        paint();
+      };
+      if (clear) clear.onclick = () => { pins.clear(); paint(); tip.hidden = true; hlHover.selectAll('*').remove(); };
+
+      let how = 'Click';
+      const show = (m) => {
+        hlHover.selectAll('*').remove();
+        if (!m) { tip.hidden = true; return; }
+        (m.hl || []).forEach((s) => shape(hlHover, s, false));
+        tip.replaceChildren();
+        m.tip(tip);
+        EE.line(tip, 'ee-tip-h', [how + (pins.has(m.id) ? ' to unpin from the chart' : ' to pin on the chart')]);
+        const k = svg.node().getBoundingClientRect().width / W;
+        EE.placeTip(el, tip, (m.tx == null ? m.x : m.tx) * k, (m.ty == null ? m.y : m.ty) * k);
+      };
+
+      // pointer: hover, click or tap toggles the nearest mark, a mouse drag toggles every mark in the stretch
+      // the press lives on the container, so a redraw between press and release does not lose the click
+      const at = (ev) => d3.pointer(ev, svg.node());
+      hit.on('pointerdown', (ev) => {
+        if (ev.button !== 0) return;
+        const [mx, my] = at(ev);
+        el._eeDown = { mx, my, type: ev.pointerType, drag: false };
+        if (o.brush && ev.pointerType !== 'touch') { try { hit.node().setPointerCapture(ev.pointerId); } catch (e) { /* ignore */ } }
+      }).on('pointermove', (ev) => {
+        const [mx, my] = at(ev);
+        how = ev.pointerType === 'touch' ? 'Tap' : 'Click';
+        const down = el._eeDown;
+        if (down && o.brush && down.type !== 'touch' && (Math.abs(mx - down.mx) > 5 || (o.brush === 'xy' && Math.abs(my - down.my) > 5))) {
+          down.drag = true; show(null);
+          const x0 = Math.max(area[0], Math.min(mx, down.mx)), x1 = Math.min(area[2], Math.max(mx, down.mx));
+          const y0 = o.brush === 'xy' ? Math.max(area[1], Math.min(my, down.my)) : area[1], y1 = o.brush === 'xy' ? Math.min(area[3], Math.max(my, down.my)) : area[3];
+          band.attr('display', null).attr('x', x0).attr('y', y0).attr('width', x1 - x0).attr('height', y1 - y0);
+          return;
+        }
+        show(o.find(mx, my));
+      }).on('pointerup', (ev) => {
+        const d = el._eeDown;
+        if (!d) return;
+        const [mx, my] = at(ev); el._eeDown = null;
+        band.attr('display', 'none');
+        if (d.drag) {
+          const x0 = Math.min(mx, d.mx), x1 = Math.max(mx, d.mx), y0 = Math.min(my, d.my), y1 = Math.max(my, d.my);
+          toggle(marks.filter((m) => m.brush !== false && m.x >= x0 && m.x <= x1 && (o.brush !== 'xy' || (m.y >= y0 && m.y <= y1))).sort((a, b) => a.x - b.x).map((m) => m.id));
+          return;
+        }
+        const m = o.find(d.mx, d.my);
+        if (m) { el._eePick = m.id; toggle([m.id]); if (d.type !== 'touch') show(m); }
+      }).on('pointercancel', () => { el._eeDown = null; band.attr('display', 'none'); })
+        .on('pointerleave', () => { if (!el._eeDown || !el._eeDown.drag) { el._eeDown = null; show(null); } });
+
+      // keyboard: arrows move between figures, Enter or Space pins, Escape clears
+      const cols = o.linear ? marks.map((m) => [m]) : d3.groups(marks, (m) => Math.round(m.x)).sort((a, b) => a[0] - b[0]).map(([, g]) => g.sort((a, b) => a.y - b.y));
+      el.tabIndex = 0;
+      el.setAttribute('role', 'group');
+      el.setAttribute('aria-label', (svg.attr('aria-label') || 'Chart') + '. Arrow keys move between figures, Enter pins one on the chart, Escape clears the pins.');
+      tip.setAttribute('aria-live', 'polite');
+      el.onkeydown = (ev) => {
+        if (!cols.length) return;
+        let m = byId.get(el._eePick), ci = m ? cols.findIndex((c) => c.includes(m)) : -1;
+        const moves = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1], Home: [-Infinity, 0], End: [Infinity, 0] };
+        if (moves[ev.key]) {
+          ev.preventDefault();
+          how = 'Enter';
+          if (ci < 0) m = marks.filter((q) => q.def != null).sort((a, b) => a.def - b.def)[0] || cols[cols.length - 1][0];
+          else {
+            const [dc, dr] = moves[ev.key];
+            if (o.linear && dr) { const n = Math.max(0, Math.min(cols.length - 1, ci + dr)); m = cols[n][0]; }
+            else if (dc) { const n = Math.max(0, Math.min(cols.length - 1, ci + dc)); m = d3.least(cols[n], (q) => Math.abs(q.y - m.y)); }
+            else { const c = cols[ci], j = Math.max(0, Math.min(c.length - 1, c.indexOf(m) + dr)); m = c[j]; }
+          }
+          el._eePick = m.id; show(m);
+        } else if ((ev.key === 'Enter' || ev.key === ' ') && m) { ev.preventDefault(); how = 'Enter'; toggle([m.id]); show(m); }
+        else if (ev.key === 'Escape') { if (pins.size) { pins.clear(); paint(); } show(null); }
+      };
+      el.onblur = () => { if (!el._eeDown) show(null); };
+      paint();
     };
   })();
 </script>
@@ -840,16 +1166,21 @@
       return { types: t.data, snaps, latest, old, live: latest.newRules, pool, comp: c.data, sig: t.data };
     };
     const share = (v, d) => (v == null || v === '' || Number.isNaN(Number(v)) ? d : Math.max(0, Math.min(100, Number(v))) / 100);
+    const iso = (t) => new Date(t).toISOString().slice(0, 10);
     EE.ctx = ctx;
-    EE.hw = () => { const c = ctx(); return share(dash.params().hw, c ? c.pool.hwShare : 0.5); };
     EE.jo = () => { const c = ctx(); return share(dash.params().jo, c ? c.pool.joShare : 0.06); };
     EE.cw = () => { const c = ctx(); return share(dash.params().cw, c ? c.pool.cwShare : 0.66); };
+    // the high-wage share: the scenario value when one is set, otherwise fitted to the rounds held under the new rules
+    EE.hwSet = () => { const v = dash.params().hw; return !(v == null || v === '' || Number.isNaN(Number(v))); };
+    EE.hw = () => { if (EE.hwSet()) return share(dash.params().hw, 0.4); const f = EE.calib(); return f ? f.h : 0.4; };
     EE.type = (key) => { const c = ctx(); return c ? c.types.find((t) => t.key === (key || EE.cat())) || null : null; };
     EE.nextFor = (t) => { const n = dash.params().next; return t.key === EE.cat() && /^\d{4}-\d{2}-\d{2}$/.test(n || '') && n >= t.lastDate ? n : t.nextDate; };
     EE.sizeRange = (t) => {
       const lo = Math.max(50, Math.round(t.usualSize / 4 / 50) * 50), hi = Math.min(10000, Math.max(lo + 500, Math.round((t.usualSize * 4) / 250) * 250));
       return { lo, hi, step: hi <= 2000 ? 50 : 250 };
     };
+    // rounds are projected through the end of February 2027, or four months past the latest round once that is later
+    EE.horizon = () => { const c = ctx(); if (!c) return '2027-02-28'; const last = c.types.reduce((m, t) => (t.lastDate > m ? t.lastDate : m), ''); const roll = iso(ms(last) + 120 * day); return roll > '2027-02-28' ? roll : '2027-02-28'; };
 
     let memoSig = null, memo = new Map();
     const cached = (k, f) => {
@@ -858,18 +1189,103 @@
       if (!memo.has(k)) memo.set(k, f(c));
       return memo.get(k);
     };
+    const density = (c, snap) => cached('density|' + snap.asOf, () => EEM.density(snap));
+
+    // the points a type's eligible profiles gain at high-wage share h. Category rounds use their own occupations'
+    // share, scaled by h against the sourced default, so a fitted or scenario share moves them too.
+    const typeGains = (c, t, h, jo, cw) => {
+      const h0 = c.pool.hwShare, cwT = t.key === 'cec' ? 1 : t.cwShare ?? cw;
+      const hwT = Math.max(0, Math.min(1, t.hwShare == null ? h : h0 ? t.hwShare * (h / h0) : t.hwShare));
+      const mixT = t.mix || c.pool.mix;
+      return { cwT, hwT, mixT, g: EEM.gains(cwT, hwT, mixT, jo, c.pool.mix) };
+    };
+
+    // A type's rounds from its last round under the old rules and IRCC's last count under the old rules,
+    // through the rounds it has held since at their real dates and sizes, then the rounds in `ahead`.
+    // Each round held is projected before its size is taken out, so the misses show how the model is doing.
+    const runType = (c, t, h, jo, cw, ahead, o = {}) => {
+      const snap = c.old || c.latest;
+      const g = o.oldRules ? [[0, 1]] : typeGains(c, t, h, jo, cw).g;
+      const rounds = t.since.map((r) => ({ date: r.date, size: r.size })).concat(ahead);
+      return EEM.path({ d: density(c, snap), share: t.key === 'cec' ? cw : t.eligibleShare, c0: t.base.crs, t0: t.base.date, rate: t.base.rate, g, mu: t.turnover, rounds, keep: o.keep ?? -1 });
+    };
+
+    // Self-correction. Before any round under the new rules the high-wage share is the sourced default, or once
+    // IRCC publishes a count under the new rules, the share that turns its last old count into that one. After
+    // each round under the new rules, the share is refitted so the projections of every round held so far come
+    // closest to the cut-offs IRCC drew. Each miss counts against the type's usual miss (a 5-point miss on a type
+    // that usually misses by 3 weighs far more than on one that misses by 17), and moving the share by 10 points
+    // costs as much as a 5-point miss on a 3-point type, so a single round can't swing it far. Each round's record
+    // uses only the rounds before it, as it would have been shown.
+    const GRID = Array.from({ length: 46 }, (_, i) => i / 50);
+    EE.hwPrior = () => cached('prior|' + EE.jo() + '|' + EE.cw(), (c) => {
+      const imp = c.live ? EE.impliedHw() : null;
+      return imp != null ? { h: imp, from: 'count' } : { h: c.pool.hwShare, from: 'sources' };
+    });
+    EE.calib = () => cached('calib|' + EE.jo() + '|' + EE.cw(), (c) => {
+      const prior = EE.hwPrior(), jo = EE.jo(), cw = EE.cw();
+      const pool = c.types.filter((t) => t.method === 'pool' && t.since.length);
+      const rows = pool.flatMap((t) => t.since.map((r, j) => ({ t, j, r }))).sort((a, b) => a.r.date.localeCompare(b.r.date) || a.r.drawNumber - b.r.drawNumber);
+      if (!rows.length) return { h: prior.h, n: 0, prior, records: [] };
+      const sims = new Map(pool.map((t) => [t.key, GRID.map((h) => runType(c, t, h, jo, cw, []).map((x) => x.cut))]));
+      const weight = new Map(pool.map((t) => [t.key, (3 / Math.max(3, t.replayError ?? 6)) ** 2]));
+      const fit = (upto) => {
+        let best = null;
+        GRID.forEach((h, gi) => {
+          let e = 25 * ((h - prior.h) / 0.1) ** 2;
+          for (let i = 0; i < upto; i++) { const x = rows[i]; e += weight.get(x.t.key) * (sims.get(x.t.key)[gi][x.j] - x.r.crs) ** 2; }
+          if (!best || e < best.e) best = { h, gi, e };
+        });
+        return best;
+      };
+      const records = rows.map((x, i) => {
+        const f = fit(i), sim = sims.get(x.t.key)[f.gi];
+        const anchor = x.j > 0 ? (x.t.since[x.j - 1].crs - sim[x.j - 1]) / 2 : 0;
+        const projected = Math.round(sim[x.j] + anchor);
+        return { key: x.t.key, category: x.t.category, drawNumber: x.r.drawNumber, date: x.r.date, size: x.r.size, actual: x.r.crs, projected, miss: x.r.crs - projected, h: f.h };
+      });
+      return { h: fit(rows.length).h, n: rows.length, prior, records };
+    });
+
+    // Provincial Nominee, Senior managers and Physicians rounds: the median of the last four cut-offs, with
+    // rounds under the old rules lifted by the points every candidate gains (none known for nominees). After
+    // rounds under the new rules, their average miss is added, shrunk toward zero: half of it after one round.
+    const patternPlan = (c, t) => cached('pattern|' + t.key, () => {
+      const S = t.method === 'shift' && t.mix && t.hwShare != null ? Math.round([70, 40, 20].reduce((s, p, i) => s + p * t.hwShare * t.mix[i], 0)) : 0;
+      const adj = t.history.map((r) => ({ ...r, v: r.crs + (r.date < EEM.RULES ? S : 0) }));
+      const records = []; let sum = 0, n = 0;
+      adj.forEach((r, i) => {
+        if (r.date < EEM.RULES || i < 1) return;
+        const med = EEM.median(adj.slice(Math.max(0, i - 4), i).map((x) => x.v)), projected = Math.round(med + sum / (n + 1));
+        records.push({ key: t.key, category: t.category, drawNumber: r.drawNumber, date: r.date, size: r.size, actual: r.crs, projected, miss: r.crs - projected });
+        sum += r.crs - med; n++;
+      });
+      const med = EEM.median(adj.slice(-4).map((x) => x.v)), bias = sum / (n + 1);
+      return { S, med, bias, n, projected: Math.round(med + bias), records };
+    });
+    // the likely range: the average miss under the new rules once there are two such rounds, before that the
+    // average miss on old-rules rounds; it grows with the square root of the rounds ahead
+    const errFor = (t, records) => {
+      const own = records.filter((r) => r.key === t.key);
+      if (own.length >= 2) return Math.max(3, Math.round(own.reduce((s, r) => s + Math.abs(r.miss), 0) / own.length));
+      return Math.max(3, Math.round(t.replayError ?? 6));
+    };
+    EE.track = () => cached('track|' + EE.jo() + '|' + EE.cw(), (c) => {
+      const pool = EE.calib() ? EE.calib().records : [];
+      const other = c.types.filter((t) => t.method !== 'pool').flatMap((t) => patternPlan(c, t).records);
+      return pool.concat(other).sort((a, b) => b.date.localeCompare(a.date) || b.drawNumber - a.drawNumber);
+    });
 
     // eligible profiles of a type at its next round (old scores), and the gains the new points give them
     const setup = (c, t, hw, jo, cw, next) => {
-      const rescore = !(c.live && t.lastDate >= EEM.RULES);
-      const snap = rescore && c.live ? c.old : c.latest;
+      const snap = c.old || c.latest;
       if (!snap) return null;
-      const d = EEM.density(snap), sh = t.key === 'cec' ? cw : t.eligibleShare;
-      const days = Math.max(0, (ms(next) - ms(t.lastDate)) / day), inflow = t.ratePerDay * days;
+      const d = density(c, snap), sh = t.key === 'cec' ? cw : t.eligibleShare;
+      const days = Math.max(0, (ms(next) - ms(t.lastDate)) / day), inflow = t.base.rate * days;
       const a = EEM.eligible(d, sh, t.lastCRS, inflow);
-      const cwT = t.key === 'cec' ? 1 : t.cwShare ?? cw, hwT = t.hwShare ?? hw, mixT = t.mix || c.pool.mix;
-      const g = (h) => (rescore ? EEM.gains(cwT, Math.max(0, Math.min(1, h)), mixT, jo, c.pool.mix) : [[0, 1]]);
-      return { snap, d, sh, days, inflow, a, cwT, hwT, mixT, rescore, g, after: EEM.shift(a, g(hwT)) };
+      const G = typeGains(c, t, hw, jo, cw);
+      const g = (h) => typeGains(c, t, Math.max(0, Math.min(1, h)), jo, cw).g;
+      return { snap, d, sh, days, inflow, a, cwT: G.cwT, hwT: G.hwT, mixT: G.mixT, rescore: true, g, after: EEM.shift(a, G.g) };
     };
 
     // projection for a draw type at a size (null = usual), under the current scenario unless o overrides it
@@ -879,30 +1295,74 @@
       const next = o.next || EE.nextFor(t), n = Math.max(1, Math.round(size ?? t.usualSize));
       return cached([t.key, n, hw, jo, cw, next].join('|'), (c) => {
         const base = { key: t.key, category: t.category, method: t.method, size: n, usual: n === t.usualSize, usualSize: t.usualSize, lastCRS: t.lastCRS, lastDate: t.lastDate, nextDate: next, t };
-        const err = Math.max(3, Math.round(t.replayError ?? 6));
         if (t.method !== 'pool') {
-          const fresh = c.live && t.lastDate >= EEM.RULES, tiers = [70, 40, 20].filter((p, i) => t.mix && t.mix[i] > 0);
-          const shift = t.method === 'shift' && !fresh ? Math.round([70, 40, 20].reduce((s, p, i) => s + p * t.hwShare * t.mix[i], 0)) : 0;
-          const spread = t.method === 'shift' && !fresh && tiers.length ? Math.round((Math.max(...tiers) - Math.min(...tiers)) / 2) : 0;
-          const projected = t.pattern + shift;
-          return { ...base, modelled: false, projected, oldRule: t.pattern, poolEffect: t.pattern - t.lastCRS, ruleEffect: shift, sizeEffect: 0, err, spread, low: projected - err - spread, high: projected + err + spread };
+          const p = patternPlan(c, t), err = errFor(t, p.records), tiers = [70, 40, 20].filter((x, i) => t.mix && t.mix[i] > 0);
+          const spread = t.method === 'shift' && !p.n && tiers.length ? Math.round((Math.max(...tiers) - Math.min(...tiers)) / 2) : 0;
+          // steps from the last cut-off: the recent median and the learned miss, then the new points lifting old-rules rounds
+          const biasR = Math.round(p.bias), poolEffect = t.pattern - t.lastCRS + biasR;
+          return { ...base, modelled: false, projected: p.projected, oldRule: t.pattern, poolEffect, ruleEffect: p.projected - t.lastCRS - poolEffect, sizeEffect: 0, err, spread, low: p.projected - err - spread, high: p.projected + err + spread, ruleShift: p.S, median: p.med, bias: p.bias, held: p.n };
+        }
+        const err = errFor(t, EE.calib().records);
+        if (t.since.length) {
+          // rounds have run under the new rules: carry the pool through them, then this round
+          const i = t.since.length, at = (h, sz, old, keep) => runType(c, t, h, jo, cw, [{ date: next, size: sz }], { oldRules: old, keep: keep ? i : -1 });
+          const held = runType(c, t, hw, jo, cw, []), anchor = Math.round((t.since[i - 1].crs - held[i - 1].cut) / 2);
+          const cut = at(hw, n, false, true)[i], newU = at(hw, t.usualSize)[i], oldN = at(hw, n, true, true)[i];
+          const lo = at(Math.max(0, hw - 0.1), n)[i].cut + anchor, hi = at(Math.min(1, hw + 0.1), n)[i].cut + anchor, projected = cut.cut + anchor;
+          const G = typeGains(c, t, hw, jo, cw), snap = c.old || c.latest;
+          return {
+            ...base, modelled: true, assimilated: i, short: cut.short, projected, oldRule: oldN.cut + anchor,
+            poolEffect: newU.cut + anchor - t.lastCRS, ruleEffect: 0, ruleIn: true, sizeEffect: cut.cut - newU.cut,
+            low: Math.min(lo, hi, projected) - err, high: Math.max(lo, hi, projected) + err, err, hwLo: lo, hwHi: hi,
+            anchor, held: held.map((x, j) => ({ ...t.since[j], sim: x.cut })), snapAsOf: snap.asOf, poolTotal: snap.total, stock: cut.eligible, withPoints: cut.withPoints,
+            cwT: G.cwT, hwT: G.hwT, mixT: G.mixT, jo, rescore: true, a: oldN.T, after: cut.T, baseDate: t.base.date, baseCRS: t.base.crs,
+          };
         }
         const m = setup(c, t, hw, jo, cw, next);
         if (!m) return null;
         const oldN = EEM.cutoff(m.a, n), oldU = EEM.cutoff(m.a, t.usualSize), newU = EEM.cutoff(m.after, t.usualSize), cut = EEM.cutoff(m.after, n);
-        const lo = EEM.cutoff(EEM.shift(m.a, m.g(m.hwT - 0.1)), n).score, hi = EEM.cutoff(EEM.shift(m.a, m.g(m.hwT + 0.1)), n).score;
-        const stock = m.a.reduce((s, v) => s + v, 0), still = (m.g(m.hwT).find(([p]) => p === 0) || [0, 0])[1];
+        const lo = EEM.cutoff(EEM.shift(m.a, m.g(hw - 0.1)), n).score, hi = EEM.cutoff(EEM.shift(m.a, m.g(hw + 0.1)), n).score;
+        const gains = m.g(hw), stock = m.a.reduce((s, v) => s + v, 0), still = (gains.find(([p]) => p === 0) || [0, 0])[1];
         return {
           ...base, modelled: true, short: cut.short, projected: cut.score, oldRule: oldN.score,
           poolEffect: oldU.score - t.lastCRS, ruleEffect: newU.score - oldU.score, sizeEffect: cut.score - newU.score,
           low: Math.min(lo, cut.score) - err, high: Math.max(hi, cut.score) + err, err, hwLo: lo, hwHi: hi,
           snapAsOf: m.snap.asOf, poolTotal: m.snap.total, belowLast: m.d.slice(0, t.lastCRS).reduce((s, v) => s + v, 0),
           share: m.sh, backlog: m.a.slice(0, t.lastCRS).reduce((s, v) => s + v, 0), days: m.days, inflow: m.inflow, stock,
-          cwT: m.cwT, hwT: m.hwT, mixT: m.mixT, jo, rescore: m.rescore, gains: m.g(m.hwT), gainers: stock * (1 - still), a: m.a, after: m.after,
+          cwT: m.cwT, hwT: m.hwT, mixT: m.mixT, jo, rescore: m.rescore, gains, gainers: stock * (1 - still), a: m.a, after: m.after,
         };
       });
     };
     EE.cur = () => EE.project(EE.cat(), EE.size());
+
+    // Every round of a type from the next one through the horizon: its usual gap and size (the selected type
+    // takes the scenario size for each round), with the year-end break skipped. Always at least the next round.
+    const schedule = (t, size, next) => {
+      const H = EE.horizon(), out = [];
+      for (let date = next; out.length < 40 && (!out.length || date <= H); date = EEM.offBreak(iso(ms(date) + t.gapDays * day))) out.push({ date, size });
+      return out;
+    };
+    EE.plan = (key) => {
+      const t = EE.type(key); if (!t) return null;
+      const h = EE.hw(), jo = EE.jo(), cw = EE.cw(), sel = t.key === EE.cat() && EE.size() != null;
+      const size = sel ? EE.size() : t.usualSize, next = EE.nextFor(t);
+      return cached(['plan', t.key, h, jo, cw, size, next].join('|'), (c) => {
+        const ahead = schedule(t, size, next);
+        if (t.method !== 'pool') {
+          const p = EE.project(t.key, size), pp = patternPlan(c, t);
+          return { t, method: t.method, records: pp.records, rounds: ahead.map((r, k) => { const e = (p.err + (p.spread || 0)) * Math.sqrt(k + 1); return { ...r, projected: p.projected, low: Math.round(p.projected - e), high: Math.round(p.projected + e), withPoints: null }; }) };
+        }
+        const n0 = t.since.length, err = errFor(t, EE.calib().records);
+        const mid = runType(c, t, h, jo, cw, ahead), lo = runType(c, t, Math.max(0, h - 0.1), jo, cw, ahead), hi = runType(c, t, Math.min(1, h + 0.1), jo, cw, ahead);
+        const miss = n0 ? t.since[n0 - 1].crs - mid[n0 - 1].cut : 0;
+        const rounds = ahead.map((r, k) => {
+          const i = n0 + k, off = n0 ? Math.round(miss * 0.5 ** (k + 1)) : 0, e = err * Math.sqrt(k + 1);
+          const p = mid[i].cut + off, a = Math.min(lo[i].cut, hi[i].cut, mid[i].cut) + off, b = Math.max(lo[i].cut, hi[i].cut, mid[i].cut) + off;
+          return { ...r, projected: p, low: Math.round(a - e), high: Math.round(b + e), withPoints: mid[i].withPoints, eligible: mid[i].eligible, short: mid[i].short };
+        });
+        return { t, method: 'pool', records: EE.calib().records.filter((r) => r.key === t.key), rounds, h };
+      });
+    };
 
     // the whole pool under the new rules: profiles with Canadian work gain the work points, the rest a job offer
     const rescorePool = (c, snap, hw, jo, cw) => {
@@ -957,8 +1417,9 @@
   // once IRCC publishes a count scored under the new rules, the rescoring estimate is no longer needed
   dash.onData(() => {
     const c = EE.ctx(), live = !!(c && c.live);
-    document.querySelectorAll('.ee-est').forEach((n) => { n.hidden = live; });
-    document.querySelectorAll('.ee-live').forEach((n) => { n.hidden = !live; });
+    // set only on a change: rewriting the attribute counts as a change and would schedule another render
+    document.querySelectorAll('.ee-est').forEach((n) => { if (n.hidden !== live) n.hidden = live; });
+    document.querySelectorAll('.ee-live').forEach((n) => { if (n.hidden !== !live) n.hidden = !live; });
   });
 
   const bar = document.querySelector('.ee-bar'), sum = document.querySelector('.ee-bar-sum');
@@ -1019,8 +1480,12 @@
   });
   dash.draw('bar-summary', (el) => {
     const r = EE.cur();
-    el.textContent = r ? r.category + ', ' + EE.num(r.size) + ' invitations, ' + EE.pctOf(EE.hw()) + ' high-wage' : '—';
+    const f = EE.hwSet() ? null : EE.calib();
+    el.textContent = r ? r.category + ', ' + EE.num(r.size) + ' a round, ' + EE.pctOf(EE.hw()) + ' high-wage' + (!f ? '' : f.n ? ' (fitted)' : f.prior.from === 'count' ? ' (from IRCC count)' : '') : '—';
   });
+  // projected rounds: every type, or only the selected one
+  document.querySelectorAll('.ee-view').forEach((b) => b.addEventListener('click', () => dash.setParams({ view: b.dataset.view })));
+  dash.onData(() => { const v = dash.params().view || 'all'; document.querySelectorAll('.ee-view').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.view === v))); });
 </script>
 
 <script>
@@ -1053,6 +1518,8 @@
   pval('k-last', (r) => r.lastCRS);
   pval('k-last-date', (r) => EE.date(r.lastDate));
   pval('k-last-size', (r) => EE.num(r.t.lastSize));
+  pval('k-last-rules', (r) => (r.lastDate >= EEM.RULES ? 'new rules' : 'old rules'));
+  ['horizon', 'horizon-2', 'horizon-3'].forEach((name) => dash.draw(name, (el) => { el.textContent = EE.ctx() ? EE.date(EE.horizon()) : '—'; }));
   pval('hero-title', (r) => r.category);
   pval('wf-title', (r) => r.category);
   value('p-asof', 'pool_summary', first((r) => EE.shortDate(r.asOf)));
@@ -1078,18 +1545,20 @@
     const dr = dash.data('draws');
     el.replaceChildren();
     if (dr.status !== 'ok') return;
-    const key = EE.cat(), r = EE.cur();
+    const key = EE.cat(), r = EE.cur(), plan = EE.plan(key);
     let pts = dr.data.filter((d) => d.key === key).map((d) => ({ ...d, t: EE.toDate(d.drawDate) })).sort((a, b) => a.t - b.t);
-    if (!pts.length || !r) { EE.empty(el, 'No draws of this type yet.'); return; }
+    if (!pts.length || !r || !plan) { EE.empty(el, 'No draws of this type yet.'); return; }
     const span = EE.span();
     if (span !== 'all') { const cut = d3.utcMonth.offset(pts[pts.length - 1].t, -Number(span)); const k = pts.filter((p) => p.t >= cut); if (k.length >= 2) pts = k; }
-    // the next round: the type's usual gap, and no earlier than the end of the rescoring pause
-    const nextT = EE.toDate(r.nextDate);
+    // the projected rounds: from the next one (the type's usual gap, no earlier than the end of the rescoring pause) through the horizon
+    const fut = plan.rounds.map((q) => ({ ...q, t: EE.toDate(q.date) }));
+    const rec = new Map((plan.records || []).map((x) => [x.drawNumber, x]));
+    const nextT = fut[fut.length - 1].t;
     const W = Math.max(280, el.clientWidth), H = W < 560 ? 280 : 330, mt = 44, mb = 30, mr = W < 560 ? 34 : 56;
-    const ys = pts.map((p) => p.drawCRS).concat([r.low, r.high]);
+    const ys = pts.map((p) => p.drawCRS).concat(fut.flatMap((q) => [q.low, q.high]), pts.filter((p) => rec.has(p.drawNumber)).map((p) => rec.get(p.drawNumber).projected));
     const pad = Math.max(8, (d3.max(ys) - d3.min(ys)) * 0.12);
     const y = d3.scaleLinear([d3.min(ys) - pad, d3.max(ys) + pad], [H - mb, mt]).nice();
-    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', 'Cut-off history');
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', 'Cut-off history and projected rounds');
     const ml = EE.yAxis(svg, y, null, 5);
     const x = d3.scaleUtc([pts[0].t, nextT], [ml + 8, W - mr]);
     EE.grid(svg, y, ml, W - 4, 5);
@@ -1111,46 +1580,55 @@
     const last = pts[pts.length - 1], coral = EE.css('--ee-coral'), ruleT = EE.toDate('2026-11-03');
     if (ruleT > x.domain()[0] && ruleT < x.domain()[1]) {
       svg.append('line').attr('x1', x(ruleT)).attr('x2', x(ruleT)).attr('y1', mt - 14).attr('y2', H - mb).style('stroke', EE.css('--ee-orange')).attr('stroke-width', 1.5).attr('stroke-dasharray', '4 3');
-      svg.append('text').attr('x', x(ruleT) - 6).attr('y', mt - 18).attr('text-anchor', 'end').text('New rules, Nov 3');
+      svg.append('text').attr('class', 'ee-rules-label').attr('x', x(ruleT) - 6).attr('y', mt - 18).attr('text-anchor', 'end').text('New rules, Nov 3');
     }
-    svg.append('line').attr('x1', x(last.t)).attr('y1', y(last.drawCRS)).attr('x2', x(nextT)).attr('y2', y(r.projected)).style('stroke', coral).attr('stroke-width', 2).attr('stroke-dasharray', '5 4');
-    svg.append('line').attr('x1', x(nextT)).attr('x2', x(nextT)).attr('y1', y(r.low)).attr('y2', y(r.high)).style('stroke', coral).attr('stroke-width', 2).attr('opacity', 0.45);
-    [r.low, r.high].forEach((v) => svg.append('line').attr('x1', x(nextT) - 6).attr('x2', x(nextT) + 6).attr('y1', y(v)).attr('y2', y(v)).style('stroke', coral).attr('stroke-width', 2).attr('opacity', 0.45));
+    // projected rounds: the likely range shaded, the path dashed from the last cut-off drawn
+    const path = [{ t: last.t, projected: last.drawCRS, low: last.drawCRS, high: last.drawCRS }].concat(fut);
+    svg.append('path').datum(path).style('fill', coral).attr('opacity', 0.12).attr('d', d3.area((q) => x(q.t), (q) => y(q.low), (q) => y(q.high)));
+    svg.append('path').datum(path).style('fill', 'none').style('stroke', coral).attr('stroke-width', 2).attr('stroke-dasharray', '5 4').attr('stroke-linejoin', 'round')
+      .attr('d', d3.line((q) => x(q.t), (q) => y(q.projected)));
+    // what was projected before each round under the new rules
+    const held = pts.filter((p) => rec.has(p.drawNumber));
+    svg.append('g').selectAll('line').data(held).join('line').attr('x1', (p) => x(p.t)).attr('x2', (p) => x(p.t)).attr('y1', (p) => y(p.drawCRS)).attr('y2', (p) => y(rec.get(p.drawNumber).projected))
+      .style('stroke', coral).attr('stroke-width', 1).attr('opacity', 0.6);
+    svg.append('g').selectAll('circle').data(held).join('circle').attr('cx', (p) => x(p.t)).attr('cy', (p) => y(rec.get(p.drawNumber).projected)).attr('r', 4.5)
+      .style('fill', 'none').style('stroke', coral).attr('stroke-width', 1.5);
     svg.append('g').selectAll('circle').data(pts).join('circle').attr('cx', (p) => x(p.t)).attr('cy', (p) => y(p.drawCRS)).attr('r', pts.length > 40 ? 2.6 : 3.6)
       .style('fill', EE.css('--ee-card')).style('stroke', EE.css('--ee-magenta')).attr('stroke-width', 2);
-    // callouts: projection, plus the latest draws while there is room
-    const bubbles = svg.append('g');
-    const used = [];
-    const fits = (cx, w) => used.every(([a, b]) => cx + w / 2 + 6 < a || cx - w / 2 - 6 > b);
-    const pw = EE.bubble(bubbles, x(nextT), y(r.high) - 2, '≈ ' + r.projected, coral, '#fff');
-    used.push([x(nextT) - pw / 2, x(nextT) + pw / 2]);
-    svg.append('circle').attr('cx', x(nextT)).attr('cy', y(r.projected)).attr('r', 5.5).style('fill', EE.css('--ee-card')).style('stroke', coral).attr('stroke-width', 2.5);
-    pts.slice(-4).reverse().forEach((p) => {
-      const cx = x(p.t), probe = String(p.drawCRS).length * 7 + 16;
-      if (!fits(cx, probe)) return;
-      const w = EE.bubble(bubbles, cx, y(p.drawCRS) - 4, String(p.drawCRS));
-      used.push([cx - w / 2, cx + w / 2]);
-      svg.insert('line', 'g').attr('x1', cx).attr('x2', cx).attr('y1', y(p.drawCRS) + 5).attr('y2', H - mb).style('stroke', EE.css('--ee-faint')).attr('stroke-dasharray', '2 3');
+    svg.append('g').selectAll('circle').data(fut).join('circle').attr('cx', (q) => x(q.t)).attr('cy', (q) => y(q.projected)).attr('r', (q, i) => (i ? 3.4 : 5.5))
+      .style('fill', EE.css('--ee-card')).style('stroke', coral).attr('stroke-width', (q, i) => (i ? 2 : 2.5));
+    // every draw and projected round is selectable. Labelled without a pin: the next round, the last projected round,
+    // and the latest draws while there is room.
+    const recent = pts.slice(-4).reverse();
+    const marks = pts.map((p) => {
+      const px = x(p.t), py = y(p.drawCRS), was = rec.get(p.drawNumber), d = recent.indexOf(p);
+      return {
+        id: key + ':d' + p.drawNumber, x: px, y: py, hl: [{ circle: [px, py, 7] }], label: { text: String(p.drawCRS) }, def: d < 0 ? null : 2 + d, drop: H - mb,
+        tip: (tip) => {
+          EE.line(tip, 'ee-tip-h', [EE.date(p.drawDate) + ', draw #' + p.drawNumber]);
+          EE.line(tip, '', ['Cut-off ' + p.drawCRS + ', ' + EE.num(p.drawSize) + ' invitations']);
+          if (was) EE.line(tip, '', ['Projected before it ' + was.projected + ', missed by ' + EE.signed(was.miss)]);
+        },
+      };
+    }).concat(fut.map((q, i) => {
+      const qx = x(q.t), qy = y(q.projected);
+      return {
+        id: key + ':p' + q.date, x: qx, y: qy, hl: [{ circle: [qx, qy, i ? 7 : 9] }], def: i === 0 ? 0 : i === fut.length - 1 ? 1 : null,
+        label: { text: (i ? '' : '≈ ') + q.projected, y: y(q.high) - 2, by: y(q.low) + 2, fill: coral, ink: '#fff' },
+        tip: (tip) => {
+          EE.line(tip, 'ee-tip-h', [(i ? 'Projected round ' + (i + 1) : 'Next round') + ', about ' + EE.date(q.date)]);
+          EE.line(tip, '', ['Cut-off ' + q.projected + ' (likely ' + q.low + ' to ' + q.high + ')']);
+          EE.line(tip, '', [EE.num(q.size) + ' invitations' + (q.size === plan.t.usualSize ? ', usual size' : '')]);
+          if (q.withPoints != null) EE.line(tip, '', [Math.round(q.withPoints * 100) + '% of invitees with new points']);
+        },
+      };
+    }));
+    const rules = svg.select('.ee-rules-label').node(), rw = rules ? rules.getComputedTextLength() : 0;
+    EE.pick(el, svg, W, H, {
+      marks, area: [ml, 0, W, H], brush: 'x',
+      obstacles: rules ? [[x(ruleT) - 6 - rw, mt - 30, x(ruleT) - 6, mt - 14]] : [],
+      find: (mx) => d3.least(marks, (m) => Math.abs(m.x - mx)),
     });
-    const tip = EE.tip(el), hit = pts.map((p) => ({ x: x(p.t), y: y(p.drawCRS), p })).concat([{ x: x(nextT), y: y(r.projected), r }]);
-    const ring = svg.append('circle').attr('r', 7).style('fill', 'none').style('stroke', EE.css('--ee-ink')).attr('stroke-width', 1.5).attr('opacity', 0);
-    svg.append('rect').attr('x', ml).attr('y', 0).attr('width', W - ml).attr('height', H).style('fill', 'transparent')
-      .on('pointermove', (ev) => {
-        const [mx] = d3.pointer(ev), h = d3.least(hit, (q) => Math.abs(q.x - mx));
-        ring.attr('cx', h.x).attr('cy', h.y).attr('opacity', 1);
-        tip.replaceChildren();
-        if (h.p) {
-          EE.line(tip, 'ee-tip-h', [EE.date(h.p.drawDate) + ', draw #' + h.p.drawNumber]);
-          EE.line(tip, '', ['Cut-off ' + h.p.drawCRS + ', ' + EE.num(h.p.drawSize) + ' invitations']);
-        } else {
-          EE.line(tip, 'ee-tip-h', ['Next draw, about ' + EE.date(h.r.nextDate)]);
-          EE.line(tip, '', ['Cut-off ' + h.r.projected + ' (likely ' + h.r.low + ' to ' + h.r.high + ')']);
-          EE.line(tip, '', [EE.num(h.r.size) + ' invitations' + (h.r.usual ? ', usual size' : '')]);
-        }
-        const k = svg.node().getBoundingClientRect().width / W;
-        EE.placeTip(el, tip, h.x * k, h.y * k);
-      })
-      .on('pointerleave', () => { tip.hidden = true; ring.attr('opacity', 0); });
   });
 </script>
 
@@ -1175,21 +1653,31 @@
     const lab = rows.filter((r, i) => (bw < 14 ? r.month.endsWith('-01') || r.month.endsWith('-07') : bw < 24 ? /-(01|04|07|10)$/.test(r.month) : true));
     svg.append('g').selectAll('text').data(lab).join('text').attr('x', (r) => x(r.month) + bw / 2).attr('y', H - mb + 16).attr('text-anchor', 'middle')
       .text((r) => (r.month.endsWith('-01') || lab.length < 14 ? d3.utcFormat(r.month.endsWith('-01') ? '%b %Y' : '%b')(EE.toDate(r.month + '-01')) : d3.utcFormat('%b')(EE.toDate(r.month + '-01'))));
-    const max = rows.reduce((m, r) => (r.total > m.total ? r : m), rows[0]), lastM = rows[rows.length - 1];
-    EE.bubble(svg.append('g'), x(max.month) + bw / 2, y(max.total) - 2, d3.format('.3~s')(max.total));
-    if (lastM !== max) EE.bubble(svg.append('g'), x(lastM.month) + bw / 2, y(lastM.total) - 2, d3.format('.3~s')(lastM.total), EE.css('--ee-coral'), '#fff');
-    const tip = EE.tip(el);
-    svg.append('g').selectAll('rect').data(rows).join('rect').attr('x', (r) => x(r.month) - (x.step() - bw) / 2).attr('width', x.step()).attr('y', 0).attr('height', H - mb).style('fill', 'transparent')
-      .on('pointermove', (ev, r) => {
-        tip.replaceChildren();
-        EE.line(tip, 'ee-tip-h', [d3.utcFormat('%B %Y')(EE.toDate(r.month + '-01')) + ', ' + r.draws + (r.draws === 1 ? ' draw' : ' draws')]);
-        [['cec', 'Canadian Experience Class'], ['pnp', 'Provincial Nominee'], ['french', 'French language'], ['other', 'Other categories']]
-          .forEach(([k, n]) => { if (r[k]) EE.line(tip, '', [EE.swatch(EE.groupColor(k)), n + '  ' + EE.num(r[k])]); });
-        EE.line(tip, '', ['Total  ' + EE.num(r.total)]);
-        const k = svg.node().getBoundingClientRect().width / W;
-        EE.placeTip(el, tip, (x(r.month) + bw / 2) * k, y(r.total) * k);
-      })
-      .on('pointerleave', () => { tip.hidden = true; });
+    // each month's total and each of its segments is selectable; the busiest and the latest month are labelled without a pin
+    const max = rows.reduce((m, r) => (r.total > m.total ? r : m), rows[0]), lastM = rows[rows.length - 1], fmt = d3.format('.3~s');
+    const names = { cec: 'Canadian Experience Class', pnp: 'Provincial Nominee', french: 'French language', other: 'Other categories' };
+    const marks = rows.flatMap((r, i) => {
+      const cx = x(r.month) + bw / 2, top = y(r.total);
+      const tip = (k) => (t) => {
+        EE.line(t, 'ee-tip-h', [d3.utcFormat('%B %Y')(EE.toDate(r.month + '-01')) + ', ' + r.draws + (r.draws === 1 ? ' draw' : ' draws')]);
+        keys.forEach((s) => { if (r[s]) EE.line(t, s === k ? 'ee-tip-b' : '', [EE.swatch(EE.groupColor(s)), names[s] + '  ' + EE.num(r[s])]); });
+        EE.line(t, k ? '' : 'ee-tip-b', ['Total  ' + EE.num(r.total)]);
+      };
+      const total = {
+        id: r.month, x: cx, y: top, ty: top, hl: [{ rect: [x(r.month) - 2, top - 2, bw + 4, y(0) - top + 2] }], tip: tip(null),
+        label: { text: fmt(r.total), y: top - 2, ...(r === lastM && r !== max ? { fill: EE.css('--ee-coral'), ink: '#fff' } : {}) },
+        def: r === max ? 0 : r === lastM ? 1 : null,
+      };
+      return [total].concat(stack.filter((s) => s[i][1] > s[i][0]).map((s) => {
+        const y0 = y(s[i][0]), y1 = y(s[i][1]);
+        return { id: r.month + ':' + s.key, x: cx, y: (y0 + y1) / 2, ty: top, top: y1, bot: y0, brush: false, hl: [{ rect: [x(r.month) - 1, y1, bw + 2, y0 - y1] }], label: { text: fmt(s[i][1] - s[i][0]) }, tip: tip(s.key) };
+      }));
+    });
+    const byMonth = d3.group(marks, (m) => m.x);
+    EE.pick(el, svg, W, H, {
+      marks, area: [ml, 0, W, H], brush: 'x',
+      find: (mx, my) => { const c = byMonth.get(d3.least([...byMonth.keys()], (k) => Math.abs(k - mx))); return c.find((m) => m.top != null && my >= m.top && my <= m.bot) || c[0]; },
+    });
   });
 
   dash.draw('mix-chart', (el) => {
@@ -1207,16 +1695,36 @@
     const cx = side ? W / 2 : size / 2 + 4, cy = size / 2 + 4, R = size / 2;
     const arc = d3.arc().innerRadius(R * 0.7).outerRadius(R).cornerRadius(2).padAngle(0.012);
     const g = svg.append('g').attr('transform', `translate(${cx},${cy})`);
-    g.selectAll('path').data(d3.pie().sort(null).value((p) => p.v)(parts)).join('path').attr('d', arc).style('fill', (a) => a.data.color);
+    const pie = d3.pie().sort(null).value((p) => p.v)(parts);
+    g.selectAll('path').data(pie).join('path').attr('d', arc).style('fill', (a) => a.data.color);
     g.append('text').attr('text-anchor', 'middle').attr('y', -4).text('Profiles');
     g.append('text').attr('class', 'ee-t-ink').attr('text-anchor', 'middle').attr('y', 16).style('font-size', '20px').text(EE.num(r.total));
-    const lx = side ? 16 : size + 22, ly = side ? size + 22 : cy - parts.length * 13;
+    const lx = side ? 16 : size + 22, ly = side ? size + 22 : cy - parts.length * 13, lw = side ? W - 32 : W - lx - 4;
     const leg = svg.append('g').attr('transform', `translate(${lx},${ly})`);
     parts.forEach((p, i) => {
       const row = leg.append('g').attr('transform', `translate(0,${i * 26})`);
       row.append('rect').attr('width', 9).attr('height', 9).attr('y', -8).attr('rx', 2).style('fill', p.color);
       row.append('text').attr('x', 16).text(p.label);
-      row.append('text').attr('class', 'ee-t-ink').attr('x', (side ? W - 32 : W - lx - 4)).attr('text-anchor', 'end').text(EE.pct(p.v / r.total));
+      row.append('text').attr('class', 'ee-t-ink').attr('x', lw).attr('text-anchor', 'end').text(EE.pct(p.v / r.total));
+    });
+    // a slice, or its legend row, pins the slice's profile count on the ring
+    const marks = pie.map((a) => {
+      const [ax, ay] = arc.centroid(a);
+      return {
+        id: a.data.k, x: cx + ax, y: cy + ay, a0: a.startAngle, a1: a.endAngle, hl: [{ path: arc(a), transform: `translate(${cx},${cy})` }], label: { text: EE.num(a.data.v) },
+        tip: (t) => { EE.line(t, 'ee-tip-h', ['CRS ' + a.data.label]); EE.line(t, '', [EE.swatch(a.data.color), EE.num(a.data.v) + ' profiles, ' + EE.pct(a.data.v / r.total)]); },
+      };
+    });
+    EE.pick(el, svg, W, H, {
+      marks, linear: true, obstacles: [[cx - 44, cy - 18, cx + 44, cy + 22]],
+      find: (mx, my) => {
+        const row = Math.round((my - ly + 4) / 26);
+        if (mx >= lx && mx <= lx + lw && row >= 0 && row < marks.length && Math.abs(my - (ly - 4 + row * 26)) <= 12) return marks[row];
+        const dx = mx - cx, dy = my - cy, d = Math.hypot(dx, dy);
+        if (d < R * 0.55 || d > R + 8) return null;
+        const ang = (Math.atan2(dx, -dy) + 2 * Math.PI) % (2 * Math.PI);
+        return marks.find((m) => ang >= m.a0 && ang < m.a1) || null;
+      },
     });
   });
 
@@ -1253,8 +1761,8 @@
     if (!r) return;
     const steps = [
       { label: 'Last cut-off', abs: r.lastCRS },
-      { label: r.modelled ? 'Pool and pause' : 'Recent pattern', d: r.poolEffect },
-      { label: 'New points', d: r.ruleEffect, off: r.method === 'pattern' },
+      { label: r.assimilated ? 'Pool since' : r.modelled ? 'Pool and pause' : 'Recent pattern', d: r.poolEffect },
+      { label: 'New points', d: r.ruleEffect, off: r.method === 'pattern' || r.ruleIn, offText: r.ruleIn ? 'in pool' : 'n/a' },
       { label: 'Draw size', d: r.sizeEffect, off: !r.modelled },
       { label: 'Projected', abs: r.projected, end: true },
     ];
@@ -1269,6 +1777,7 @@
     EE.grid(svg, y, ml, W - 4, 5);
     const x = d3.scaleBand(steps.map((s) => s.label), [ml + 4, W - 4]).padding(0.32);
     const base = y.domain()[0], coral = EE.css('--ee-coral'), green = EE.css('--ee-green'), blue = EE.css('--ee-blue'), slate = EE.css('--ee-slate');
+    const marks = [];
     steps.forEach((s, i) => {
       const bx = x(s.label), bw = x.bandwidth();
       let top, bot, fill;
@@ -1276,14 +1785,28 @@
       else { top = y(Math.max(s.y0, s.y1)); bot = y(Math.min(s.y0, s.y1)); fill = s.d > 0 ? coral : s.d < 0 ? green : slate; if (bot - top < 2) { top -= 1; bot += 1; } }
       svg.append('rect').attr('x', bx).attr('width', bw).attr('y', top).attr('height', Math.max(2, bot - top)).attr('rx', 3).style('fill', fill).attr('opacity', s.off ? 0.35 : 1);
       if (i < steps.length - 1) svg.append('line').attr('x1', bx + bw).attr('x2', x(steps[i + 1].label)).attr('y1', y(s.y1)).attr('y2', y(s.y1)).style('stroke', EE.css('--ee-faint')).attr('stroke-dasharray', '3 3');
-      const txt = s.abs != null ? String(s.abs) : s.off ? 'n/a' : EE.signed(s.d);
+      const txt = s.abs != null ? String(s.abs) : s.off ? s.offText || 'n/a' : EE.signed(s.d);
       svg.append('text').attr('class', 'ee-t-ink').attr('x', bx + bw / 2).attr('y', top - 7).attr('text-anchor', 'middle').text(txt);
       const words = s.label.split(' ');
       words.forEach((w, j) => svg.append('text').attr('x', bx + bw / 2).attr('y', H - mb + 16 + j * 13).attr('text-anchor', 'middle').text(w));
+      // a pinned step shows where it leaves the cut-off: from and to for a change, the likely range for the projection
+      const ltop = s.end ? Math.min(top, y(r.high)) : top;
+      marks.push({
+        id: r.key + ':' + i, x: bx + bw / 2, y: top, hl: [{ rect: [bx - 2, top - 2, bw + 4, Math.max(2, bot - top) + 4] }],
+        label: s.off ? null : { text: s.end ? r.low + '–' + r.high : s.abs != null ? String(s.abs) : s.y0 + ' → ' + s.y1, y: ltop - 20, by: Math.min(bot, top + 24) },
+        tip: (t) => {
+          EE.line(t, 'ee-tip-h', [s.label]);
+          if (s.end) { EE.line(t, '', ['Projected cut-off ' + r.projected]); EE.line(t, '', ['Likely ' + r.low + ' to ' + r.high]); }
+          else if (s.abs != null) EE.line(t, '', ['Cut-off ' + s.abs + ', ' + EE.date(r.lastDate)]);
+          else if (s.off) EE.line(t, '', [s.offText === 'in pool' ? 'Already counted in Pool since' : 'Not used for this draw type']);
+          else { EE.line(t, '', ['Moves the cut-off ' + EE.signed(s.d)]); EE.line(t, '', ['From ' + s.y0 + ' to ' + s.y1]); }
+        },
+      });
     });
     const ex = x('Projected') + x.bandwidth() / 2;
     svg.append('line').attr('x1', ex).attr('x2', ex).attr('y1', y(r.high)).attr('y2', y(r.low)).style('stroke', EE.css('--ee-ink')).attr('stroke-width', 1.5).attr('opacity', 0.6);
     [r.low, r.high].forEach((v) => svg.append('line').attr('x1', ex - 5).attr('x2', ex + 5).attr('y1', y(v)).attr('y2', y(v)).style('stroke', EE.css('--ee-ink')).attr('stroke-width', 1.5).attr('opacity', 0.6));
+    EE.pick(el, svg, W, H, { marks, area: [ml, 0, W, H], find: (mx) => d3.least(marks, (m) => Math.abs(m.x - mx)) });
   });
 
   dash.draw('sens-chart', (el) => {
@@ -1312,19 +1835,21 @@
     svg.append('path').datum(rows).style('fill', 'none').style('stroke', EE.css('--ee-slate')).attr('stroke-width', 1.8).attr('stroke-dasharray', '5 4').attr('d', ln('oldRule'));
     svg.append('path').datum(rows).style('fill', 'none').style('stroke', EE.css('--ee-blue')).attr('stroke-width', 2.5).attr('stroke-linejoin', 'round').attr('d', ln('projected'));
     svg.append('circle').attr('cx', x(cur.size)).attr('cy', y(cur.projected)).attr('r', 5.5).style('fill', EE.css('--ee-card')).style('stroke', EE.css('--ee-coral')).attr('stroke-width', 2.5);
-    EE.bubble(svg.append('g'), x(cur.size), y(cur.projected) - 6, cur.projected + ' at ' + d3.format('~s')(cur.size), EE.css('--ee-coral'), '#fff');
-    const tip = EE.tip(el);
-    svg.append('rect').attr('x', ml).attr('y', 0).attr('width', W - ml).attr('height', H).style('fill', 'transparent')
-      .on('pointermove', (ev) => {
-        const [mx] = d3.pointer(ev), h = d3.least(rows, (q) => Math.abs(x(q.size) - mx));
-        tip.replaceChildren();
-        EE.line(tip, 'ee-tip-h', [EE.num(h.size) + ' invitations' + (h.usual ? ' (usual)' : '')]);
-        EE.line(tip, '', [EE.swatch(EE.css('--ee-blue')), 'New rules  ' + h.projected + ' (likely ' + h.low + ' to ' + h.high + ')']);
-        EE.line(tip, '', [EE.swatch(EE.css('--ee-slate')), 'Same pool, old rules  ' + h.oldRule]);
-        const k = svg.node().getBoundingClientRect().width / W;
-        EE.placeTip(el, tip, x(h.size) * k, y(h.projected) * k);
-      })
-      .on('pointerleave', () => { tip.hidden = true; });
+    // each size is selectable: a pin shows the cut-off on both lines; the size in use is labelled without a pin
+    const marks = rows.map((h) => {
+      const hx = x(h.size), hy = y(h.projected), oy = y(h.oldRule), now = h.size === cur.size;
+      return {
+        id: t.key + ':' + h.size, x: hx, y: hy, hl: [{ circle: [hx, hy, 7] }, { circle: [hx, oy, 6] }], def: now ? 0 : null,
+        label: [now ? { text: cur.projected + ' at ' + d3.format('~s')(cur.size), y: hy - 6, fill: EE.css('--ee-coral'), ink: '#fff' } : { text: String(h.projected), y: hy - 6 },
+          { text: String(h.oldRule), y: oy - 4, by: oy + 4, below: true, fill: EE.css('--ee-track'), ink: EE.css('--ee-ink') }],
+        tip: (tip) => {
+          EE.line(tip, 'ee-tip-h', [EE.num(h.size) + ' invitations' + (h.usual ? ' (usual)' : '')]);
+          EE.line(tip, '', [EE.swatch(EE.css('--ee-blue')), 'New rules  ' + h.projected + ' (likely ' + h.low + ' to ' + h.high + ')']);
+          EE.line(tip, '', [EE.swatch(EE.css('--ee-slate')), 'Same pool, old rules  ' + h.oldRule]);
+        },
+      };
+    });
+    EE.pick(el, svg, W, H, { marks, area: [ml, 0, W, H], brush: 'x', find: (mx) => d3.least(marks, (m) => Math.abs(m.x - mx)) });
   });
 
   dash.draw('types-body', (tb) => {
@@ -1338,7 +1863,7 @@
       const tr = document.createElement('tr');
       tr.dataset.key = r.key + ',' + r.size;
       tr.className = 'ee-click' + (r.key === cur ? ' is-picked' : '');
-      const vals = [null, EE.num(r.size), r.projected, r.low, r.high, EE.signed(r.poolEffect), r.method === 'pattern' ? 'n/a' : EE.signed(r.ruleEffect), r.modelled ? EE.signed(r.sizeEffect) : 'n/a', null];
+      const vals = [null, EE.num(r.size), r.projected, r.low, r.high, EE.signed(r.poolEffect), r.method === 'pattern' ? 'n/a' : r.ruleIn ? 'in pool' : EE.signed(r.ruleEffect), r.modelled ? EE.signed(r.sizeEffect) : 'n/a', null];
       vals.forEach((v, i) => {
         const td = document.createElement('td');
         if (i > 0 && i < 8) td.className = 'num';
@@ -1353,9 +1878,76 @@
         } else td.textContent = v;
         tr.appendChild(td);
       });
-      tr.addEventListener('click', () => dash.setParams({ cat: r.key, size: null }));
+      tr.addEventListener('click', () => { if (r.key !== cur) dash.setParams({ cat: r.key, size: null, next: null }); });
       tb.appendChild(tr);
     });
+  });
+
+  // a table cell: text, numeric alignment, or the draw type's swatch and name
+  const cell = (tr, v, cls, typeOf) => {
+    const td = document.createElement('td');
+    if (cls) td.className = cls;
+    if (typeOf) EE.typeCell(td, typeOf.key, typeOf.category); else td.textContent = v;
+    tr.appendChild(td);
+    return td;
+  };
+  const emptyRow = (tb, cols, text) => { const tr = document.createElement('tr'); const td = cell(tr, text, 'ee-empty'); td.colSpan = cols; tb.appendChild(tr); };
+
+  // every projected round through the horizon, by date
+  dash.draw('rounds-body', (tb) => {
+    tb.replaceChildren();
+    const d = dash.data('types');
+    if (d.status !== 'ok' || !EE.ctx()) return;
+    const cur = EE.cat(), all = (dash.params().view || 'all') === 'all';
+    const rows = d.data.filter((t) => all || t.key === cur).flatMap((t) => {
+      const p = EE.plan(t.key);
+      return p ? p.rounds.map((q, i) => ({ ...q, key: t.key, category: t.category, prev: i ? p.rounds[i - 1].projected : t.lastCRS })) : [];
+    }).sort((a, b) => a.date.localeCompare(b.date) || a.category.localeCompare(b.category));
+    if (!rows.length) { emptyRow(tb, 7, 'No rounds to project.'); return; }
+    rows.forEach((r) => {
+      const tr = document.createElement('tr');
+      tr.dataset.key = r.key + ',' + r.date;
+      tr.className = 'ee-click' + (all && r.key === cur ? ' is-picked' : '');
+      cell(tr, EE.date(r.date));
+      cell(tr, null, '', r);
+      cell(tr, EE.num(r.size), 'num');
+      cell(tr, String(r.projected), 'num');
+      cell(tr, r.low + ' to ' + r.high, 'num');
+      cell(tr, EE.signed(r.projected - r.prev), 'num');
+      cell(tr, r.withPoints == null ? 'n/a' : Math.round(r.withPoints * 100) + '%', 'num');
+      tr.addEventListener('click', () => { if (r.key !== cur) dash.setParams({ cat: r.key, size: null, next: null }); });
+      tb.appendChild(tr);
+    });
+  });
+
+  // what was projected before each round under the new rules, and what IRCC drew
+  dash.draw('track-body', (tb) => {
+    tb.replaceChildren();
+    if (!EE.ctx()) return;
+    const rows = EE.track();
+    if (!rows.length) { emptyRow(tb, 7, 'No rounds under the new rules yet. Each round IRCC holds after the rescoring pause is listed here with the cut-off projected before it.'); return; }
+    rows.forEach((r) => {
+      const tr = document.createElement('tr');
+      tr.dataset.key = String(r.drawNumber);
+      cell(tr, '#' + r.drawNumber, 'num');
+      cell(tr, EE.date(r.date));
+      cell(tr, null, '', r);
+      cell(tr, EE.num(r.size), 'num');
+      cell(tr, String(r.projected), 'num');
+      cell(tr, String(r.actual), 'num');
+      cell(tr, EE.signed(r.miss), 'num');
+      tb.appendChild(tr);
+    });
+  });
+  dash.draw('track-note', (el) => {
+    const c = EE.ctx();
+    if (!c) { el.textContent = ''; return; }
+    const cal = EE.calib(), rows = EE.track(), n = rows.length;
+    const miss = n ? rows.reduce((s, r) => s + Math.abs(r.miss), 0) / n : 0;
+    const share = EE.hwSet()
+      ? 'The high-wage share is set to ' + EE.pctOf(EE.hw()) + ' in the scenario, so it is not refitted.'
+      : 'High-wage share in use: ' + EE.pctOf(cal.h) + (cal.n ? ', refitted to ' + cal.n + ' round' + (cal.n === 1 ? '' : 's') + ' under the new rules.' : cal.prior.from === 'count' ? ', from IRCC’s first count under the new rules.' : ', the sourced default until rounds under the new rules come in.');
+    el.textContent = (n ? n + ' round' + (n === 1 ? '' : 's') + ' so far, missed by ' + miss.toFixed(1) + ' points on average. Each projection uses only the rounds before it. ' : '') + share;
   });
 </script>
 
@@ -1370,14 +1962,16 @@
     EE.grid(svg, y, ml, W - 4, 5);
     const x = d3.scaleBand(rows.map((r) => r.band), [ml + 2, W - 4]).padding(0.2);
     const bw = x.bandwidth();
+    const obstacles = [];
     if (mark) {
       const band = rows.find((r) => mark.v >= r.lo && mark.v <= r.hi);
       if (band) {
         const bx = x(band.band) + bw / 2;
         svg.append('rect').attr('x', x(band.band) - (x.step() - bw) / 2).attr('width', x.step()).attr('y', mt - 6).attr('height', H - mb - mt + 6).style('fill', EE.css('--ee-chip'));
         const t = svg.append('text').attr('class', 'ee-t-ink').attr('y', 12).text(mark.label);
-        const tw = t.node().getComputedTextLength();
-        t.attr('x', Math.min(W - tw - 2, Math.max(ml, bx - tw / 2)));
+        const tw = t.node().getComputedTextLength(), tx = Math.min(W - tw - 2, Math.max(ml, bx - tw / 2));
+        t.attr('x', tx);
+        obstacles.push([tx, 0, tx + tw, 16]);
       }
     }
     const g = svg.append('g').selectAll('g').data(rows).join('g').attr('transform', (r) => `translate(${x(r.band)},0)`);
@@ -1388,18 +1982,21 @@
     svg.append('g').selectAll('text').data(rows.filter((r, i) => i % every === 0 || i === rows.length - 1)).join('text')
       .attr('x', (r) => x(r.band) + bw / 2).attr('y', H - mb + 16).attr('text-anchor', 'middle').text((r) => (r.lo === 0 ? '≤300' : r.lo === 601 ? '601+' : r.lo));
     svg.append('text').attr('x', (ml + W) / 2).attr('y', H - 6).attr('text-anchor', 'middle').text('CRS score, start of band');
-    const tip = EE.tip(el);
-    svg.append('g').selectAll('rect').data(rows).join('rect').attr('x', (r) => x(r.band) - (x.step() - bw) / 2).attr('width', x.step()).attr('y', 0).attr('height', H - mb).style('fill', 'transparent')
-      .on('pointermove', (ev, r) => {
-        tip.replaceChildren();
-        EE.line(tip, 'ee-tip-h', ['CRS ' + r.band]);
-        EE.line(tip, '', [EE.swatch(colA), labA + '  ' + EE.num(r[a])]);
-        EE.line(tip, '', [EE.swatch(colB.stroke || colB.fill), labB + '  ' + EE.num(r[b])]);
-        EE.line(tip, '', ['Difference  ' + EE.signed(r[a] - r[b])]);
-        const k = svg.node().getBoundingClientRect().width / W;
-        EE.placeTip(el, tip, (x(r.band) + bw / 2) * k, y(Math.max(r[a], r[b])) * k);
-      })
-      .on('pointerleave', () => { tip.hidden = true; });
+    // each band is selectable: a pin shows its count under the new rules
+    const fmt = d3.format('.3~s');
+    const marks = rows.map((r) => {
+      const top = y(Math.max(r[a], r[b]));
+      return {
+        id: r.band, x: x(r.band) + bw / 2, y: top, hl: [{ rect: [x(r.band) - 2, top - 2, bw + 4, y(0) - top + 2] }], label: { text: fmt(r[a]), y: top - 2 },
+        tip: (tip) => {
+          EE.line(tip, 'ee-tip-h', ['CRS ' + r.band]);
+          EE.line(tip, '', [EE.swatch(colA), labA + '  ' + EE.num(r[a])]);
+          EE.line(tip, '', [EE.swatch(colB.stroke || colB.fill), labB + '  ' + EE.num(r[b])]);
+          EE.line(tip, '', ['Difference  ' + EE.signed(r[a] - r[b])]);
+        },
+      };
+    });
+    EE.pick(el, svg, W, H, { marks, area: [ml, 0, W, H], brush: 'x', obstacles, find: (mx) => d3.least(marks, (m) => Math.abs(m.x - mx)) });
   };
 
   dash.draw('rescored-chart', (el) => {
@@ -1433,18 +2030,25 @@
         svg.append('text').attr('x', W - mr + 6).attr('y', yy + 4).text(keys[o.i][1]);
       });
     }
-    const tip = EE.tip(el), rule = svg.append('line').attr('y1', mt).attr('y2', H - mb).style('stroke', EE.css('--ee-ink')).attr('opacity', 0);
-    svg.append('rect').attr('x', ml).attr('y', 0).attr('width', W - mr - ml).attr('height', H).style('fill', 'transparent')
-      .on('pointermove', (ev) => {
-        const [mx] = d3.pointer(ev), r = d3.least(rows, (q) => Math.abs(x(q.t) - mx));
-        rule.attr('x1', x(r.t)).attr('x2', x(r.t)).attr('opacity', 0.35);
-        tip.replaceChildren();
-        EE.line(tip, 'ee-tip-h', [EE.date(r.asOf) + ', ' + EE.num(r.total) + ' profiles']);
-        keys.slice().reverse().forEach(([k, label, c]) => EE.line(tip, '', [EE.swatch(EE.css(c)), label + '  ' + EE.num(r[k])]));
-        const k = svg.node().getBoundingClientRect().width / W;
-        EE.placeTip(el, tip, x(r.t) * k, 50 * k);
-      })
-      .on('pointerleave', () => { tip.hidden = true; rule.attr('opacity', 0); });
+    // each count's total and each of its score ranges is selectable
+    const fmt = d3.format('.3~s');
+    const marks = rows.flatMap((r, i) => {
+      const rx = x(r.t), top = y(r.total);
+      const tip = (k) => (t) => {
+        EE.line(t, 'ee-tip-h', [EE.date(r.asOf) + ', ' + EE.num(r.total) + ' profiles']);
+        keys.slice().reverse().forEach(([s, label, c]) => EE.line(t, s === k ? 'ee-tip-b' : '', [EE.swatch(EE.css(c)), label + '  ' + EE.num(r[s])]));
+      };
+      const total = { id: r.asOf, x: rx, y: top, ty: 50, hl: [{ vline: [rx, mt, H - mb] }, { circle: [rx, top, 4] }], label: { text: fmt(r.total), y: top - 2 }, tip: tip(null) };
+      return [total].concat(stack.filter((s) => s[i][1] > s[i][0]).map((s) => {
+        const y0 = y(s[i][0]), y1 = y(s[i][1]), mid = (y0 + y1) / 2;
+        return { id: r.asOf + ':' + s.key, x: rx, y: mid, ty: 50, top: y1, bot: y0, brush: false, hl: [{ vline: [rx, mt, H - mb] }, { circle: [rx, mid, 4] }], label: { text: fmt(s[i][1] - s[i][0]) }, tip: tip(s.key) };
+      }));
+    });
+    const byDate = d3.group(marks, (m) => m.x);
+    EE.pick(el, svg, W, H, {
+      marks, area: [ml, 0, W - mr, H], brush: 'x',
+      find: (mx, my) => { const c = byDate.get(d3.least([...byDate.keys()], (k) => Math.abs(k - mx))); return c.find((m) => m.top != null && my >= m.top && my <= m.bot) || c[0]; },
+    });
   });
 </script>
 
@@ -1467,18 +2071,20 @@
     svg.append('g').selectAll('circle').data(rows.slice().sort((a, b) => b.drawSize - a.drawSize)).join('circle')
       .attr('cx', (q) => x(q.t)).attr('cy', (q) => y(q.drawCRS)).attr('r', (q) => Math.max(2, r(q.drawSize)))
       .style('fill', (q) => EE.groupColor(q.key)).attr('fill-opacity', 0.55).style('stroke', (q) => EE.groupColor(q.key)).attr('stroke-width', 1);
-    const tip = EE.tip(el), pts = rows.map((q) => ({ q, px: x(q.t), py: y(q.drawCRS) })), dl = d3.Delaunay.from(pts, (p) => p.px, (p) => p.py);
-    svg.append('rect').attr('x', ml).attr('y', 0).attr('width', W - ml).attr('height', H - mb).style('fill', 'transparent')
-      .on('pointermove', (ev) => {
-        const [mx, my] = d3.pointer(ev), p = pts[dl.find(mx, my)];
-        tip.replaceChildren();
-        EE.line(tip, 'ee-tip-h', [EE.date(p.q.drawDate) + ', draw #' + p.q.drawNumber]);
-        EE.line(tip, '', [p.q.category]);
-        EE.line(tip, '', ['Cut-off ' + p.q.drawCRS + ', ' + EE.num(p.q.drawSize) + ' invitations']);
-        const k = svg.node().getBoundingClientRect().width / W;
-        EE.placeTip(el, tip, p.px * k, p.py * k);
-      })
-      .on('pointerleave', () => { tip.hidden = true; });
+    // each draw is selectable: the nearest one to the pointer; drag a box to pin every draw inside it
+    const marks = rows.map((q) => {
+      const px = x(q.t), py = y(q.drawCRS), rr = Math.max(2, r(q.drawSize));
+      return {
+        id: String(q.drawNumber), x: px, y: py, hl: [{ circle: [px, py, rr + 3] }], label: { text: String(q.drawCRS), y: py - rr - 1, by: py + rr + 1 },
+        tip: (tip) => {
+          EE.line(tip, 'ee-tip-h', [EE.date(q.drawDate) + ', draw #' + q.drawNumber]);
+          EE.line(tip, '', [q.category]);
+          EE.line(tip, '', ['Cut-off ' + q.drawCRS + ', ' + EE.num(q.drawSize) + ' invitations']);
+        },
+      };
+    });
+    const dl = d3.Delaunay.from(marks, (m) => m.x, (m) => m.y);
+    EE.pick(el, svg, W, H, { marks, area: [ml, 0, W, H - mb], brush: 'xy', find: (mx, my) => marks[dl.find(mx, my)] });
   });
 
   const search = document.querySelector('.ee-search');
@@ -1511,10 +2117,22 @@
     ['src-cw', () => pc(comp() && comp().cwShare)], ['src-hw', () => (comp() ? pc(comp().hwShare) + ' (' + mixText(comp().mix) + ')' : '—')], ['src-jo', () => pc(comp() && comp().joShare)], ['src-cat', cats],
   ].forEach(([name, f]) => dash.draw(name, (el) => { el.textContent = f(); }));
   dash.draw('asof-long', (el) => { const c = EE.ctx(); el.textContent = c ? EE.date((c.live && c.old ? c.old : c.latest).asOf) : 'latest'; });
+  // where the high-wage share in use comes from
+  const hwSource = () => {
+    if (EE.hwSet()) return 'Scenario value';
+    const f = EE.calib();
+    return f.n ? 'Refitted to ' + f.n + ' round' + (f.n === 1 ? '' : 's') + ' under the new rules' : f.prior.from === 'count' ? 'From IRCC’s first count under the new rules' : 'Sourced default';
+  };
+  const hwNote = (t) => {
+    if (t.key === 'cec' || t.hwShare == null) return hwSource();
+    const c = comp(), h = EE.hw();
+    return 'This category’s occupations, weighted by people' + (c && Math.abs(h - c.hwShare) > 0.005 ? ', scaled by ' + pc(h) + ' in use against ' + pc(c.hwShare) + ' sourced' : '');
+  };
   dash.draw('calc-defaults', (el) => {
     const c = comp(), imp = EE.impliedHw();
     el.textContent = !c ? '' : 'Sourced defaults: ' + pc(c.cwShare) + ' with Canadian work, ' + pc(c.hwShare) + ' of them in high-wage jobs, ' + pc(c.joShare) + ' job offers.'
-      + (imp != null ? ' IRCC’s first count under the new rules fits a high-wage share of about ' + pc(imp) + '.' : '');
+      + (imp != null ? ' IRCC’s first count under the new rules fits a high-wage share of about ' + pc(imp) + '.' : '')
+      + (EE.hwSet() ? '' : ' High-wage share in use: ' + pc(EE.hw()) + ' (' + hwSource().toLowerCase() + ').');
   });
 
   // one line of the receipt: operator, label (with an optional note), value
@@ -1537,30 +2155,54 @@
     const t = r.t;
     if (!r.modelled) {
       head(box, r.category + ': recent rounds');
-      line(box, '', 'Median cut-off of the last four rounds', String(t.pattern), { note: 'Old rules. Last round ' + EE.date(t.lastDate) + ' at ' + t.lastCRS });
+      line(box, '', 'Median cut-off of the last four rounds', String(t.pattern), { note: 'Last round ' + EE.date(t.lastDate) + ' at ' + t.lastCRS + (t.lastDate >= EEM.RULES ? ', new rules' : ', old rules') });
       if (r.method === 'shift') {
-        line(box, '+', 'New points for every eligible candidate', EE.signed(r.ruleEffect), { note: 'All have 12+ months of Canadian work in high-wage occupations (' + mixText(t.mix) + ' in 2× / 1.5× / 1.3×), so the whole group moves up together' });
+        line(box, '+', 'New points, on the old-rules rounds among them', EE.signed(r.ruleEffect), { note: 'Each old-rules round is lifted by ' + r.ruleShift + ' points: all eligible candidates have 12+ months of Canadian work in high-wage occupations (' + mixText(t.mix) + ' in 2× / 1.5× / 1.3×), so the whole group moves up together' });
       } else {
         line(box, '', 'New points', 'not added', { note: 'Nearly every nominee is invited, so the cut-off is the lowest-scoring nominee. Pool counts can’t place that score: 601+ is one IRCC band' });
       }
+      if (r.held) line(box, '+', 'Learned from rounds under the new rules', EE.signed(Math.round(r.bias)), { note: 'Average miss over ' + r.held + ' round' + (r.held === 1 ? '' : 's') + ', shrunk toward zero (' + r.held + ' of ' + (r.held + 1) + ')' });
       line(box, '=', 'Projected cut-off', String(r.projected), { cls: 'ee-rc-total' });
-      line(box, '', 'Likely range', r.low + ' to ' + r.high, { note: 'Average miss of this method on recent rounds: ' + (t.replayError ?? '—') + ' points' });
+      line(box, '', 'Likely range', r.low + ' to ' + r.high, { note: (r.held >= 2 ? 'Average miss under the new rules: ' : 'Average miss of this method on recent rounds: ') + r.err + ' points' + (r.spread ? ', plus ' + r.spread + ' for the spread between occupation tiers' : '') });
       return;
     }
-    const isCec = r.key === 'cec';
+    const isCec = r.key === 'cec', c = r.projected;
+    if (r.assimilated) {
+      const last = r.held[r.held.length - 1], cm = c - r.anchor;
+      head(box, 'Carried through the rounds under the new rules');
+      line(box, '', 'Start: last round under the old rules', String(r.baseCRS), { note: EE.date(r.baseDate) + '. IRCC pool count of ' + EE.date(r.snapAsOf) + ' (' + n0(r.poolTotal) + ' profiles), rescored with the new points' });
+      r.held.forEach((h) => line(box, '', 'Draw #' + h.drawNumber + ', ' + EE.date(h.date) + ', ' + EE.num(h.size) + ' invited', 'drew ' + h.crs, { note: 'Carried to this round, the model gives ' + h.sim + '. Its invitees leave; new profiles arrive at ' + EE.num(Math.round(t.base.rate)) + ' a day and replace the invited at the pool’s rate of new points' }));
+      line(box, '=', 'Eligible at the next round, ' + EE.date(r.nextDate), n0(r.stock), { cls: 'ee-rc-sub' });
+      head(box, 'New points');
+      line(box, '', 'Of those with Canadian work, in high-wage occupations', pc(r.hwT), { note: hwNote(t) });
+      if (r.withPoints != null) line(box, '', 'Invitees with new points at this round', pc(r.withPoints), { note: 'Falls as the high-wage profiles waiting are invited; those replacing them gain the points only as often as the pool does' });
+      head(box, 'Where ' + EE.num(r.size) + ' invitations run out');
+      const tl = EEM.tail(r.after), tlOld = EEM.tail(r.a);
+      [cm + 10, cm + 5, cm + 2, cm + 1, cm, cm - 1, cm - 5].filter((s) => s >= 0 && s <= 1200).forEach((s) => {
+        line(box, s === cm ? '◀' : '', 'Eligible scoring ' + s + ' or more', n0(tl[s]), { cls: s === cm ? 'ee-rc-cut' : 'ee-rc-ladder', note: (s === cm ? 'First score where the count reaches ' + EE.num(r.size) + '. ' : '') + 'Same rounds under the old rules: ' + n0(tlOld[s]) });
+      });
+      line(box, '+', 'Half the last round’s miss', EE.signed(r.anchor), { note: 'Draw #' + last.drawNumber + ' drew ' + last.crs + '; the model carried to it gave ' + last.sim });
+      line(box, '=', 'Projected cut-off', String(c), { cls: 'ee-rc-total' });
+      line(box, '', 'Likely range', r.low + ' to ' + r.high, { note: 'High-wage share ±10 points gives ' + Math.min(r.hwLo, r.hwHi) + ' to ' + Math.max(r.hwLo, r.hwHi) + '; plus the ' + r.err + '-point average miss' });
+      head(box, 'From the last cut-off');
+      line(box, '', 'Last cut-off, new rules', String(r.lastCRS));
+      line(box, '+', 'Pool since', EE.signed(r.poolEffect), { note: 'At the usual size (' + EE.num(r.usualSize) + '): ' + (r.lastCRS + r.poolEffect) + ', the new points already in the pool' });
+      line(box, '+', 'Draw size', EE.signed(r.sizeEffect), { note: r.usual ? 'Usual size' : EE.num(r.size) + ' instead of ' + EE.num(r.usualSize) });
+      line(box, '=', 'Projected', String(c), { cls: 'ee-rc-sub' });
+    } else {
     head(box, 'Who can be invited');
     line(box, '', 'IRCC pool count, ' + EE.date(r.snapAsOf), n0(r.poolTotal), { note: 'Every profile in the pool, by CRS band' });
     line(box, '', 'Below the last cut-off, ' + r.lastCRS, n0(r.belowLast), { note: 'Last ' + r.category + ' round ' + EE.date(r.lastDate) + '; everyone eligible above it was invited' });
     line(box, '×', isCec ? 'Share with 12+ months of Canadian work' : 'Share eligible for this round', pc(r.share), { note: isCec ? 'CEC-eligible share of the whole pool' : t.basis });
     line(box, '=', 'Eligible, waiting below ' + r.lastCRS, n0(r.backlog));
-    line(box, '+', 'Arrivals above ' + r.lastCRS + ' until ' + EE.date(r.nextDate), n0(r.inflow), { note: EE.num(t.ratePerDay) + ' a day (invitations per day over recent rounds) × ' + Math.round(r.days) + ' days' });
+    line(box, '+', 'Arrivals above ' + r.lastCRS + ' until ' + EE.date(r.nextDate), n0(r.inflow), { note: EE.num(Math.round(t.base.rate * 10) / 10) + ' a day (invitations per day over recent rounds) × ' + Math.round(r.days) + ' days' });
     line(box, '=', 'Eligible at the next round', n0(r.stock), { cls: 'ee-rc-sub' });
 
     head(box, 'New points, rules from November 3');
     if (r.rescore) {
       const withWork = r.stock * r.cwT;
       line(box, '×', 'With Canadian work', pc(r.cwT) + ' = ' + n0(withWork), { note: isCec ? 'Every CEC candidate has Canadian work' : 'Whole-pool share' });
-      line(box, '×', 'Of those, in high-wage occupations', pc(r.hwT), { note: isCec ? 'Scenario value' : 'This category’s occupations, weighted by people' });
+      line(box, '×', 'Of those, in high-wage occupations', pc(r.hwT), { note: hwNote(t) });
       [70, 40, 20].forEach((pts, i) => line(box, '', '  +' + pts + ' points (' + ['2×', '1.5×', '1.3×'][i] + ' occupations, ' + Math.round(r.mixT[i] * 100) + '%)', n0(withWork * r.hwT * r.mixT[i]), { cls: 'ee-rc-indent' }));
       if (r.cwT < 1) {
         const without = r.stock * (1 - r.cwT);
@@ -1572,7 +2214,7 @@
     }
 
     head(box, 'Where ' + EE.num(r.size) + ' invitations run out');
-    const tl = EEM.tail(r.after), tlOld = EEM.tail(r.a), c = r.projected;
+    const tl = EEM.tail(r.after), tlOld = EEM.tail(r.a);
     [c + 10, c + 5, c + 2, c + 1, c, c - 1, c - 5].filter((s) => s >= 0 && s <= 1200).forEach((s) => {
       line(box, s === c ? '◀' : '', 'Eligible scoring ' + s + ' or more', n0(tl[s]), { cls: s === c ? 'ee-rc-cut' : 'ee-rc-ladder', note: (s === c ? 'First score where the count reaches ' + EE.num(r.size) + '. ' : '') + 'Before the new points: ' + n0(tlOld[s]) });
     });
@@ -1585,6 +2227,7 @@
     line(box, '+', 'New points', EE.signed(r.ruleEffect));
     line(box, '+', 'Draw size', EE.signed(r.sizeEffect), { note: r.usual ? 'Usual size' : EE.num(r.size) + ' instead of ' + EE.num(r.usualSize) });
     line(box, '=', 'Projected', String(r.projected), { cls: 'ee-rc-sub' });
+    }
 
     head(box, 'What moves it');
     const sens = document.createElement('div'); sens.className = 'ee-sensi';
@@ -1607,7 +2250,8 @@
     const names = { pool: 'Pool calculation', shift: 'Recent median + new points', pattern: 'Recent median' };
     d.data.forEach((t) => {
       const tr = document.createElement('tr'); tr.dataset.key = t.key;
-      [null, names[t.method], t.replayN, t.replayError == null ? '—' : t.replayError.toFixed(1), t.replayNaive == null ? '—' : t.replayNaive.toFixed(1), t.method === 'pool' ? pc(t.eligibleShare) : 'n/a'].forEach((v, i) => {
+      const turn = t.method !== 'pool' || !t.turnover ? 'n/a' : 'about ' + Math.round(1 / t.turnover) + ' days' + (t.turnoverOwn ? '' : ', all types');
+      [null, names[t.method], t.replayN, t.replayError == null ? '—' : t.replayError.toFixed(1), t.replayNaive == null ? '—' : t.replayNaive.toFixed(1), t.method === 'pool' ? pc(t.eligibleShare) : 'n/a', turn].forEach((v, i) => {
         const td = document.createElement('td');
         if (i >= 2 && i <= 4) td.className = 'num';
         if (i === 0) EE.typeCell(td, t.key, t.category); else td.textContent = v;

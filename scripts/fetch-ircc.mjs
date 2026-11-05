@@ -47,8 +47,30 @@ async function main() {
   if (!rows.length) throw new Error('No usable rounds in the IRCC feed');
   rows.sort((a, b) => b.drawNumber - a.drawNumber);
 
+  // Checks across rounds. A repeated draw number is dropped, since it would count one round twice in the
+  // projections' record; the others are reported only, because the dashboard handles them.
+  const seen = new Set();
+  for (let i = rows.length - 1; i >= 0; i--) {
+    if (seen.has(rows[i].drawNumber)) { console.warn(`Dropping a repeat of draw #${rows[i].drawNumber}`); rows.splice(i, 1); skipped++; } else seen.add(rows[i].drawNumber);
+  }
+  const byDate = new Map();
+  for (const r of rows) {
+    if (r.distributionAsOn > r.drawDate) console.warn(`Draw #${r.drawNumber} (${r.drawDate}) carries a pool count dated after it, ${r.distributionAsOn}`);
+    const prev = byDate.get(r.distributionAsOn);
+    if (prev && prev.dd18 !== r.dd18) console.warn(`Two different pool counts dated ${r.distributionAsOn} (draws #${prev.drawNumber} and #${r.drawNumber})`);
+    if (!prev) byDate.set(r.distributionAsOn, r);
+  }
+  const counts = [...byDate.values()].sort((a, b) => a.distributionAsOn.localeCompare(b.distributionAsOn));
+  for (let i = 1; i < counts.length; i++) {
+    const a = counts[i - 1], b = counts[i];
+    if (Array.from({ length: 18 }, (_, k) => 'dd' + (k + 1)).every((k) => a[k] === b[k])) console.warn(`The pool count dated ${b.distributionAsOn} repeats the one dated ${a.distributionAsOn}; the dashboard counts it once`);
+  }
+
   let before = null;
   try { before = JSON.parse(await readFile(file, 'utf8')); } catch { /* first run */ }
+  // a feed served from a stale cache must not erase rounds the projections have already learned from
+  const savedTop = before?.rows?.[0]?.drawNumber;
+  if (savedTop && rows[0].drawNumber < savedTop) throw new Error(`IRCC feed ends at draw #${rows[0].drawNumber}, behind the saved data (#${savedTop}); keeping the saved data`);
   const out = { source: FEED, fetchedAt: new Date().toISOString(), since: SINCE, rows };
   await mkdir(dirname(file), { recursive: true });
   await writeFile(file, JSON.stringify(out));

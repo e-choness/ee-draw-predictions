@@ -1,8 +1,8 @@
 # EE Outlook
 
-A dashboard of the Canada Express Entry pool and a projection of the next draw's CRS cut-off, built from IRCC's published [rounds of invitations](https://www.canada.ca/en/immigration-refugees-citizenship/corporate/mandate/policies-operational-instructions-agreements/ministerial-instructions/express-entry-rounds.html).
+A dashboard of the Canada Express Entry pool and projections of the CRS cut-off of every round through February 2027, corrected after each round IRCC publishes, built from IRCC's published [rounds of invitations](https://www.canada.ca/en/immigration-refugees-citizenship/corporate/mandate/policies-operational-instructions-agreements/ministerial-instructions/express-entry-rounds.html).
 
-Scores follow the rules in force since **November 3, 2026**, which added points for high-wage Canadian work and job offers. Until IRCC publishes a pool count under the new rules, the dashboard rescores IRCC's last count with a scenario you set. When a count dated November 3 or later arrives, that count is used as it is and the estimate switches off.
+Scores follow the rules in force since **November 3, 2026**, which added points for high-wage Canadian work and job offers. Until IRCC publishes a pool count under the new rules, the dashboard rescores IRCC's last count with a scenario you set. When a count dated November 3 or later arrives, the pool view uses it as it is, and the high-wage share starts from the share that turns IRCC's last old count into it.
 
 > Statistical estimates, not IRCC guidance. IRCC sets each draw's size and type itself.
 
@@ -10,13 +10,15 @@ Scores follow the rules in force since **November 3, 2026**, which added points 
 
 | Page | Shows |
 | --- | --- |
-| Overview | Pool size, profiles at 501+, the projected next cut-off, cut-off history with the projection, invitations per month, pool by score range, latest draws |
-| Next draw forecast | How the projection is built (waterfall), how the cut-off moves with the number of invitations, every draw type side by side |
+| Overview | Pool size, profiles at 501+, the projected next cut-off, cut-off history with every projected round and its likely range, invitations per month, pool by score range, latest draws |
+| Forecast | Every projected round of every draw type through February 2027, what was projected before each round under the new rules against what IRCC drew, how the next projection is built (waterfall), how the cut-off moves with the number of invitations, every draw type side by side |
 | Pool scores | Profiles by score band under the new rules, the November 3 scoring changes, IRCC pool counts since 2024 |
 | All draws | Every draw since January 2024 as a bubble chart and a searchable, sortable table |
 | Method and sources | A calculator that breaks the projection down step by step as you change the inputs, the method, how it does when replayed on past rounds, and every source |
 
-The scenario bar at the top sets the draw type, the next draw's size, the share of Canadian work in high-wage occupations, and the share of profiles without Canadian work that hold a high-wage job offer. The calculator on the Method page also sets the Canadian work share and the next round's date. Every page follows the same values.
+Every chart is selectable: hover or tap for details, click or tap a point, bar or slice to pin its figure on the chart (click it again to remove it), or drag across a stretch to pin every figure in it. With the keyboard, focus a chart, move between figures with the arrow keys, pin with Enter and clear with Escape. While a chart has pins, a **Clear selection** button at the right edge of its title bar removes them.
+
+The scenario bar at the top sets the draw type, its invitations per round, the share of Canadian work in high-wage occupations (fitted to the rounds under the new rules unless you set it), and the share of profiles without Canadian work that hold a high-wage job offer. The calculator on the Method page also sets the Canadian work share and the next round's date. Every page follows the same values.
 
 The defaults use only figures that describe the whole pool or the whole workforce, never candidates already invited:
 
@@ -83,7 +85,7 @@ data/pool_composition.json  the scenario defaults the dashboard loads
 data/high_wage_occupations.json, data/assumption_inputs.json, data/census_noc_2021.json  inputs to the defaults
 ```
 
-The fetch script keeps each round's pool distribution only when IRCC's subtotals add up, so a malformed row never reaches the dashboard.
+The fetch script keeps each round's pool distribution only when IRCC's subtotals add up, so a malformed row never reaches the dashboard. It drops a repeated draw number, reports a pool count dated after its round, two different counts under one date, or one count repeated under two dates (the dashboard counts it once), and refuses a feed that ends before the saved data, so a stale cache can't erase rounds the projections have learned from.
 
 ## Method in brief
 
@@ -96,6 +98,22 @@ The cut-off is the lowest score still invited when a round's invitations run out
 5. **Cut-off**: the score where the rescored eligible count reaches the round's size.
 
 The likely range adds the method's average miss when replayed on the type's recent rounds (each against the pool count IRCC published before it) and the cut-offs at a high-wage share 10 points lower or higher. Provincial Nominee rounds use the median of the last four cut-offs. Senior managers and Physicians rounds use their recent median plus the new points, since IRCC reports their scores in one wide band.
+
+**Rounds after the next.** Each type keeps its usual gap and size; rounds that fall on a weekend or in the year-end break (none from December 19 to January 4 since 2024) move to the next weekday or the first week of January. Each round starts from the pool the one before left behind:
+
+- every profile invited is gone;
+- new profiles arrive above the type's last cut-off at its recent rate, carrying the new points at the pool's rate;
+- profiles below it are replaced as rounds reach into them, at the type's turnover: the rate that best replays its old-rules rounds two to four rounds ahead (types with too few rounds take the rate fitted to all of them). The replacements carry the new points only as often as the pool does, not as often as the profiles invited did, since 12 months in a high-wage job or a high-wage offer is a higher bar than the old turnover had to clear. High-wage profiles become scarcer round by round, and the cut-off eases back.
+
+The range widens with the square root of the rounds ahead.
+
+**After each new round.** The projections correct themselves from what IRCC drew:
+
+- the pool is carried through every round held under the new rules at the sizes IRCC drew, from the type's last old-rules round and IRCC's last old-rules count, and half of the last round's miss is carried into the next projection (a quarter into the one after);
+- the high-wage share is refitted to every round held so far, each miss weighed against the type's usual miss; moving it 10 points costs as much as a 5-point miss, so one round can't swing it far;
+- Provincial Nominee, Senior managers and Physicians rounds add their average miss under the new rules, shrunk toward zero.
+
+The Forecast page lists every round under the new rules with what was projected before it, using only the rounds before it.
 
 ## License
 

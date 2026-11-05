@@ -156,10 +156,11 @@
   function start() {
     started = true;
     Object.keys(datasetUrls).forEach(function (id) { if (!datasets[id]) load(id); });
-    // pages are shown and hidden with the hidden attribute: draw a page when it appears
+    // pages are shown and hidden with the hidden attribute: draw a page when it appears. Only an element that holds
+    // something drawn counts; a tooltip or button shown or hidden inside a page must not redraw everything.
     var root = document.getElementById('dash-root') || document.body;
     new MutationObserver(function (list) {
-      if (list.some(function (m) { return m.attributeName === 'hidden'; })) schedule();
+      if (list.some(function (m) { var t = m.target; return t.nodeType === 1 && (t.hasAttribute('data-draw') || t.querySelector('[data-draw]')); })) schedule();
     }).observe(root, { attributes: true, subtree: true, attributeFilter: ['hidden'] });
     window.addEventListener('hashchange', schedule);
     schedule();

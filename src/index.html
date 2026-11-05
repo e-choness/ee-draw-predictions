@@ -1,0 +1,446 @@
+<!doctype html>
+<!-- Copyright 2026 Beili (Echo) Yin
+     SPDX-License-Identifier: Apache-2.0 -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>EE Outlook</title>
+  <meta name="description" content="Express Entry pool composition and next-draw CRS cut-off projections, built from IRCC's published rounds of invitations.">
+  <meta name="theme-color" content="#1b2136">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231b2136'/%3E%3Cpath d='M7 22l6-7 5 4 7-9' fill='none' stroke='%23ef5461' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap">
+  <link rel="stylesheet" href="styles/app.css">
+  <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+  <script type="module" src="js/main.js"></script>
+</head>
+<body>
+<div class="ee" id="app">
+  <aside class="ee-rail" aria-label="Pages">
+    <div class="ee-brand">EE Outlook <small>Express Entry</small></div>
+    <div class="ee-feed">
+      <span>Latest IRCC draw</span>
+      <b data-view="rail-draw">—</b>
+      <span>Pool snapshot <b data-view="rail-asof">—</b></span>
+    </div>
+    <nav class="ee-nav">
+      <span class="ee-nav-label">Outlook</span>
+      <button type="button" data-page="overview"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>Overview</button>
+      <button type="button" data-page="forecast"><svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>Forecast</button>
+      <button type="button" data-page="pool"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg>Pool scores<span class="ee-badge">New rules</span></button>
+      <span class="ee-nav-label">Data</span>
+      <button type="button" data-page="draws"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>All draws</button>
+      <button type="button" data-page="method"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg>Method and sources</button>
+    </nav>
+    <p class="ee-rail-foot">Estimates from IRCC's published draws. Not IRCC guidance.</p>
+  </aside>
+
+  <main class="ee-main">
+    <section class="ee-bar" aria-label="Scenario">
+      <div class="ee-bar-sum" role="button" tabindex="0" aria-expanded="false"><span>Scenario: <b data-view="bar-summary">—</b></span><span class="ee-hint">Edit</span></div>
+      <div class="ee-bar-fields">
+        <div class="ee-field">
+          <span class="ee-field-label">Draw type</span>
+          <div data-view="type-select"></div>
+        </div>
+        <div class="ee-field">
+          <span class="ee-field-label"><span>Invitations per round</span><span class="ee-val" data-view="size-label">—</span></span>
+          <input class="ee-range" type="range" data-param="size" min="100" max="10000" step="50" aria-label="Invitations per round">
+        </div>
+        <div class="ee-field">
+          <label for="ee-hw"><span>Canadian work in high-wage jobs</span><output data-view="hw-out">—</output></label>
+          <input id="ee-hw" class="ee-range ee-est-input" type="range" min="0" max="80" step="1" data-param="hw">
+        </div>
+        <div class="ee-field">
+          <label for="ee-jo"><span>Job offers, no Canadian work</span><output data-view="jo-out">—</output></label>
+          <input id="ee-jo" class="ee-range ee-est-input" type="range" min="0" max="20" step="1" data-param="jo">
+        </div>
+        <button type="button" class="ee-btn ee-reset">Reset scenario</button>
+      </div>
+    </section>
+
+    <!-- Overview -->
+    <section class="ee-page" id="overview">
+      <div class="ee-grid">
+        <div class="ee-s12 ee-page-head">
+          <h1>Express Entry outlook</h1>
+          <p>Where the pool stands, what the next cut-off could be, and what moves it.</p>
+        </div>
+        <p class="ee-s12 ee-pause ee-est">Since November 3, 2026, CRS scores include new points for high-wage work and job offers, and IRCC has paused rounds for up to two weeks while it rescores the pool. IRCC has not yet published a pool count under the new rules, so scores here are its <span data-view="asof-long">latest</span> count rescored with the scenario above. <a href="#pool" class="ee-go" data-go="pool">How scoring changed</a></p>
+        <p class="ee-s12 ee-pause ee-live" hidden>Scores here come from IRCC's first pool counts under the scoring rules in force since November 3, 2026. <a href="#pool" class="ee-go" data-go="pool">How scoring changed</a></p>
+
+        <div class="ee-card ee-kpi ee-s3" id="kpi-pool">
+          <span class="ee-kpi-label">Profiles in the pool</span>
+          <span class="ee-kpi-num" data-view="k-pool">—</span>
+          <span class="ee-kpi-sub"><b data-view="k-pool-change">—</b> since the previous snapshot</span>
+          <div class="ee-spark" data-view="k-pool-spark"></div>
+        </div>
+        <div class="ee-card ee-kpi ee-s3" id="kpi-top">
+          <span class="ee-kpi-label">Profiles scoring 501+</span>
+          <span class="ee-kpi-num" data-view="k-top">—</span>
+          <span class="ee-kpi-sub ee-est">Estimated. IRCC's last count, before the new points: <span data-view="k-top-before">—</span></span>
+        </div>
+        <div class="ee-card ee-kpi ee-s3" id="kpi-next">
+          <span class="ee-kpi-label">Projected next <span data-view="k-next-label">—</span> cut-off</span>
+          <span class="ee-kpi-num" data-view="k-next">—</span>
+          <span class="ee-kpi-sub">Likely <b data-view="k-next-low">—</b> to <b data-view="k-next-high">—</b> at <span data-view="k-next-size">—</span> invitations</span>
+        </div>
+        <div class="ee-card ee-kpi ee-s3" id="kpi-last">
+          <span class="ee-kpi-label">Last draw of this type</span>
+          <span class="ee-kpi-num" data-view="k-last">—</span>
+          <span class="ee-kpi-sub"><span data-view="k-last-date">—</span>, <span data-view="k-last-size">—</span> invitations, <span data-view="k-last-rules">—</span></span>
+        </div>
+
+        <div class="ee-card ee-s12" id="history">
+          <div class="ee-card-h">
+            <h2><span data-view="hero-title">—</span> cut-offs and projected rounds</h2>
+            <div class="ee-pills" role="group" aria-label="Time span">
+              <button type="button" class="ee-pill ee-span" data-span="12">12 months</button>
+              <button type="button" class="ee-pill ee-span" data-span="24">24 months</button>
+              <button type="button" class="ee-pill ee-span" data-span="all">Since 2024</button>
+            </div>
+          </div>
+          <div class="ee-card-b">
+            <div class="ee-chart ee-tall" data-view="hero-chart"></div>
+            <p class="ee-note">Dashed: every projected round through <span data-view="horizon-2">—</span>, with the likely range shaded. Rings mark what the dashboard projected before each round under the new rules. After each new IRCC round, the rounds after it are projected again. On every chart, click or tap a point, bar or slice to pin its figure on the chart, or drag across a stretch to pin all of it. <a href="#forecast" class="ee-go" data-go="forecast">All projected rounds</a></p>
+          </div>
+        </div>
+
+        <div class="ee-card ee-s8" id="monthly">
+          <div class="ee-card-h"><h2>Invitations issued per month</h2>
+            <div class="ee-legend"><span><span class="ee-sw sw-cec"></span>Canadian Experience Class</span><span><span class="ee-sw sw-pnp"></span>Provincial Nominee</span><span><span class="ee-sw sw-french"></span>French language</span><span><span class="ee-sw sw-other"></span>Other categories</span></div>
+          </div>
+          <div class="ee-card-b"><div class="ee-chart" data-view="monthly-chart"></div></div>
+        </div>
+        <div class="ee-card ee-s4" id="mix">
+          <div class="ee-card-h"><h2>Pool by score range</h2></div>
+          <div class="ee-card-b"><div class="ee-chart" data-view="mix-chart"></div><p class="ee-note ee-est">Estimated under the new rules.</p></div>
+        </div>
+
+        <div class="ee-card ee-s12" id="recent">
+          <div class="ee-card-h"><h2>Latest draws</h2><button type="button" class="ee-btn ee-go" data-go="draws">See all draws</button></div>
+          <div class="ee-card-b">
+            <div class="ee-table-wrap">
+              <table class="ee-table">
+                <thead><tr><th class="num">Draw</th><th>Date</th><th>Type</th><th class="num">Invitations</th><th class="num">Cut-off</th></tr></thead>
+                <tbody data-view="recent-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Forecast -->
+    <section class="ee-page" id="forecast" hidden>
+      <div class="ee-grid">
+        <div class="ee-s12 ee-page-head">
+          <h1>Forecast</h1>
+          <p>Every round through <span data-view="horizon-3">—</span>, worked out on the pool rescored under the November 3 rules and carried from one round to the next. After each round IRCC publishes, the rounds after it are projected again from what IRCC drew.</p>
+        </div>
+        <div class="ee-card ee-s12" id="rounds">
+          <div class="ee-card-h"><h2>Projected rounds through <span data-view="horizon">—</span></h2>
+            <div class="ee-pills" role="group" aria-label="Rounds shown">
+              <button type="button" class="ee-pill ee-rounds-pill" data-rounds="all">All types</button>
+              <button type="button" class="ee-pill ee-rounds-pill" data-rounds="type">Selected type</button>
+            </div>
+          </div>
+          <div class="ee-card-b">
+            <div class="ee-table-wrap">
+              <table class="ee-table">
+                <thead><tr>
+                  <th>Round, about</th>
+                  <th>Draw type</th>
+                  <th class="num">Invitations</th>
+                  <th class="num">Projected cut-off</th>
+                  <th class="num">Likely range</th>
+                  <th class="num">Change</th>
+                  <th class="num">Invited with new points</th>
+                </tr></thead>
+                <tbody data-view="rounds-body"></tbody>
+              </table>
+            </div>
+            <p class="ee-note">Each type keeps its usual gap and size; the selected type uses the invitations per round set above. Rounds that would fall on a weekend or in the year-end break move to the next weekday or the first week of January. Each round starts from the one before: the profiles it invited are gone, new ones have arrived, and those that replace the invited carry the new points only as often as the pool does. The range widens with each round ahead. Provincial Nominee, Senior managers and Physicians rounds follow their recent cut-offs, so they stay level. Select a row to explore its type.</p>
+          </div>
+        </div>
+        <div class="ee-card ee-s12" id="track">
+          <div class="ee-card-h"><h2>Projected before each round, and what IRCC drew</h2><span class="ee-hint">Rounds under the new rules</span></div>
+          <div class="ee-card-b">
+            <p class="ee-note" data-view="track-note"></p>
+            <div class="ee-table-wrap">
+              <table class="ee-table">
+                <thead><tr>
+                  <th class="num">Draw</th>
+                  <th>Date</th>
+                  <th>Draw type</th>
+                  <th class="num">Invitations</th>
+                  <th class="num">Projected before</th>
+                  <th class="num">Cut-off drawn</th>
+                  <th class="num">Miss</th>
+                </tr></thead>
+                <tbody data-view="track-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="ee-card ee-s5" id="waterfall">
+          <div class="ee-card-h"><h2>How the next <span data-view="wf-title">—</span> projection is built</h2></div>
+          <div class="ee-card-b">
+            <div class="ee-chart" data-view="wf-chart"></div>
+            <p class="ee-note">Higher is harder. Coral steps push the cut-off up; green steps bring it down. Pool and pause: the same calculation on old scores, with the profiles that arrive until the next round. New points: the change once the November 3 points are added. Draw size: from the usual size to the size you set. Once a type has had rounds under the new rules, Pool since carries the pool through them, with the new points already in it. Recent pattern: the median of the last four cut-offs, plus what rounds under the new rules have taught.</p>
+          </div>
+        </div>
+        <div class="ee-card ee-s7" id="sensitivity">
+          <div class="ee-card-h"><h2>Invitations and the cut-off</h2>
+          </div>
+          <div class="ee-card-b">
+            <div class="ee-chart" data-view="sens-chart"></div>
+            <p class="ee-note">A bigger round reaches further down the eligible profiles and lowers the cut-off. The dashed line is the same pool on old scores, before the new points. Drag the draw size in the scenario bar to move the marker.</p>
+          </div>
+        </div>
+        <div class="ee-card ee-s12" id="all-types">
+          <div class="ee-card-h"><h2>Every draw type</h2><span class="ee-hint">Each at its usual size, except the selected type. Select a row to explore it.</span></div>
+          <div class="ee-card-b">
+            <div class="ee-table-wrap">
+              <table class="ee-table">
+                <thead><tr>
+                  <th>Draw type</th>
+                  <th class="num">Invitations</th>
+                  <th class="num">Projected</th>
+                  <th class="num">Low</th>
+                  <th class="num">High</th>
+                  <th class="num">Pool</th>
+                  <th class="num">New points</th>
+                  <th class="num">Draw size</th>
+                  <th>Against last cut-off</th>
+                </tr></thead>
+                <tbody data-view="types-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pool -->
+    <section class="ee-page" id="pool" hidden>
+      <div class="ee-grid">
+        <div class="ee-s12 ee-page-head">
+          <h1>Pool scores</h1>
+          <p class="ee-est">Scores under the rules in force since November 3, estimated from IRCC's last count and the scenario above until IRCC publishes a count under the new rules.</p>
+          <p class="ee-live" hidden>Scores under the rules in force since November 3, from IRCC's published counts.</p>
+        </div>
+        <div class="ee-card ee-kpi ee-s4">
+          <span class="ee-kpi-label">Profiles scoring 501+</span>
+          <span class="ee-kpi-num" data-view="r-501">—</span>
+          <span class="ee-kpi-sub ee-est"><b data-view="r-501-change">—</b> from the new points</span>
+        </div>
+        <div class="ee-card ee-kpi ee-s4">
+          <span class="ee-kpi-label">Profiles scoring 451+</span>
+          <span class="ee-kpi-num" data-view="r-451">—</span>
+          <span class="ee-kpi-sub ee-est"><b data-view="r-451-change">—</b> from the new points</span>
+        </div>
+        <div class="ee-card ee-kpi ee-s4">
+          <span class="ee-kpi-label">IRCC pool count used</span>
+          <span class="ee-kpi-num" data-view="p-asof">—</span>
+          <span class="ee-kpi-sub"><span data-view="k-pool-2">—</span> profiles</span>
+        </div>
+        <div class="ee-card ee-s12" id="bands">
+          <div class="ee-card-h"><h2>Profiles by score band</h2>
+            <div class="ee-legend"><span><span class="ee-sw sw-after"></span>New rules<span class="ee-est">, estimated</span></span><span class="ee-est"><span class="ee-sw sw-prev"></span>IRCC's last count, before the new points</span></div>
+          </div>
+          <div class="ee-card-b"><div class="ee-chart ee-tall" data-view="rescored-chart"></div></div>
+        </div>
+        <div class="ee-card ee-s12">
+          <div class="ee-card-h"><h2>How scoring changed on November 3</h2></div>
+          <div class="ee-card-b">
+            <p class="ee-note">A new labour market integration factor, worth up to 150 points (140 with a spouse), takes the higher of two scores: Canadian work (the existing points for years worked, plus up to 70 for 12 months in high-wage occupations) or a qualifying job offer in a high-wage occupation. They are never added together. High-wage means the occupation's national median wage is at least 1.3, 1.5 or 2 times the average; 186 occupations qualify. An LMIA is no longer needed for a job offer to count.</p>
+            <div class="ee-rules">
+              <div class="ee-rule"><h3>Extra points for Canadian work</h3>
+                <table><tbody><tr><td>12+ months in 2× occupations</td><td>+70</td></tr><tr><td>12+ months in 1.5× or higher</td><td>+40</td></tr><tr><td>12+ months in 1.3× or higher</td><td>+20</td></tr></tbody></table>
+              </div>
+              <div class="ee-rule"><h3>Or, a job offer instead</h3>
+                <table><tbody><tr><td>Offer in a 2× occupation</td><td>100</td></tr><tr><td>Offer in a 1.5× occupation</td><td>70</td></tr><tr><td>Offer in a 1.3× occupation</td><td>50</td></tr></tbody></table>
+              </div>
+              <div class="ee-rule"><h3>Timing</h3>
+                <table><tbody><tr><td>Rules took effect</td><td>Nov 3, 2026</td></tr><tr><td>Profiles rescored within</td><td>2 weeks</td></tr><tr><td>Invitation rounds</td><td>Paused</td></tr></tbody></table>
+              </div>
+            </div>
+            <div class="ee-prose ee-est">
+              <p>IRCC does not publish the pool's occupations or Canadian work directly. The estimate uses only figures that describe the whole pool or the whole workforce, never people already invited, who are a selected group.</p>
+              <ul>
+                <li><b>Canadian work, <span data-view="c-cw">—</span>:</b> 159,675 of the 240,675 profiles in IRCC's 2025 pool count were eligible for the Canadian Experience Class, which needs 12 months of skilled Canadian work.</li>
+                <li><b>High-wage share of that work, <span data-view="c-hw">—</span>:</b> temporary residents working in Canada in occupations open to Express Entry (2021 Census), weighted by how many people work in each occupation. Counting each occupation code once instead gives about 51%, because managers and professionals make up a third of the codes but fewer of the people; the pool's two largest occupations, food service supervisors and cooks, are not high-wage.</li>
+                <li><b>Points tiers:</b> <span data-view="c-mix">—</span> of high-wage workers are in 2×, 1.5× and 1.3× occupations (+70, +40, +20).</li>
+                <li><b>Job offers, <span data-view="c-jo">—</span> of profiles without Canadian work:</b> 12.3% of eligible profiles in 2024 claimed a job offer, times the high-wage share. For someone with Canadian work, an offer in the same tier never beats the work points, so offers only lift profiles without Canadian work.</li>
+                <li><b>Category rounds</b> use their own occupations, weighted the same way: <span data-view="c-cats">—</span> of the jobs in each category are high-wage.</li>
+              </ul>
+              <p>Shares are applied evenly across scores. Profiles that were above the last Canadian Experience Class cut-off were invited, so above it only recent arrivals are counted as having Canadian work. See <a href="#method" class="ee-go" data-go="method">Method and sources</a> for the calculator and every source.</p>
+            </div>
+          </div>
+        </div>
+        <div class="ee-card ee-s12" id="trend">
+          <div class="ee-card-h"><h2>IRCC pool counts since 2024</h2><span class="ee-hint">Scored under the rules of each date</span></div>
+          <div class="ee-card-b"><div class="ee-chart ee-tall" data-view="trend-chart"></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Draws -->
+    <section class="ee-page" id="draws" hidden>
+      <div class="ee-grid">
+        <div class="ee-s12 ee-page-head">
+          <h1>All draws</h1>
+          <p>Every round of invitations since January 2024, as IRCC published it.</p>
+        </div>
+        <div class="ee-card ee-s12" id="bubbles">
+          <div class="ee-card-h"><h2>Cut-off and size of every draw</h2>
+            <div class="ee-legend"><span><span class="ee-sw sw-cec"></span>Canadian Experience Class</span><span><span class="ee-sw sw-pnp"></span>Provincial Nominee</span><span><span class="ee-sw sw-french"></span>French language</span><span><span class="ee-sw sw-other"></span>Other categories</span></div>
+          </div>
+          <div class="ee-card-b">
+            <div class="ee-chart ee-tall" data-view="bubble-chart"></div>
+            <p class="ee-note">Bubble area shows the number of invitations.</p>
+          </div>
+        </div>
+        <div class="ee-card ee-s12" id="draw-table">
+          <div class="ee-card-h"><h2>Draw list</h2><input class="ee-search" type="search" placeholder="Search by type, date or number" aria-label="Search draws"></div>
+          <div class="ee-card-b">
+            <div class="ee-table-wrap">
+              <table class="ee-table">
+                <thead><tr>
+                  <th class="num"><button type="button" class="ee-sort" data-sort="drawNumber">Draw</button></th>
+                  <th><button type="button" class="ee-sort" data-sort="drawDate">Date</button></th>
+                  <th><button type="button" class="ee-sort" data-sort="category">Type</button></th>
+                  <th class="num"><button type="button" class="ee-sort" data-sort="drawSize">Invitations</button></th>
+                  <th class="num"><button type="button" class="ee-sort" data-sort="drawCRS">Cut-off</button></th>
+                </tr></thead>
+                <tbody data-view="all-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Method -->
+    <section class="ee-page" id="method" hidden>
+      <div class="ee-grid">
+        <div class="ee-s12 ee-page-head">
+          <h1>Method and sources</h1>
+          <p>How the next cut-off is worked out, step by step, with every input and where it comes from.</p>
+        </div>
+
+        <div class="ee-card ee-s12" id="calc">
+          <div class="ee-card-h"><h2>Calculator</h2><span class="ee-hint">Change any input. The scenario bar and every page use the same values.</span></div>
+          <div class="ee-card-b ee-calc">
+            <div class="ee-calc-in">
+              <div class="ee-field"><span class="ee-field-label">Draw type</span><div data-view="type-select"></div></div>
+              <div class="ee-field"><label for="c-size">Invitations per round</label><input id="c-size" class="ee-num" type="number" min="1" max="20000" step="50" data-param="size"></div>
+              <div class="ee-field"><label for="c-next">Next round on</label><input id="c-next" class="ee-num" type="date" data-param="next"></div>
+              <div class="ee-field"><label for="c-cw"><span>Pool with 12+ months of Canadian work</span><span>%</span></label><input id="c-cw" class="ee-num ee-est-input" type="number" min="0" max="100" step="0.1" data-param="cw"></div>
+              <div class="ee-field"><label for="c-hw"><span>Of those, in high-wage jobs</span><span>%</span></label><input id="c-hw" class="ee-num ee-est-input" type="number" min="0" max="100" step="0.1" data-param="hw"></div>
+              <div class="ee-field"><label for="c-jo"><span>No Canadian work, high-wage job offer</span><span>%</span></label><input id="c-jo" class="ee-num ee-est-input" type="number" min="0" max="100" step="0.1" data-param="jo"></div>
+              <button type="button" class="ee-btn ee-reset">Reset to sourced defaults</button>
+              <p class="ee-note" data-view="calc-defaults"></p>
+            </div>
+            <div class="ee-receipt" data-view="calc-receipt" aria-live="polite"></div>
+          </div>
+        </div>
+
+        <div class="ee-card ee-s7">
+          <div class="ee-card-h"><h2>How the projection works</h2></div>
+          <div class="ee-card-b ee-prose">
+            <p>The cut-off is the lowest score still invited once the round's invitations run out, counting from the top of the profiles eligible for that round. The dashboard works that out on the pool itself, under the rules in force since November 3, 2026.</p>
+            <ol>
+              <li><b>The pool.</b> IRCC's latest count of every profile by CRS band. Ten-point bands are spread evenly; the 501–600 band thins out from the 491–500 density instead of spreading its profiles over 100 equal steps.</li>
+              <li><b>Who is eligible below the last cut-off.</b> Everyone eligible above the type's last cut-off was invited in that round, so below it the type's share of the whole pool is used: 66% for Canadian Experience Class (profiles with 12+ months of Canadian work), and each category's share of the pool from IRCC's Table 17a.</li>
+              <li><b>Who arrived since.</b> Above the last cut-off only profiles that arrived since that round can be eligible. While a type's cut-off holds steady, each round takes out what arrived since the one before, so the arrival rate is the invitations per day over its recent rounds, times the days until the next round. The pause adds weeks of arrivals.</li>
+              <li><b>The new points.</b> Each eligible profile is rescored: with Canadian work, +70, +40 or +20 if it is in a 2×, 1.5× or 1.3× high-wage occupation; without Canadian work, 100, 70 or 50 for a high-wage job offer. The new factor takes the higher of the two, so for someone with Canadian work an offer in the same tier never adds anything.</li>
+              <li><b>Where the invitations run out.</b> Counting down from the top of the rescored eligible profiles, the cut-off is the score where the count reaches the round's size.</li>
+            </ol>
+            <p>The likely range adds how far the same calculation missed when replayed on the type's recent rounds, and how far the cut-off moves if the high-wage share is 10 points lower or higher.</p>
+            <p><b>Rounds after the next.</b> Each round starts from the pool the one before left behind:</p>
+            <ul>
+              <li><b>Invited profiles leave.</b> Every profile from the top down to the cut-off is gone; at the cut-off, as many as the round's size allows.</li>
+              <li><b>New profiles arrive</b> above the type's last cut-off at its recent rate, carrying the new points at the pool's rate.</li>
+              <li><b>Profiles below the last cut-off are replaced</b> as rounds reach into them, at the type's turnover: the rate that best replays its old-rules rounds two to four rounds ahead. The replacements carry the new points only as often as the pool does, not as often as the profiles invited did. Twelve months in a high-wage job or a high-wage offer is a higher bar than the old turnover had to clear, so high-wage profiles become scarcer round by round.</li>
+              <li><b>Dates and sizes.</b> Each type keeps its usual gap and size; rounds that fall on a weekend or in the year-end break move to the next weekday or the first week of January. The range widens with the square root of the rounds ahead.</li>
+            </ul>
+            <p><b>After each new round.</b> When IRCC publishes a round, the projection corrects itself in three ways:</p>
+            <ul>
+              <li><b>It continues from what IRCC drew.</b> The pool is carried through every round held under the new rules at the sizes IRCC drew, from the type's last old-rules round and IRCC's last old-rules count. Half of the last round's miss is carried into the next projection, a quarter into the one after.</li>
+              <li><b>It refits the high-wage share.</b> The share starts at the sourced default, or at the share that turns IRCC's last old count into its first count under the new rules once that is published. After each round it is refitted to every round held so far. Each miss is weighed against the type's usual miss. Moving the share 10 points costs as much as a 5-point miss, so one round can't swing it far. A share you set in the scenario stays fixed.</li>
+              <li><b>It learns the offset for pattern rounds.</b> Provincial Nominee, Senior managers and Physicians rounds add their average miss under the new rules, shrunk toward zero: half of it after one round.</li>
+            </ul>
+            <p>Every round under the new rules is listed on the Forecast page with what the dashboard projected before it, using only the rounds before it.</p>
+            <p>Provincial Nominee rounds invite nearly every nominee, so their cut-off is just the lowest-scoring nominee: the dashboard uses the median of the last four. Senior managers and Physicians scores fall in IRCC's widest bands, so the pool can't place them; every eligible candidate in those rounds has Canadian work in a high-wage occupation, so their recent median gets the new points added (+70 for physicians).</p>
+          </div>
+        </div>
+
+        <div class="ee-card ee-s5">
+          <div class="ee-card-h"><h2>What the audit changed</h2></div>
+          <div class="ee-card-b">
+            <table class="ee-mini">
+              <thead><tr><th>Part</th><th>Before</th><th>Now</th></tr></thead>
+              <tbody>
+                <tr><td>Starting point</td><td>Average of past cut-offs under the old rules, plus adjustments</td><td>The whole pool, rescored under the new rules</td></tr>
+                <tr><td>Who is eligible</td><td>Invited ÷ every profile above the cut-off, the same at every score (CEC 12%)</td><td>Type's share of the whole pool below the last cut-off (CEC 66%); arrivals above it</td></tr>
+                <tr><td>Draw size</td><td>CEC 1,000 → 584, 4,000 → 512; French 8,000 → 5</td><td>Follows the eligible profiles near the cut-off; replayed on past rounds</td></tr>
+                <tr><td>501–600 band</td><td>100 equal steps</td><td>Thins out above 500</td></tr>
+                <tr><td>Canadian work</td><td>36%, from Canadian education</td><td>66%, CEC-eligible profiles in the pool</td></tr>
+                <tr><td>High-wage share</td><td>51–56%, each occupation code counted once</td><td>40%, weighted by people in each occupation</td></tr>
+                <tr><td>Job offers</td><td>7%, added on top of work points</td><td>5%, only for profiles without Canadian work</td></tr>
+                <tr><td>Pause</td><td>Not counted</td><td>Arrivals until the next round counted</td></tr>
+                <tr><td>Rounds projected</td><td>The next round only</td><td>Every round through February 2027, the pool carried from one to the next</td></tr>
+                <tr><td>Profiles replacing the invited</td><td>Not modelled</td><td>At each type's fitted turnover, carrying the new points at the pool's rate</td></tr>
+                <tr><td>After each new round</td><td>Next round from the new data</td><td>High-wage share refitted to every round so far; continues from the sizes drawn; misses listed</td></tr>
+                <tr><td>Same count under two dates</td><td>Counted twice (Dec 14 and 15, 2025)</td><td>Counted once</td></tr>
+                <tr><td>Round dates</td><td>Could land in the year-end break (Senior managers, Dec 23)</td><td>Weekdays outside the break</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="ee-card ee-s12">
+          <div class="ee-card-h"><h2>Checked against past rounds</h2><span class="ee-hint">The same calculation on old scores, each round against the pool count IRCC published before it</span></div>
+          <div class="ee-card-b">
+            <div class="ee-table-wrap">
+              <table class="ee-table">
+                <thead><tr><th>Draw type</th><th>Method</th><th class="num">Rounds replayed</th><th class="num">Average miss</th><th class="num">Repeating the last cut-off</th><th>Eligible share</th><th>Waiting profiles replaced in</th></tr></thead>
+                <tbody data-view="replay-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="ee-card ee-s12">
+          <div class="ee-card-h"><h2>Sources</h2><span class="ee-hint">Every input describes the whole pool or the whole workforce. None comes from people already invited.</span></div>
+          <div class="ee-card-b">
+            <div class="ee-table-wrap">
+              <table class="ee-table ee-src">
+                <thead><tr><th>Input</th><th>Value</th><th>Source</th></tr></thead>
+                <tbody>
+                  <tr><td>Profiles by CRS band, last cut-offs, round sizes</td><td>Every round since 2024</td><td>IRCC <a href="https://www.canada.ca/en/immigration-refugees-citizenship/corporate/mandate/policies-operational-instructions-agreements/ministerial-instructions/express-entry-rounds.html" target="_blank" rel="noopener">rounds of invitations</a>, refreshed daily</td></tr>
+                  <tr><td>Pool with 12+ months of Canadian work</td><td data-view="src-cw">—</td><td>IRCC pool by program, 2025: 159,675 of 240,675 profiles CEC-eligible, as compiled by <a href="https://mapleimmigrationchronicles.ca/express-entry-2025-noc-analytics-top-20-occupations-in-the-system-as-of-april/" target="_blank" rel="noopener">Maple Immigration Chronicles</a> (secondary; the four programs add up to the total)</td></tr>
+                  <tr><td>Canadian work in high-wage jobs, and tier mix</td><td data-view="src-hw">—</td><td>Statistics Canada, 2021 Census: non-permanent residents by occupation (<a href="https://doi.org/10.25318/9810058501-eng" target="_blank" rel="noopener">98-10-0585</a>, split into unit groups with <a href="https://doi.org/10.25318/9810044901-eng" target="_blank" rel="noopener">98-10-0449</a>), TEER 0–3, student assistant jobs excluded, matched to the high-wage list</td></tr>
+                  <tr><td>High-wage occupations</td><td>186: 31 at 2×, 89 at 1.5×, 66 at 1.3×</td><td>IRCC <a href="https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/check-score/high-wage.html" target="_blank" rel="noopener">high-wage occupations</a>, October 16, 2026. Checked against census median earnings (<a href="https://doi.org/10.25318/9810058601-eng" target="_blank" rel="noopener">98-10-0586</a>): 81% agree; IRCC's list is more generous, as it keeps the highest level an occupation reached in any recent year</td></tr>
+                  <tr><td>High-wage job offers, no Canadian work</td><td data-view="src-jo">—</td><td>12.3% of 339,621 eligible profiles in 2024 claimed a job offer (IRCC <a href="https://www.canada.ca/en/immigration-refugees-citizenship/corporate/publications-manuals/express-entry-year-end-report-2024.html" target="_blank" rel="noopener">Year-End Report 2024</a>, Table 3), times the high-wage share. Leans high: offers no longer need an LMIA, but only offers entered in a profile by November 3 count at the rescoring</td></tr>
+                  <tr><td>Category shares of the pool</td><td>STEM 19%, healthcare 8%, trades 4%, transport 4%</td><td>Year-End Report 2024, Table 17a (218,291 candidates in the pool, December 2024); French 9% of eligible profiles (fact sheet)</td></tr>
+                  <tr><td>Category high-wage shares</td><td data-view="src-cat">—</td><td>Same census weighting, over each category's occupations. This is the share of the category's jobs on the list; candidates also need 12+ months of that work in Canada</td></tr>
+                  <tr><td>Rules from November 3, 2026</td><td>Higher of work or offer; up to 150 points (140 with a spouse)</td><td>IRCC <a href="https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/changes.html" target="_blank" rel="noopener">2026 changes</a> and <a href="https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/check-score/crs-criteria.html" target="_blank" rel="noopener">CRS criteria</a>, as summarised by <a href="https://www.cicnews.com/2026/10/ircc-releases-updated-breakdown-of-express-entry-candidates-by-crs-score-1081904.html" target="_blank" rel="noopener">CIC News</a> and <a href="https://gowlingwlg.com/en-ca/insights-resources/articles/2026/canada-announces-changes-to-express-entry" target="_blank" rel="noopener">Gowling WLG</a></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="ee-prose ee-limits">
+              <p><b>Limits.</b> No public table splits the pool by occupation and score together, so the shares are applied evenly across scores. The census is from 2021, and IRCC's 2025 pool count shows more food service supervisors and cooks (neither high-wage) than the census suggests, so the high-wage share may lean high. Profiles entering during the pause and job offers added after November 3 are not counted. Once IRCC publishes a count under the new rules, the pool view uses it directly, and the high-wage share starts from the share that turns IRCC's last old count into it. Projections keep starting from the last old count and carry it through the rounds held since, because only an old count can be split into who gained which points. The turnover is an effective rate fitted to old-rules rounds: it also covers profiles that become eligible by changing (another year of work, a new test result), not only new profiles. Rounds further ahead assume each type keeps its usual size and gap. These are statistical estimates, not IRCC guidance: IRCC sets each round's size and type itself.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+</body>
+</html>

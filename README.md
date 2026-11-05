@@ -38,9 +38,10 @@ Requires Node.js 20 or later. No dependencies to install.
 ```bash
 npm run fetch   # download the latest rounds from IRCC into data/ee_rounds.json
 npm run dev     # build dist/ and serve it at http://localhost:8080
+npm test        # check the model against the committed data
 ```
 
-`npm run build` writes the static site to `dist/`, which any static web server can host.
+`npm run build` writes the static site to `dist/`, which any static web server can host. Scripts and styles go under `dist/assets/<version>/`, named after their content, so a rebuilt site always loads its own code: an ordinary reload shows it, with no stale script left over from the build before.
 
 ## Docker
 
@@ -71,19 +72,40 @@ A health check answers at `/healthz`.
 
 ## How it's built
 
+Plain HTML, CSS and native ES modules, with d3 v7 from a CDN. Nothing to install and no bundler.
+
 ```
-src/page.html          the dashboard: markup, styles, calculations and charts (d3 v7)
-src/dash-shim.js       the small data and drawing runtime the page runs on
-src/shell.html         the standalone HTML wrapper
-scripts/fetch-ircc.mjs downloads and validates IRCC's feed
-scripts/build.mjs      assembles dist/
-scripts/serve.mjs      static server with timed refresh, used by Docker
-scripts/census.mjs     downloads 2021 Census occupation tables from Statistics Canada
-scripts/assumptions.mjs computes the pool composition defaults
-data/ee_rounds.json    the latest committed IRCC snapshot
+src/
+  index.html             the page: markup only; each element a view draws into has data-view="<name>"
+  styles/
+    app.css              imports the rest in order; the build inlines them into one file
+    tokens.css           colours and type for light and dark mode
+    base.css, layout.css, components.css, tables.css, charts.css, method.css
+  js/
+    main.js              entry point: maps every data-view name to its view and starts the app
+    config.js            data files, scenario defaults, pages
+    state.js             the store, the datasets derived from IRCC's files, the forecast for the current scenario
+    core/store.js        data and scenario state, no DOM: datasets cached until a file reloads
+    core/renderer.js     draws views on the next frame after a change; skips hidden pages
+    model/eem.js         CRS model math: pool density, eligibility, new points, cut-offs, rounds carried forward
+    model/datasets.js    draws, monthly totals, pool counts and draw types from IRCC's rounds
+    model/forecast.js    projections, self-correction and the pool under the new rules
+    charts/              one module per chart, the shared axes, and pick.js (hover, pin, drag, keyboard)
+    views/               navigation, scenario controls, values, tables, the Method page
+    ui/                  number and date formats, theme colours, small DOM builders
+    lib/d3.js            the d3 global as a module
+test/model.test.mjs      model checks for `npm test`
+scripts/fetch-ircc.mjs   downloads and validates IRCC's feed
+scripts/build.mjs        assembles dist/ with versioned assets
+scripts/serve.mjs        static server with timed refresh, used by Docker and npm run dev
+scripts/census.mjs       downloads 2021 Census occupation tables from Statistics Canada
+scripts/assumptions.mjs  computes the pool composition defaults
+data/ee_rounds.json      the latest committed IRCC snapshot
 data/pool_composition.json  the scenario defaults the dashboard loads
 data/high_wage_occupations.json, data/assumption_inputs.json, data/census_noc_2021.json  inputs to the defaults
 ```
+
+The model modules are pure functions over plain arrays, so the tests run them in Node exactly as the page does. Views read state only through `store`, `scenario` and `model` in `state.js`.
 
 The fetch script keeps each round's pool distribution only when IRCC's subtotals add up, so a malformed row never reaches the dashboard. It drops a repeated draw number, reports a pool count dated after its round, two different counts under one date, or one count repeated under two dates (the dashboard counts it once), and refuses a feed that ends before the saved data, so a stale cache can't erase rounds the projections have learned from.
 

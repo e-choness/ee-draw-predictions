@@ -9,7 +9,8 @@
     "fetch": "node scripts/fetch-ircc.mjs",
     "build": "node scripts/build.mjs",
     "start": "node scripts/serve.mjs",
-    "dev": "node scripts/build.mjs && REFRESH_ON_START=0 REFRESH_HOURS=0 node scripts/serve.mjs"
+    "dev": "node scripts/build.mjs && node scripts/serve.mjs --no-refresh",
+    "test": "node --test"
   },
   "license": "Apache-2.0"
 }

@@ -1,0 +1,12 @@
+/* Copyright 2026 Beili (Echo) Yin
+   SPDX-License-Identifier: Apache-2.0 */
+
+/* Base
+   Page background, box sizing, the hidden attribute and reduced motion. */
+
+html, body { margin: 0; padding: 0; }
+body { background: #edf1f7; }
+@media (prefers-color-scheme: dark) { body { background: #121729; } }
+.ee *, .ee *::before, .ee *::after { box-sizing: border-box; }
+.ee [hidden] { display: none !important; }
+@media (prefers-reduced-motion: reduce) { .ee * { transition: none !important; animation: none !important; } }

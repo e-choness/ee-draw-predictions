@@ -1,0 +1,25 @@
+/* Copyright 2026 Beili (Echo) Yin
+   SPDX-License-Identifier: Apache-2.0 */
+
+/* Design tokens
+   Colours, surfaces and the type stack, for light and dark mode. Every other file uses these. */
+
+.ee {
+  --ee-page: #edf1f7; --ee-card: #ffffff; --ee-line: #e2e7ef; --ee-ink: #263045; --ee-muted: #7b869b; --ee-faint: #a9b2c3;
+  --ee-rail: #1b2136; --ee-rail-ink: #b9c1d4; --ee-rail-hi: #ffffff; --ee-rail-active: #262d47;
+  --ee-blue: #3b97e3; --ee-coral: #ef5461; --ee-green: #3fb46a; --ee-cyan: #17bfe3; --ee-magenta: #c8349f; --ee-orange: #ffa22b; --ee-violet: #8a6ee6; --ee-slate: #9aa6bb;
+  --ee-bubble: #39415a; --ee-bubble-ink: #ffffff; --ee-chip: #f4f6fa; --ee-track: #e4e9f1; --ee-shadow: 0 1px 2px rgba(27, 33, 54, .06);
+  --ee-font: "Open Sans", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .ee {
+    --ee-page: #121729; --ee-card: #1a2036; --ee-line: #2a3150; --ee-ink: #e6e9f3; --ee-muted: #95a0b8; --ee-faint: #6a7590;
+    --ee-rail: #0c1020; --ee-rail-active: #1c2340; --ee-bubble: #e6e9f3; --ee-bubble-ink: #1a2036; --ee-chip: #222944; --ee-track: #2a3150; --ee-shadow: none;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] .ee {
+  --ee-page: #121729; --ee-card: #1a2036; --ee-line: #2a3150; --ee-ink: #e6e9f3; --ee-muted: #95a0b8; --ee-faint: #6a7590;
+  --ee-rail: #0c1020; --ee-rail-active: #1c2340; --ee-bubble: #e6e9f3; --ee-bubble-ink: #1a2036; --ee-chip: #222944; --ee-track: #2a3150; --ee-shadow: none;
+  color-scheme: dark;
+}

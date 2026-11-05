@@ -1,0 +1,53 @@
+/* Copyright 2026 Beili (Echo) Yin
+   SPDX-License-Identifier: Apache-2.0 */
+
+/* Method page
+   Scoring rules, prose, and the calculator with its receipt-style breakdown. */
+
+/* Rules and prose */
+.ee-rules { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr)); }
+.ee-rule { border: 1px solid var(--ee-line); border-radius: 6px; padding: 12px 14px; display: grid; gap: 8px; align-content: start; }
+.ee-rule h3 { margin: 0; font-size: 13.5px; font-weight: 600; }
+.ee-rule table { border-collapse: collapse; width: 100%; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.ee-rule td { padding: 4px 0; border-bottom: 1px solid var(--ee-line); }
+.ee-rule tr:last-child td { border-bottom: 0; }
+.ee-rule td:last-child { text-align: right; font-weight: 600; }
+.ee-prose { display: grid; gap: 10px; max-width: 72ch; }
+.ee-prose p, .ee-prose ol, .ee-prose ul { margin: 0; }
+.ee-prose ol, .ee-prose ul { padding-left: 1.2rem; display: grid; gap: 6px; }
+.ee-prose a { color: var(--ee-blue); }
+.ee-limits { margin-top: 12px; }
+
+/* Calculator: inputs on the left, the receipt on the right */
+.ee-calc { display: grid; grid-template-columns: minmax(0, 17rem) minmax(0, 1fr); gap: 22px; align-items: start; }
+.ee-calc-in { display: grid; gap: 14px; align-content: start; }
+.ee-calc-in .ee-btn { justify-self: start; }
+.ee-num { font: inherit; font-size: 13.5px; color: var(--ee-ink); background: var(--ee-chip); border: 1px solid var(--ee-line); border-radius: 6px; padding: 6px 10px; width: 100%; font-variant-numeric: tabular-nums; }
+.ee-num:focus-visible { outline: 2px solid var(--ee-blue); outline-offset: 1px; }
+.ee-num:disabled { opacity: .55; }
+.ee-receipt { border: 1px solid var(--ee-line); border-radius: 6px; background: var(--ee-chip); padding: 4px 16px 14px; font-variant-numeric: tabular-nums; min-width: 0; }
+.ee-rc-head { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--ee-muted); padding: 14px 0 4px; }
+.ee-rc-row { display: grid; grid-template-columns: 1.3em minmax(0, 1fr) auto; gap: 4px 10px; align-items: baseline; padding: 6px 0; border-bottom: 1px dashed var(--ee-line); }
+.ee-rc-op { color: var(--ee-muted); font-weight: 700; text-align: center; }
+.ee-rc-label { min-width: 0; }
+.ee-rc-label small { display: block; color: var(--ee-muted); font-size: 11.5px; line-height: 1.4; margin-top: 1px; }
+.ee-rc-val { font-weight: 600; text-align: right; white-space: nowrap; }
+.ee-rc-indent .ee-rc-label { padding-left: 14px; color: var(--ee-muted); white-space: pre-wrap; }
+.ee-rc-indent .ee-rc-val { font-weight: 400; }
+.ee-rc-sub { border-bottom: 1px solid var(--ee-ink); }
+.ee-rc-ladder .ee-rc-label, .ee-rc-ladder .ee-rc-val { color: var(--ee-muted); font-weight: 400; }
+.ee-rc-cut { background: var(--ee-card); box-shadow: inset 3px 0 0 var(--ee-coral); margin: 0 -16px; padding-left: 16px; padding-right: 16px; }
+.ee-rc-cut .ee-rc-op { color: var(--ee-coral); }
+.ee-rc-total { border-bottom: 0; border-top: 2px solid var(--ee-ink); margin-top: 4px; padding-top: 10px; }
+.ee-rc-total .ee-rc-label { font-weight: 600; }
+.ee-rc-total .ee-rc-val { font-size: 24px; letter-spacing: -.01em; color: var(--ee-coral); }
+.ee-sensi { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 9.5rem), 1fr)); gap: 8px; padding-top: 6px; }
+.ee-sensi div { background: var(--ee-card); border: 1px solid var(--ee-line); border-radius: 6px; padding: 8px 10px; display: grid; gap: 2px; font-size: 12px; color: var(--ee-muted); }
+.ee-sensi b { color: var(--ee-ink); font-size: 16px; font-weight: 600; }
+
+@media (max-width: 860px) {
+  .ee-calc { grid-template-columns: minmax(0, 1fr); }
+  .ee-receipt { padding: 4px 12px 12px; }
+  .ee-rc-cut { margin: 0 -12px; padding-left: 12px; padding-right: 12px; }
+  .ee-rc-val { white-space: normal; }
+}

@@ -1,0 +1,27 @@
+/* Copyright 2026 Beili (Echo) Yin
+   SPDX-License-Identifier: Apache-2.0 */
+
+/* Tables
+   Data tables with sticky headers, the compact comparison table and the sources table. */
+
+.ee-table-wrap { overflow: auto; max-height: 34rem; margin: 0 -18px -18px; }
+.ee-table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+.ee-table th { position: sticky; top: 0; z-index: 1; background: var(--ee-card); text-align: left; font-weight: 400; font-size: 12px; color: var(--ee-muted); padding: 8px 12px; border-bottom: 1px solid var(--ee-line); white-space: nowrap; }
+.ee-table th:first-child, .ee-table td:first-child { padding-left: 18px; }
+.ee-table th:last-child, .ee-table td:last-child { padding-right: 18px; }
+.ee-table th button { all: unset; cursor: pointer; }
+.ee-table th button:focus-visible { outline: 2px solid var(--ee-blue); }
+.ee-table td { padding: 9px 12px; border-bottom: 1px solid var(--ee-line); white-space: nowrap; }
+.ee-table tr:last-child td { border-bottom: 0; }
+.ee-table .num { text-align: right; }
+.ee-table tbody tr[data-key]:hover td { background: var(--ee-chip); }
+.ee-table tbody tr.is-picked td { background: var(--ee-chip); font-weight: 600; }
+.ee-table tbody tr.ee-click { cursor: pointer; }
+.ee-mini { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.ee-mini th { text-align: left; font-weight: 400; color: var(--ee-muted); padding: 0 8px 6px 0; border-bottom: 1px solid var(--ee-line); }
+.ee-mini td { padding: 7px 8px 7px 0; border-bottom: 1px solid var(--ee-line); vertical-align: top; }
+.ee-mini td:first-child { font-weight: 600; white-space: nowrap; }
+.ee-mini tr:last-child td { border-bottom: 0; }
+.ee-src td { white-space: normal; vertical-align: top; min-width: 9rem; }
+.ee-src td:last-child { min-width: 18rem; color: var(--ee-muted); }
+.ee-src a { color: var(--ee-blue); }

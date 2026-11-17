@@ -16,7 +16,7 @@ Scores follow the rules in force since **November 3, 2026**, which added points 
 | All draws | Every draw since January 2024 as a bubble chart and a searchable, sortable table |
 | Method and sources | A calculator that breaks the projection down step by step as you change the inputs, the method, how it does when replayed on past rounds, and every source |
 
-Every chart is selectable: hover or tap for details, click or tap a point, bar or slice to pin its figure on the chart (click it again to remove it), or drag across a stretch to pin every figure in it. With the keyboard, focus a chart, move between figures with the arrow keys, pin with Enter and clear with Escape. While a chart has pins, a **Clear selection** button at the right edge of its title bar removes them.
+Every chart is selectable: hover or tap for details, and click or tap a point, bar or slice (or the plot near one) to pin its figure on the chart; click it again to remove it. Click a legend entry to hide or show that series, and on All draws, drag the slider under the chart (or hold Ctrl and scroll) to zoom into a stretch of time. With the keyboard, focus a chart, move between figures with the arrow keys, pin with Enter and clear with Escape. While a chart has pins, a **Clear selection** button at the right edge of its title bar removes them.
 
 The scenario bar at the top sets the draw type, its invitations per round, the share of Canadian work in high-wage occupations (fitted to the rounds under the new rules unless you set it), and the share of profiles without Canadian work that hold a high-wage job offer. The calculator on the Method page also sets the Canadian work share and the next round's date. Every page follows the same values.
 
@@ -72,7 +72,9 @@ A health check answers at `/healthz`.
 
 ## How it's built
 
-Plain HTML, CSS and native ES modules, with d3 v7 from a CDN. Nothing to install and no bundler.
+Plain HTML, CSS and native ES modules, with the charts drawn by [Apache ECharts](https://echarts.apache.org/) 6 (SVG renderer). Nothing to install and no bundler, and no third-party CDN: ECharts is served from the site itself like every other script, so privacy tools and firewalls that block CDNs don't blank the charts.
+
+To upgrade ECharts, replace `src/js/vendor/echarts.esm.min.js` with `dist/echarts.esm.min.js` from the new version's npm package (`npm pack echarts@<version>`), and `LICENSE-echarts.txt` and `NOTICE-echarts.txt` beside it with its `LICENSE` and `NOTICE`.
 
 ```
 src/
@@ -90,10 +92,13 @@ src/
     model/eem.js         CRS model math: pool density, eligibility, new points, cut-offs, rounds carried forward
     model/datasets.js    draws, monthly totals, pool counts and draw types from IRCC's rounds
     model/forecast.js    projections, self-correction and the pool under the new rules
-    charts/              one module per chart, the shared axes, and pick.js (hover, pin, drag, keyboard)
+    charts/              one module per chart, each an ECharts option built from the state
+    charts/base.js       the shared look (axes, labels, legends, tooltips from the CSS tokens) and pins
+    charts/keyboard.js   keyboard access to every chart: arrow keys, Enter to pin, Escape to clear
     views/               navigation, scenario controls, values, tables, the Method page
     ui/                  number and date formats, theme colours, small DOM builders
-    lib/d3.js            the d3 global as a module
+    lib/echarts.js       ECharts as a module, from vendor/
+    vendor/echarts.esm.min.js  ECharts 6.1.0, the npm package's ES module build unchanged (Apache-2.0, LICENSE and NOTICE beside it)
 test/model.test.mjs      model checks for `npm test`
 scripts/fetch-ircc.mjs   downloads and validates IRCC's feed
 scripts/build.mjs        assembles dist/ with versioned assets

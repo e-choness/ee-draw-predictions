@@ -3,7 +3,6 @@
 
 // Forecast page tables: every projected round, the track record under the new rules, and every draw type side by side.
 // Selecting a row of another type selects that type in the scenario.
-import d3 from '../lib/d3.js';
 import { store, scenario, model } from '../state.js';
 import { num, signed, date, pctOf } from '../ui/format.js';
 import { css } from '../ui/theme.js';
@@ -79,7 +78,7 @@ export function typesTable(tb) {
   if (!types) return;
   const cur = scenario.cat();
   const rows = types.map((t) => model.project(t.key, t.key === cur ? scenario.size() : null)).filter(Boolean);
-  const maxAbs = Math.max(20, d3.max(rows, (r) => Math.abs(r.projected - r.lastCRS)));
+  const maxAbs = Math.max(20, ...rows.map((r) => Math.abs(r.projected - r.lastCRS)));
   rows.forEach((r) => {
     const tr = document.createElement('tr');
     tr.dataset.key = r.key + ',' + r.size;
@@ -98,11 +97,19 @@ export function typesTable(tb) {
 }
 
 // against the last cut-off: a bar from zero, coral up and green down, and the change in points
+const svgNode = (tag, attrs, text) => {
+  const n = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  Object.entries(attrs).forEach(([k, v]) => n.setAttribute(k, v));
+  if (text != null) n.textContent = text;
+  return n;
+};
 function changeBar(td, dlt, maxAbs) {
-  const w = 150, h = 16, s = d3.scaleLinear([-maxAbs, maxAbs], [0, w]);
-  const svg = d3.select(td).append('svg').attr('width', w + 46).attr('height', h).attr('aria-hidden', 'true');
-  svg.append('line').attr('x1', s(0)).attr('x2', s(0)).attr('y1', 0).attr('y2', h).style('stroke', css('--ee-faint'));
-  svg.append('rect').attr('x', Math.min(s(0), s(dlt))).attr('width', Math.max(2, Math.abs(s(dlt) - s(0)))).attr('y', 4).attr('height', h - 8).attr('rx', 2)
-    .style('fill', dlt > 0 ? css('--ee-coral') : css('--ee-green'));
-  svg.append('text').attr('x', w + 6).attr('y', h - 4).style('font-size', '11.5px').style('fill', css('--ee-ink')).text(signed(dlt));
+  const w = 150, h = 16, x = (v) => ((v + maxAbs) / (2 * maxAbs)) * w, zero = x(0);
+  const svg = svgNode('svg', { width: w + 46, height: h, 'aria-hidden': 'true' });
+  svg.append(
+    svgNode('line', { x1: zero, x2: zero, y1: 0, y2: h, style: 'stroke:' + css('--ee-faint') }),
+    svgNode('rect', { x: Math.min(zero, x(dlt)), width: Math.max(2, Math.abs(x(dlt) - zero)), y: 4, height: h - 8, rx: 2, style: 'fill:' + (dlt > 0 ? css('--ee-coral') : css('--ee-green')) }),
+    svgNode('text', { x: w + 6, y: h - 4, style: 'font-size:11.5px;fill:' + css('--ee-ink') }, signed(dlt)),
+  );
+  td.appendChild(svg);
 }

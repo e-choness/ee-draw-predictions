@@ -37,6 +37,9 @@
 .ee-page-head p { margin: 0; color: var(--ee-muted); max-width: 70ch; }
 .ee-pause { display: block; padding: 10px 14px; border-radius: 6px; background: var(--ee-card); border: 1px solid var(--ee-line); border-left: 3px solid var(--ee-orange); font-size: 13px; max-width: 100%; }
 .ee-pause a { color: inherit; font-weight: 600; }
+/* shown only when the app's scripts fail to download (index.html sets ee-load-failed) */
+.ee-load-error { display: none; margin: 0 0 16px; padding: 10px 14px; border-radius: 6px; background: var(--ee-card); border: 1px solid var(--ee-line); border-left: 3px solid var(--ee-coral); font-size: 13px; }
+.ee-load-failed .ee-load-error { display: block; }
 
 /* Grid and cards */
 .ee-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 18px; }

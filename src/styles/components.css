@@ -35,10 +35,6 @@
 
 /* Legends and type labels */
 .ee-sw { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 6px; vertical-align: baseline; }
-.ee-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: var(--ee-muted); }
-.ee-legend span { display: inline-flex; align-items: center; }
-.sw-cec { background: var(--ee-blue); } .sw-pnp { background: var(--ee-magenta); } .sw-french { background: var(--ee-cyan); } .sw-other { background: var(--ee-orange); }
-.sw-today { background: var(--ee-slate); } .sw-after { background: var(--ee-blue); } .sw-prev { background: var(--ee-track); border: 1px solid var(--ee-slate); }
 .ee-type { display: inline-flex; align-items: center; gap: 8px; }
 .ee-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
 .ee-tag { display: inline-block; min-width: 3.4em; text-align: center; padding: 3px 10px; border-radius: 999px; color: #fff; font-weight: 600; font-size: 12px; }

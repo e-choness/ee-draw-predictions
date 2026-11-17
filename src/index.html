@@ -13,8 +13,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap">
   <link rel="stylesheet" href="styles/app.css">
-  <script src="https://cdn.jsdelivr.net/npm/d3@7.9.2/dist/d3.min.js"></script>
-  <script type="module" src="js/main.js"></script>
+  <!-- the error event fires when any module of the app fails to download: show the notice in place of blank charts -->
+  <script type="module" src="js/main.js" onerror="document.documentElement.classList.add('ee-load-failed')"></script>
 </head>
 <body>
 <div class="ee" id="app">
@@ -38,6 +38,7 @@
   </aside>
 
   <main class="ee-main">
+    <p class="ee-load-error" role="alert">The charts could not load. A browser extension, firewall or network filter may be blocking this site's scripts: allow this site and reload the page.</p>
     <section class="ee-bar" aria-label="Scenario">
       <div class="ee-bar-sum" role="button" tabindex="0" aria-expanded="false"><span>Scenario: <b data-view="bar-summary">—</b></span><span class="ee-hint">Edit</span></div>
       <div class="ee-bar-fields">
@@ -104,14 +105,12 @@
           </div>
           <div class="ee-card-b">
             <div class="ee-chart ee-tall" data-view="hero-chart"></div>
-            <p class="ee-note">Dashed: every projected round through <span data-view="horizon-2">—</span>, with the likely range shaded. Rings mark what the dashboard projected before each round under the new rules. After each new IRCC round, the rounds after it are projected again. On every chart, click or tap a point, bar or slice to pin its figure on the chart, or drag across a stretch to pin all of it. <a href="#forecast" class="ee-go" data-go="forecast">All projected rounds</a></p>
+            <p class="ee-note">Dashed: every projected round through <span data-view="horizon-2">—</span>, with the likely range shaded. Rings mark what the dashboard projected before each round under the new rules. After each new IRCC round, the rounds after it are projected again. On every chart, click or tap a point, bar or slice to pin its figure on the chart, and click a legend entry to hide or show that series. From the keyboard, Tab to a chart and use the arrow keys. <a href="#forecast" class="ee-go" data-go="forecast">All projected rounds</a></p>
           </div>
         </div>
 
         <div class="ee-card ee-s8" id="monthly">
-          <div class="ee-card-h"><h2>Invitations issued per month</h2>
-            <div class="ee-legend"><span><span class="ee-sw sw-cec"></span>Canadian Experience Class</span><span><span class="ee-sw sw-pnp"></span>Provincial Nominee</span><span><span class="ee-sw sw-french"></span>French language</span><span><span class="ee-sw sw-other"></span>Other categories</span></div>
-          </div>
+          <div class="ee-card-h"><h2>Invitations issued per month</h2></div>
           <div class="ee-card-b"><div class="ee-chart" data-view="monthly-chart"></div></div>
         </div>
         <div class="ee-card ee-s4" id="mix">
@@ -248,9 +247,7 @@
           <span class="ee-kpi-sub"><span data-view="k-pool-2">—</span> profiles</span>
         </div>
         <div class="ee-card ee-s12" id="bands">
-          <div class="ee-card-h"><h2>Profiles by score band</h2>
-            <div class="ee-legend"><span><span class="ee-sw sw-after"></span>New rules<span class="ee-est">, estimated</span></span><span class="ee-est"><span class="ee-sw sw-prev"></span>IRCC's last count, before the new points</span></div>
-          </div>
+          <div class="ee-card-h"><h2>Profiles by score band</h2></div>
           <div class="ee-card-b"><div class="ee-chart ee-tall" data-view="rescored-chart"></div></div>
         </div>
         <div class="ee-card ee-s12">
@@ -296,12 +293,10 @@
           <p>Every round of invitations since January 2024, as IRCC published it.</p>
         </div>
         <div class="ee-card ee-s12" id="bubbles">
-          <div class="ee-card-h"><h2>Cut-off and size of every draw</h2>
-            <div class="ee-legend"><span><span class="ee-sw sw-cec"></span>Canadian Experience Class</span><span><span class="ee-sw sw-pnp"></span>Provincial Nominee</span><span><span class="ee-sw sw-french"></span>French language</span><span><span class="ee-sw sw-other"></span>Other categories</span></div>
-          </div>
+          <div class="ee-card-h"><h2>Cut-off and size of every draw</h2></div>
           <div class="ee-card-b">
             <div class="ee-chart ee-tall" data-view="bubble-chart"></div>
-            <p class="ee-note">Bubble area shows the number of invitations.</p>
+            <p class="ee-note">Bubble area shows the number of invitations. Drag the slider under the chart, or hold Ctrl and scroll, to zoom into a stretch of time.</p>
           </div>
         </div>
         <div class="ee-card ee-s12" id="draw-table">

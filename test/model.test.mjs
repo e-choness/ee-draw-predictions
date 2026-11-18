@@ -53,6 +53,23 @@ test('every type is projected through the horizon, each round inside its likely 
   });
 });
 
+test('no round is projected before today, on a weekend, or in the year-end break', () => {
+  const latest = ROUNDS.reduce((m, r) => (r.drawDate > m ? r.drawDate : m), '');
+  const day = (iso, n) => new Date(Date.parse(iso + 'T00:00:00Z') + n * 864e5).toISOString().slice(0, 10);
+  // a day three weeks after the latest round, the Saturday after it, and a day in the year-end break
+  const start = day(latest, 21), sat = day(start, (6 - new Date(start + 'T00:00:00Z').getUTCDay() + 7) % 7);
+  [start, sat, latest.slice(0, 4) + '-12-22'].filter((d) => d > latest).forEach((today) => {
+    const types = D.drawTypes(D.toDraws(ROUNDS), COMP, today), F2 = createForecast(context(types, D.snapshots(ROUNDS), COMP));
+    types.forEach((t) => {
+      assert.ok(t.nextDate >= today, `${t.key}: next round ${t.nextDate} is before ${today}`);
+      assert.equal(t.nextDate, M.offBreak(t.nextDate), `${t.key}: ${t.nextDate} is a weekday outside the break`);
+      assert.equal(F2.plan(t.key, S).rounds[0].date, t.nextDate, `${t.key}: the projected rounds start at the next round`);
+    });
+  });
+  // without a date the floor is unchanged: the day after the latest round, or the end of IRCC's rescoring estimate
+  D.drawTypes(D.toDraws(ROUNDS), COMP).forEach((t) => assert.ok(t.nextDate > latest && t.nextDate >= (latest >= M.RULES ? latest : M.RESUME), t.key));
+});
+
 test('a bigger round never raises the cut-off', () => {
   c.types.filter((t) => t.method === 'pool').forEach((t) => {
     const cuts = [0.5, 1, 2, 4].map((k) => F.project(t.key, Math.round(t.usualSize * k), S).projected);

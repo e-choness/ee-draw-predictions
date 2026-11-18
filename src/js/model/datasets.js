@@ -72,8 +72,9 @@ export const snapshots = (rounds) => distinctCounts(rounds).map((r) => {
 /**
  * For each draw type: its last round, usual size, how fast eligible profiles arrive between rounds, its share of the
  * whole pool and occupation mix, and how far the model was off when replayed on its recent rounds.
+ * today (yyyy-mm-dd, optional): no next round is dated before it, since IRCC's feed would already show one.
  */
-export function drawTypes(draws, comp) {
+export function drawTypes(draws, comp, today) {
   const day = 864e5, ms = (d) => Date.parse(d + 'T00:00:00Z'), iso = (t) => new Date(t).toISOString().slice(0, 10);
   const byKey = new Map(comp.map((r) => [r.key, r])), pool = byKey.get('pool') || {};
   const asc = [...draws].sort((a, b) => a.drawDate.localeCompare(b.drawDate) || a.drawNumber - b.drawNumber);
@@ -95,7 +96,10 @@ export function drawTypes(draws, comp) {
     const share = key === 'cec' ? pool.cwShare : c.eligibleShare;
     const tail = recent.slice(-7), gaps = tail.slice(1).map((d, i) => (ms(d.drawDate) - ms(tail[i].drawDate)) / day);
     const gap = Math.max(7, Math.round(M.median(gaps)));
-    const floor = latest >= M.RULES ? ms(latest) + day : ms(M.RESUME);
+    // the earliest next round: the day after the latest round of any type, no sooner than IRCC's rescoring estimate
+    // ran out while no round has followed the new rules, and never in the past. A type whose usual gap has already
+    // passed is projected for today, or the next weekday
+    const floor = Math.max(latest >= M.RULES ? ms(latest) + day : ms(M.RESUME), M.isDate(today) ? ms(today) : 0);
     // replay the same model on this type's recent rounds, each against the pool count IRCC published before it
     const errs = [], naive = [];
     for (let i = Math.max(3, all.length - 8); i < all.length; i++) {

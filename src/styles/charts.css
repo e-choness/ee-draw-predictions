@@ -5,7 +5,9 @@
    Chart containers, the lines inside ECharts tooltips, keyboard focus, and the Clear button for pinned figures.
    ECharts draws and colours everything else from the tokens (charts/base.js). */
 
-.ee-chart { position: relative; min-height: 260px; }
+/* min-width: 0 lets the container follow its column when the window narrows (ECharts sizes its drawing in pixels,
+   which would otherwise hold the column open); the renderer sees the new width and the chart redraws to fit */
+.ee-chart { position: relative; min-width: 0; min-height: 260px; }
 .ee-chart.ee-tall { min-height: 320px; }
 .ee-chart.ee-short { min-height: 220px; }
 

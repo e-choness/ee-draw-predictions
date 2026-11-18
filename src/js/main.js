@@ -3,7 +3,7 @@
 
 // Entry point: wires the controls, maps every data-view mount point in index.html to the view that draws it, and
 // loads the data. Views redraw on the next frame whenever the data or the scenario changes.
-import { store } from './state.js';
+import { store, today } from './state.js';
 import { createRenderer } from './core/renderer.js';
 import { setupNav, syncEstimateNotes } from './views/nav.js';
 import { setupScenarioControls, syncScenarioControls, typeSelect, hwOut, joOut, sizeLabel, barSummary } from './views/scenario-bar.js';
@@ -75,3 +75,8 @@ Object.keys(VIEWS).forEach((n) => { if (!names.has(n)) console.warn('[ee] view '
 store.subscribe(renderer.schedule);
 renderer.start();
 store.loadAll();
+
+// a page left open past midnight in Ottawa reloads the data: the earliest projected round moves to the new day, and
+// IRCC may have published a round since
+let day = today();
+setInterval(() => { const d = today(); if (d !== day) { day = d; store.loadAll(); } }, 5 * 60e3);

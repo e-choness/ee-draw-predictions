@@ -5,7 +5,11 @@
 // for a round, the points the new rules add, where a round's invitations run out, and rounds carried forward.
 // Pure functions over plain arrays; no DOM, no state.
 
+// RULES: the day the new scoring took effect. RESUME: the end of the "up to two weeks" IRCC gave for rescoring the
+// pool, so the earliest a round could follow it; it passed with no round, and projections never date one before today
 export const RULES = '2026-11-03', RESUME = '2026-11-17';
+// an ISO date (yyyy-mm-dd)
+export const isDate = (v) => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v);
 // IRCC's bands: field, label, lowest and highest score
 export const BANDS = [['dd17', '0–300', 0, 300], ['dd16', '301–350', 301, 350], ['dd15', '351–400', 351, 400],
   ['dd14', '401–410', 401, 410], ['dd13', '411–420', 411, 420], ['dd12', '421–430', 421, 430], ['dd11', '431–440', 431, 440], ['dd10', '441–450', 441, 450],

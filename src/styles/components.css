@@ -25,13 +25,14 @@
 .ee-empty { display: flex; align-items: center; justify-content: center; min-height: inherit; color: var(--ee-muted); font-size: 12.5px; text-align: center; padding: 16px; }
 
 /* KPI tiles */
-.ee-kpi { padding: 16px 18px; display: grid; gap: 4px; align-content: start; }
+/* a column that can shrink below its content, so the sparkline's fixed-width drawing never holds the tile open */
+.ee-kpi { padding: 16px 18px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px; align-content: start; }
 .ee-kpi-label { font-size: 12.5px; color: var(--ee-muted); }
 .ee-kpi-num { font-size: 30px; font-weight: 600; letter-spacing: -.02em; line-height: 1.15; font-variant-numeric: tabular-nums; min-height: 1.15em; }
 .ee-kpi-sub { font-size: 12.5px; color: var(--ee-muted); font-variant-numeric: tabular-nums; }
 .ee .ee-kpi-sub b { color: var(--ee-ink); font-weight: 600; }
 .ee-up { color: var(--ee-coral); } .ee-down { color: var(--ee-green); }
-.ee-spark { height: 34px; margin-top: 4px; }
+.ee-spark { height: 34px; margin-top: 4px; min-width: 0; }
 
 /* Legends and type labels */
 .ee-sw { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 6px; vertical-align: baseline; }

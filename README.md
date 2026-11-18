@@ -126,6 +126,8 @@ The cut-off is the lowest score still invited when a round's invitations run out
 
 The likely range adds the method's average miss when replayed on the type's recent rounds (each against the pool count IRCC published before it) and the cut-offs at a high-wage share 10 points lower or higher. Provincial Nominee rounds use the median of the last four cut-offs. Senior managers and Physicians rounds use their recent median plus the new points, since IRCC reports their scores in one wide band.
 
+**When the next round falls.** Each type's next round comes its usual gap after its last one, but never before today's date in Ottawa: when that gap has passed with no round (as during IRCC's rescoring pause, which outlasted the two weeks IRCC estimated, to November 17), the round is projected for today or the next weekday, and the whole schedule moves forward a day at a time until IRCC holds one. While no round has followed the November 3 rules, none is projected before November 17.
+
 **Rounds after the next.** Each type keeps its usual gap and size; rounds that fall on a weekend or in the year-end break (none from December 19 to January 4 since 2024) move to the next weekday or the first week of January. Each round starts from the pool the one before left behind:
 
 - every profile invited is gone;

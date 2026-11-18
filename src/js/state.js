@@ -10,12 +10,20 @@ import { context, createForecast, horizon, sizeRange } from './model/forecast.js
 
 export const store = createStore({ sources: SOURCES, defaults: DEFAULTS });
 
+/** Today's date in Ottawa, where IRCC holds its rounds (yyyy-mm-dd). No round is projected before it. */
+export const today = () => {
+  const p = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Toronto', year: 'numeric', month: '2-digit', day: '2-digit' })
+    .formatToParts(new Date()).map((x) => [x.type, x.value]));
+  return p.year + '-' + p.month + '-' + p.day;
+};
+
 store.derive('draws', ['rounds'], D.toDraws);
 store.derive('monthly', ['draws'], D.monthly);
 store.derive('pool_summary', ['rounds'], D.poolSummary);
 store.derive('pool_trend', ['rounds'], D.poolTrend);
 store.derive('snapshots', ['rounds'], D.snapshots);
-store.derive('types', ['draws', 'composition'], D.drawTypes);
+// read on each reload of the data, so main.js reloads it when the date changes in Ottawa
+store.derive('types', ['draws', 'composition'], (draws, comp) => D.drawTypes(draws, comp, today()));
 // the forecast engine memoises its results; a new one is made whenever the data reloads
 store.derive('forecast', ['types', 'snapshots', 'composition'], (types, snaps, comp) => {
   const c = context(types, snaps, comp);

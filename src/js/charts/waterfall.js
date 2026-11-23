@@ -14,7 +14,7 @@ export const waterfallChart = chartView(() => {
     { label: 'Last cut-off', abs: r.lastCRS },
     { label: r.assimilated ? 'Pool since' : r.modelled ? 'Pool and pause' : 'Recent pattern', d: r.poolEffect },
     { label: 'New points', d: r.ruleEffect, off: r.method === 'pattern' || r.ruleIn, offText: r.ruleIn ? 'in pool' : 'n/a' },
-    { label: 'Draw size', d: r.sizeEffect, off: !r.modelled },
+    { label: 'Draw size', d: r.sizeEffect, off: !r.modelled && !r.sized },
     { label: 'Projected', abs: r.projected, end: true },
   ];
   let run = 0;

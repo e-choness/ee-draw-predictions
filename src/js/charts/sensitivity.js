@@ -9,19 +9,19 @@ import { chartView, valueAxis, bubble, pinnable, nice } from './base.js';
 
 const NOT_MODELLED = {
   shift: 'Draw size is not modelled for this type: IRCC reports its scores in one wide band, so only the new points are added to its recent cut-offs.',
-  pattern: 'Draw size is not modelled for Provincial Nominee rounds: nearly every nominee is invited, so the cut-off is the lowest-scoring nominee.',
+  pattern: 'Draw size is not modelled for this type: too few rounds to measure how its cut-off moves with size.',
 };
 
 export const sensitivityChart = chartView((el) => {
   const cur = model.cur(), t = model.type();
   if (!cur || !t) return null;
-  if (!cur.modelled) return { height: 260, empty: cur.method === 'shift' ? NOT_MODELLED.shift : NOT_MODELLED.pattern };
+  if (!cur.modelled && !cur.sized) return { height: 260, empty: cur.method === 'shift' ? NOT_MODELLED.shift : NOT_MODELLED.pattern };
   // 23 sizes spread evenly on a log scale across the type's range, plus its usual size and the size in use
   const sr = model.sizeRange(t), n = 22, sizes = new Set([t.usualSize, cur.size]);
   for (let i = 0; i <= n; i++) sizes.add(Math.round(sr.lo * Math.pow(sr.hi / sr.lo, i / n) / 10) * 10);
   const rows = [...sizes].sort((a, b) => a - b).map((s) => model.project(t.key, s)).filter(Boolean);
   const W = el.clientWidth, first = rows[0].size, lastSize = rows[rows.length - 1].size;
-  const ys = rows.flatMap((r) => [r.projected, r.oldRule]);
+  const old = cur.modelled, ys = rows.flatMap((r) => (old ? [r.projected, r.oldRule] : [r.projected]));
   const ticks = [50, 100, 250, 500, 1000, 2500, 5000, 10000].filter((v) => v >= first && v <= lastSize && (W > 420 || [100, 500, 2500, 10000].includes(v)));
   const blue = css('--ee-blue'), slate = css('--ee-slate'), coral = css('--ee-coral'), muted = css('--ee-muted'), faint = css('--ee-faint');
 
@@ -40,7 +40,8 @@ export const sensitivityChart = chartView((el) => {
       },
       yAxis: valueAxis(nice(Math.min(...ys) - 6, Math.max(...ys) + 6)),
       series: [
-        { id: 'old', type: 'line', silent: true, symbol: 'none', lineStyle: { color: slate, width: 1.8, type: [5, 4] }, data: rows.map((h) => [h.size, h.oldRule]) },
+        // Provincial Nominee: nominees score the same under both rules, so there is no old-rules line
+        old && { id: 'old', type: 'line', silent: true, symbol: 'none', lineStyle: { color: slate, width: 1.8, type: [5, 4] }, data: rows.map((h) => [h.size, h.oldRule]) },
         {
           id: 'new', type: 'line', symbol: 'circle', symbolSize: 7, showAllSymbol: true,
           ...pinnable({ formatter: (p) => String(p.value[1]) }, { opacity: 1 }),
@@ -59,13 +60,13 @@ export const sensitivityChart = chartView((el) => {
           labelLayout: { hideOverlap: true },
           data: [[cur.size, cur.projected]],
         },
-      ],
+      ].filter(Boolean),
     },
     describe: (id, i) => {
       const h = rows[i];
       return {
         title: num(h.size) + ' invitations' + (h.usual ? ' (usual)' : ''),
-        rows: [{ color: blue, text: 'New rules  ' + h.projected + ' (likely ' + h.low + ' to ' + h.high + ')' }, { color: slate, text: 'Same pool, old rules  ' + h.oldRule }],
+        rows: [{ color: blue, text: (old ? 'New rules  ' : 'Projected  ') + h.projected + ' (likely ' + h.low + ' to ' + h.high + ')' }].concat(old ? [{ color: slate, text: 'Same pool, old rules  ' + h.oldRule }] : []),
       };
     },
   };

@@ -9,12 +9,13 @@ import { readFileSync } from 'node:fs';
 import * as D from '../src/js/model/datasets.js';
 import * as M from '../src/js/model/eem.js';
 import { context, createForecast, horizon } from '../src/js/model/forecast.js';
+import { transition, KNOTS } from '../src/js/model/transition.js';
 
 const read = (f) => JSON.parse(readFileSync(new URL('../data/' + f, import.meta.url), 'utf8'));
 const ROUNDS = read('ee_rounds.json').rows, COMP = read('pool_composition.json').rows;
 
 const build = (rounds) => {
-  const types = D.drawTypes(D.toDraws(rounds), COMP), c = context(types, D.snapshots(rounds), COMP);
+  const draws = D.toDraws(rounds), types = D.drawTypes(draws, COMP), c = context(types, D.snapshots(rounds), COMP, draws);
   return { c, F: createForecast(c) };
 };
 const { c, F } = build(ROUNDS);
@@ -59,7 +60,7 @@ test('no round is projected before today, on a weekend, or in the year-end break
   // a day three weeks after the latest round, the Saturday after it, and a day in the year-end break
   const start = day(latest, 21), sat = day(start, (6 - new Date(start + 'T00:00:00Z').getUTCDay() + 7) % 7);
   [start, sat, latest.slice(0, 4) + '-12-22'].filter((d) => d > latest).forEach((today) => {
-    const types = D.drawTypes(D.toDraws(ROUNDS), COMP, today), F2 = createForecast(context(types, D.snapshots(ROUNDS), COMP));
+    const draws = D.toDraws(ROUNDS), types = D.drawTypes(draws, COMP, today), F2 = createForecast(context(types, D.snapshots(ROUNDS), COMP, draws));
     types.forEach((t) => {
       assert.ok(t.nextDate >= today, `${t.key}: next round ${t.nextDate} is before ${today}`);
       assert.equal(t.nextDate, M.offBreak(t.nextDate), `${t.key}: ${t.nextDate} is a weekday outside the break`);
@@ -77,10 +78,49 @@ test('a bigger round never raises the cut-off', () => {
   });
 });
 
-test('rescoring moves profiles between bands without adding or losing any', () => {
+test('the pool under the new rules: rescoring moves profiles between bands, or IRCC’s own count once there is one', () => {
   const pv = F.poolView(S), before = pv.rows.reduce((s, r) => s + r.before, 0), after = pv.rows.reduce((s, r) => s + r.after, 0);
-  assert.ok(Math.abs(after - before) / before < 0.005, `${before} vs ${after}`);
-  if (!pv.live) assert.ok(pv.after501 >= pv.before501, 'the new points only add');
+  if (pv.live) {
+    // two IRCC counts: the last under the old rules and the latest, each as IRCC published it
+    assert.equal(before, c.old.total);
+    assert.equal(after, c.latest.total);
+  } else {
+    assert.ok(Math.abs(after - before) / before < 0.005, `${before} vs ${after}`);
+    assert.ok(pv.after501 >= pv.before501, 'the new points only add');
+  }
+});
+
+test('the rescoring reverse-calculated from IRCC’s counts adds up to its count under the new rules', (t) => {
+  if (!c.live) { t.skip('no IRCC count under the new rules yet'); return; }
+  const tr = c.trans;
+  assert.ok(tr, 'reverse-calculated once IRCC counts the pool under the new rules');
+  // the pool it starts from holds every profile IRCC counted
+  assert.ok(Math.abs(tr.d.reduce((s, v) => s + v, 0) - c.latest.total) < 1, 'carried pool total');
+  // the high-wage share never falls as scores rise, and stays a share
+  tr.levels.forEach((v, i) => { assert.ok(v >= 0 && v <= 1, 'share ' + v); if (i) assert.ok(v >= tr.levels[i - 1], 'non-decreasing'); });
+  assert.equal(tr.levels.length, KNOTS.length);
+  // the fit explains every band to within 10% before the leftover is calibrated away
+  tr.bands.slice(0, -1).forEach((b) => assert.ok(Math.abs(b.fitted - b.ircc) / b.ircc < 0.1, `${b.band}: ${b.fitted} vs ${b.ircc}`));
+  // calibrated, a whole-pool profile set rescored at the fitted shares adds up to IRCC's count band by band
+  const g = M.calibrate(M.gains(0.5, tr.hw, c.pool.mix, tr.jo, c.pool.mix), tr.ratio);
+  assert.ok(g.m.every((v) => v > 0.5 && v < 2), 'calibration stays modest');
+  // it is pure: the same inputs give the same answer
+  const again = transition(D.toDraws(ROUNDS), D.snapshots(ROUNDS), c.types, COMP);
+  assert.deepEqual(again.levels, tr.levels);
+});
+
+test('a bigger Provincial Nominee round reaches further down the nominees', () => {
+  const t = F.type('pnp');
+  if (!t) return;
+  assert.ok(t.sizeSlope < 0, 'cut-offs fall with size');
+  const cuts = [0.5, 1, 2, 4].map((k) => F.project('pnp', Math.round(t.usualSize * k), S).projected);
+  cuts.slice(1).forEach((v, i) => assert.ok(v <= cuts[i], cuts.join(' > ')));
+  // each round under the new rules is recorded against a projection at the size IRCC drew
+  F.track(S).filter((r) => r.key === 'pnp').forEach((r) => {
+    const h = t.history.findIndex((x) => x.drawNumber === r.drawNumber);
+    const med = M.sizedMedian(t.history, h, M.sizeSlopeBefore(t.history, h), r.size);
+    assert.ok(Math.abs(r.projected - med) <= Math.abs(r.projected - M.sizedMedian(t.history, h, 0, r.size)) + 60, 'size-aware record');
+  });
 });
 
 test('a higher high-wage share never lowers the next cut-off', () => {

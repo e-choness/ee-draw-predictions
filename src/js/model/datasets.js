@@ -94,6 +94,9 @@ export function drawTypes(draws, comp, today) {
     const c = byKey.get(key) || {}, last = all[all.length - 1];
     const method = key === 'pnp' ? 'pattern' : c.eligibleShare ? 'pool' : c.hwShare != null ? 'shift' : 'pattern';
     const share = key === 'cec' ? pool.cwShare : c.eligibleShare;
+    const history = all.map((d) => ({ date: d.drawDate, crs: d.drawCRS, size: d.drawSize, drawNumber: d.drawNumber }));
+    // Provincial Nominee cut-offs fall with the round's size (see M.sizeSlope); other pattern types keep the plain median
+    const sized = key === 'pnp', slopeAt = (i) => (sized ? M.sizeSlopeBefore(history, i) : 0);
     const tail = recent.slice(-7), gaps = tail.slice(1).map((d, i) => (ms(d.drawDate) - ms(tail[i].drawDate)) / day);
     const gap = Math.max(7, Math.round(M.median(gaps)));
     // the earliest next round: the day after the latest round of any type, no sooner than IRCC's rescoring estimate
@@ -109,7 +112,7 @@ export function drawTypes(draws, comp, today) {
       if (method === 'pool') {
         const inflow = rateBefore(all, i) * (ms(cur.drawDate) - ms(prev.drawDate)) / day;
         pred = M.cutoff(M.eligible(M.density(cur), share, prev.drawCRS, inflow), cur.drawSize).score;
-      } else pred = M.median(all.slice(Math.max(0, i - 4), i).map((d) => d.drawCRS));
+      } else pred = M.sizedMedian(history, i, slopeAt(i), cur.drawSize);
       errs.push(Math.abs(pred - cur.drawCRS));
       naive.push(Math.abs(prev.drawCRS - cur.drawCRS));
     }
@@ -132,17 +135,19 @@ export function drawTypes(draws, comp, today) {
     // the starting point for rounds under the new rules: the type's last round under the old rules
     const firstNew = all.findIndex((d) => d.drawDate >= M.RULES), baseIdx = firstNew < 0 ? all.length - 1 : firstNew - 1;
     const base = baseIdx >= 0 ? { date: all[baseIdx].drawDate, crs: all[baseIdx].drawCRS, size: all[baseIdx].drawSize, rate: rateBefore(all, baseIdx + 1) } : null;
+    const usualSize = Math.round(M.median(all.slice(-4).map((d) => d.drawSize))), slope = slopeAt(all.length);
     return {
       key, category: last.category, method: base ? method : 'pattern', draws12m: recent.length,
       lastDate: last.drawDate, lastCRS: last.drawCRS, lastSize: last.drawSize, lastAsOf: last.distributionAsOn, lastNumber: last.drawNumber,
       gapDays: gap, nextDate: M.offBreak(iso(Math.max(ms(last.drawDate) + gap * day, floor))),
-      usualSize: Math.round(M.median(all.slice(-4).map((d) => d.drawSize))), ratePerDay: Math.round(rateBefore(all, all.length) * 10) / 10,
-      pattern: Math.round(M.median(all.slice(-4).map((d) => d.drawCRS))),
+      usualSize, ratePerDay: Math.round(rateBefore(all, all.length) * 10) / 10,
+      // the median of the last four cut-offs, at the usual size for types whose cut-off falls with size
+      pattern: Math.round(M.sizedMedian(history, all.length, slope, usualSize)), sizeSlope: slope,
       eligibleShare: share ?? null, cwShare: c.cwShare ?? null, hwShare: c.hwShare ?? null, mix: c.mix ?? null, basis: c.basis || '',
       replayError: mean(errs), replayNaive: mean(naive), replayN: errs.length,
       turnover: fitted ? fitted.mu : null, turnoverErr, turnoverOwn: !!fitted,
       base, since: (firstNew < 0 ? [] : all.slice(firstNew)).map((d) => ({ drawNumber: d.drawNumber, date: d.drawDate, size: d.drawSize, crs: d.drawCRS, asOf: d.distributionAsOn })),
-      history: all.map((d) => ({ date: d.drawDate, crs: d.drawCRS, size: d.drawSize, drawNumber: d.drawNumber })),
+      history,
     };
   }).filter(Boolean).sort((a, b) => b.draws12m - a.draws12m || a.category.localeCompare(b.category));
   // types with too little history take the turnover that fits every pool type's replays together

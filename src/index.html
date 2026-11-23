@@ -274,7 +274,19 @@
                 <li><b>Job offers, <span data-view="c-jo">—</span> of profiles without Canadian work:</b> 12.3% of eligible profiles in 2024 claimed a job offer, times the high-wage share. For someone with Canadian work, an offer in the same tier never beats the work points, so offers only lift profiles without Canadian work.</li>
                 <li><b>Category rounds</b> use their own occupations, weighted the same way: <span data-view="c-cats">—</span> of the jobs in each category are high-wage.</li>
               </ul>
-              <p>Shares are applied evenly across scores. Profiles that were above the last Canadian Experience Class cut-off were invited, so above it only recent arrivals are counted as having Canadian work. See <a href="#method" class="ee-go" data-go="method">Method and sources</a> for the calculator and every source.</p>
+              <p>Before IRCC counts the pool under the new rules, these shares are applied evenly across scores. Once it does, the high-wage share and job offers are reverse-calculated from its counts before and after November 3 (below), and the share rises with score. Profiles that were above the last Canadian Experience Class cut-off were invited, so above it only recent arrivals are counted as having Canadian work. See <a href="#method" class="ee-go" data-go="method">Method and sources</a> for the calculator and every source.</p>
+            </div>
+          </div>
+        </div>
+        <div class="ee-card ee-s12 ee-live" id="reverse" hidden>
+          <div class="ee-card-h"><h2>Who gained points, from IRCC's counts</h2><span class="ee-hint">Reverse-calculated</span></div>
+          <div class="ee-card-b">
+            <p class="ee-note" data-view="rev-note"></p>
+            <div class="ee-table-wrap">
+              <table class="ee-table">
+                <thead><tr><th>Band</th><th class="num">IRCC, last count before Nov 3</th><th class="num">IRCC, first count after</th><th class="num">Reconstructed</th><th class="num">Off by</th><th class="num">High-wage share at that old score</th></tr></thead>
+                <tbody data-view="rev-body"></tbody>
+              </table>
             </div>
           </div>
         </div>
@@ -366,11 +378,11 @@
             <p><b>After each new round.</b> When IRCC publishes a round, the projection corrects itself in three ways:</p>
             <ul>
               <li><b>It continues from what IRCC drew.</b> The pool is carried through every round held under the new rules at the sizes IRCC drew, from the type's last old-rules round and IRCC's last old-rules count. Half of the last round's miss is carried into the next projection, a quarter into the one after.</li>
-              <li><b>It refits the high-wage share.</b> The share starts at the sourced default, or at the share that turns IRCC's last old count into its first count under the new rules once that is published. After each round it is refitted to every round held so far. Each miss is weighed against the type's usual miss. Moving the share 10 points costs as much as a 5-point miss, so one round can't swing it far. A share you set in the scenario stays fixed.</li>
+              <li><b>It refits the high-wage share.</b> The share starts at the sourced default. Once IRCC publishes a count under the new rules, it starts from the reverse calculation instead: IRCC's last old count is carried to the new count's date (the invited leave, each band gains its usual arrivals, the nominees of the Provincial Nominee round held then are placed at 601+), and the high-wage share at each old score, the job-offer share and where new Canadian Experience Class profiles sit are fitted so the rescored pool adds up to IRCC's new count band by band. The share rises with score, and what the fit leaves over is scaled away band by band, so projections start from IRCC's own count. After each round it is refitted to every round held so far. Each miss is weighed against the type's usual miss. Moving the share 10 points costs as much as a 5-point miss, so one round can't swing it far. A share you set in the scenario stays fixed.</li>
               <li><b>It learns the offset for pattern rounds.</b> Provincial Nominee, Senior managers and Physicians rounds add their average miss under the new rules, shrunk toward zero: half of it after one round.</li>
             </ul>
             <p>Every round under the new rules is listed on the Forecast page with what the dashboard projected before it, using only the rounds before it.</p>
-            <p>Provincial Nominee rounds invite nearly every nominee, so their cut-off is just the lowest-scoring nominee: the dashboard uses the median of the last four. Senior managers and Physicians scores fall in IRCC's widest bands, so the pool can't place them; every eligible candidate in those rounds has Canadian work in a high-wage occupation, so their recent median gets the new points added (+70 for physicians).</p>
+            <p>Provincial Nominee rounds invite nearly every nominee, so their cut-off is just the lowest-scoring nominee, and a bigger round reaches further down the nominees. The dashboard moves each of the last four rounds to the usual size, using how cut-offs fell with size over the last two years (the calculator shows by how much), takes the median, and moves it to the size in use. Senior managers and Physicians scores fall in IRCC's widest bands, so the pool can't place them; every eligible candidate in those rounds has Canadian work in a high-wage occupation, so their recent median gets the new points added (+70 for physicians).</p>
           </div>
         </div>
 
@@ -429,7 +441,7 @@
               </table>
             </div>
             <div class="ee-prose ee-limits">
-              <p><b>Limits.</b> No public table splits the pool by occupation and score together, so the shares are applied evenly across scores. The census is from 2021, and IRCC's 2025 pool count shows more food service supervisors and cooks (neither high-wage) than the census suggests, so the high-wage share may lean high. Profiles entering during the pause and job offers added after November 3 are not counted. Once IRCC publishes a count under the new rules, the pool view uses it directly, and the high-wage share starts from the share that turns IRCC's last old count into it. Projections keep starting from the last old count and carry it through the rounds held since, because only an old count can be split into who gained which points. The turnover is an effective rate fitted to old-rules rounds: it also covers profiles that become eligible by changing (another year of work, a new test result), not only new profiles. Rounds further ahead assume each type keeps its usual size and gap. These are statistical estimates, not IRCC guidance: IRCC sets each round's size and type itself.</p>
+              <p><b>Limits.</b> No public table splits the pool by occupation and score together, so before IRCC counts the pool under the new rules the shares are applied evenly across scores; after, the reverse calculation fits how they rise with score, but it can't tell from the counts alone who gained points from Canadian work and who from a job offer, except that offers above 500 would have pushed far more than IRCC's 69 non-nominees past 600. The census is from 2021, and IRCC's 2025 pool count shows more food service supervisors and cooks (neither high-wage) than the census suggests, so the high-wage share may lean high. Profiles entering during the pause and job offers added after November 3 are not counted. Once IRCC publishes a count under the new rules, the pool view uses it directly, and projections start from IRCC's last old count carried to it and matched to it band by band, because only an old count can be split into who gained which points. The turnover is an effective rate fitted to old-rules rounds: it also covers profiles that become eligible by changing (another year of work, a new test result), not only new profiles. Rounds further ahead assume each type keeps its usual size and gap. These are statistical estimates, not IRCC guidance: IRCC sets each round's size and type itself.</p>
             </div>
           </div>
         </div>

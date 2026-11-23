@@ -11,6 +11,7 @@ import { values } from './views/values.js';
 import { recentDraws, allDraws, setupDrawSearch } from './views/draw-tables.js';
 import { roundsTable, trackTable, trackNote, typesTable } from './views/forecast-tables.js';
 import { sourceValues, calcDefaults, calcReceipt, replayTable } from './views/method.js';
+import { revNote, revTable } from './views/transition.js';
 import { poolSparkline } from './charts/sparkline.js';
 import { heroChart } from './charts/hero.js';
 import { monthlyChart } from './charts/monthly.js';
@@ -46,6 +47,8 @@ const VIEWS = {
   // Pool scores
   'rescored-chart': scoreBandsChart,
   'trend-chart': poolTrendChart,
+  'rev-note': revNote,
+  'rev-body': revTable,
   // All draws
   'bubble-chart': drawBubblesChart,
   'all-body': allDraws,

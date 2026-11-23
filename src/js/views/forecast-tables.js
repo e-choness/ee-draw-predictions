@@ -67,7 +67,7 @@ export function trackNote(el) {
   const miss = n ? rows.reduce((s, r) => s + Math.abs(r.miss), 0) / n : 0;
   const share = model.hwSet()
     ? 'The high-wage share is set to ' + pctOf(model.hw()) + ' in the scenario, so it is not refitted.'
-    : 'High-wage share in use: ' + pctOf(cal.h) + (cal.n ? ', refitted to ' + plural(cal.n, 'round') + ' under the new rules.' : cal.prior.from === 'count' ? ', from IRCC’s first count under the new rules.' : ', the sourced default until rounds under the new rules come in.');
+    : 'High-wage share in use: ' + pctOf(cal.h) + (cal.n ? ', refitted to ' + plural(cal.n, 'round') + ' under the new rules.' : cal.prior.from === 'count' ? ', reverse-calculated from IRCC’s counts before and after the change.' : ', the sourced default until rounds under the new rules come in.');
   el.textContent = (n ? plural(n, 'round') + ' so far, missed by ' + miss.toFixed(1) + ' points on average. Each projection uses only the rounds before it. ' : '') + share;
 }
 
@@ -83,7 +83,7 @@ export function typesTable(tb) {
     const tr = document.createElement('tr');
     tr.dataset.key = r.key + ',' + r.size;
     clickable(tr, r.key, r.key === cur);
-    const vals = [null, num(r.size), r.projected, r.low, r.high, signed(r.poolEffect), r.method === 'pattern' ? 'n/a' : r.ruleIn ? 'in pool' : signed(r.ruleEffect), r.modelled ? signed(r.sizeEffect) : 'n/a', null];
+    const vals = [null, num(r.size), r.projected, r.low, r.high, signed(r.poolEffect), r.method === 'pattern' ? 'n/a' : r.ruleIn ? 'in pool' : signed(r.ruleEffect), r.modelled || r.sized ? signed(r.sizeEffect) : 'n/a', null];
     vals.forEach((v, i) => {
       const td = document.createElement('td');
       if (i > 0 && i < 8) td.className = 'num';

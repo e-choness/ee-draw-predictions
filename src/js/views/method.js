@@ -7,6 +7,7 @@ import { store, model } from '../state.js';
 import { RULES, tail } from '../model/eem.js';
 import { num, signed, date, pctOf } from '../ui/format.js';
 import { typeCell } from '../ui/dom.js';
+import { curveText } from './transition.js';
 
 const comp = () => { const c = model.ctx(); return c ? c.pool : null; };
 const pc = (v) => (v == null ? '—' : pctOf(v));
@@ -37,7 +38,7 @@ export const sourceValues = {
 const hwSource = () => {
   if (model.hwSet()) return 'Scenario value';
   const f = model.calib();
-  return f.n ? 'Refitted to ' + plural(f.n, 'round') + ' under the new rules' : f.prior.from === 'count' ? 'From IRCC’s first count under the new rules' : 'Sourced default';
+  return f.n ? 'Refitted to ' + plural(f.n, 'round') + ' under the new rules' : f.prior.from === 'count' ? 'From IRCC’s counts before and after the change: it rises with score, so this is the average over these profiles' : 'Sourced default';
 };
 const hwNote = (t) => {
   if (t.key === 'cec' || t.hwShare == null) return hwSource();
@@ -49,8 +50,8 @@ const hwNote = (t) => {
 export function calcDefaults(el) {
   const c = comp(), imp = model.impliedHw();
   el.textContent = !c ? '' : 'Sourced defaults: ' + pc(c.cwShare) + ' with Canadian work, ' + pc(c.hwShare) + ' of them in high-wage jobs, ' + pc(c.joShare) + ' job offers.'
-    + (imp != null ? ' IRCC’s first count under the new rules fits a high-wage share of about ' + pc(imp) + '.' : '')
-    + (model.hwSet() ? '' : ' High-wage share in use: ' + pc(model.hw()) + ' (' + hwSource().toLowerCase() + ').');
+    + (imp != null && model.transition() ? ' IRCC’s counts before and after the change fit a high-wage share that rises with score: ' + curveText(model.transition()) + ', ' + pc(imp) + ' on average, and ' + (model.transition().jo < 0.005 ? 'no job offers' : pc(model.transition().jo) + ' job offers') + '.' : '')
+    + (model.hwSet() ? '' : ' High-wage share in use: ' + pc(model.hw()) + ' (' + hwSource().replace(/^./, (ch) => ch.toLowerCase()) + ').');
 }
 
 /* ---------- The receipt ---------- */
@@ -80,13 +81,16 @@ const ladder = (box, r, c, oldLabel) => {
 function patternReceipt(box, r) {
   const t = r.t;
   head(box, r.category + ': recent rounds');
-  line(box, '', 'Median cut-off of the last four rounds', String(t.pattern), { note: 'Last round ' + date(t.lastDate) + ' at ' + t.lastCRS + (t.lastDate >= RULES ? ', new rules' : ', old rules') });
+  const last = 'Last round ' + date(t.lastDate) + ' at ' + t.lastCRS + (t.lastDate >= RULES ? ', new rules' : ', old rules');
+  if (r.sized) line(box, '', 'Median cut-off of the last four rounds, at the usual size', String(t.pattern), { note: last + ', ' + num(t.lastSize) + ' invited. Each round is moved to ' + num(r.usualSize) + ' invitations (the median of the last four) before the median is taken' });
+  else line(box, '', 'Median cut-off of the last four rounds', String(t.pattern), { note: last });
   if (r.method === 'shift') {
     line(box, '+', 'New points, on the old-rules rounds among them', signed(r.ruleEffect), { note: 'Each old-rules round is lifted by ' + r.ruleShift + ' points: all eligible candidates have 12+ months of Canadian work in high-wage occupations (' + mixText(t.mix) + ' in 2× / 1.5× / 1.3×), so the whole group moves up together' });
   } else {
     line(box, '', 'New points', 'not added', { note: 'Nearly every nominee is invited, so the cut-off is the lowest-scoring nominee. Pool counts can’t place that score: 601+ is one IRCC band' });
   }
-  if (r.held) line(box, '+', 'Learned from rounds under the new rules', signed(Math.round(r.bias)), { note: 'Average miss over ' + plural(r.held, 'round') + ', shrunk toward zero (' + r.held + ' of ' + (r.held + 1) + ')' });
+  if (r.held) line(box, '+', 'Learned from rounds under the new rules', signed(Math.round(r.bias)), { note: 'Average miss over ' + plural(r.held, 'round') + (r.sized ? ', each against a projection at the size IRCC drew' : '') + ', shrunk toward zero (' + r.held + ' of ' + (r.held + 1) + ')' });
+  if (r.sized) line(box, '+', 'Draw size', signed(r.sizeEffect), { note: (r.usual ? 'Usual size. ' : num(r.size) + ' instead of ' + num(r.usualSize) + '. ') + 'A bigger round reaches further down the nominees: the cut-off falls about ' + Math.round(-r.slope * Math.log(2)) + ' points each time the round doubles, fitted on the last two years of rounds' });
   line(box, '=', 'Projected cut-off', String(r.projected), { cls: 'ee-rc-total' });
   line(box, '', 'Likely range', r.low + ' to ' + r.high, { note: (r.held >= 2 ? 'Average miss under the new rules: ' : 'Average miss of this method on recent rounds: ') + r.err + ' points' + (r.spread ? ', plus ' + r.spread + ' for the spread between occupation tiers' : '') });
 }
@@ -95,7 +99,7 @@ function patternReceipt(box, r) {
 function carriedReceipt(box, r) {
   const t = r.t, c = r.projected, last = r.held[r.held.length - 1], cm = c - r.anchor;
   head(box, 'Carried through the rounds under the new rules');
-  line(box, '', 'Start: last round under the old rules', String(r.baseCRS), { note: date(r.baseDate) + '. IRCC pool count of ' + date(r.snapAsOf) + ' (' + n0(r.poolTotal) + ' profiles), rescored with the new points' });
+  line(box, '', 'Start: last round under the old rules', String(r.baseCRS), { note: date(r.baseDate) + '. ' + (r.carriedFrom ? 'IRCC’s count of ' + date(r.carriedFrom) + ', carried to ' + date(r.snapAsOf) + ' and matched to IRCC’s count then (' + n0(r.poolTotal) + ' profiles)' : 'IRCC pool count of ' + date(r.snapAsOf) + ' (' + n0(r.poolTotal) + ' profiles), rescored with the new points') });
   r.held.forEach((h) => line(box, '', 'Draw #' + h.drawNumber + ', ' + date(h.date) + ', ' + num(h.size) + ' invited', 'drew ' + h.crs, { note: 'Carried to this round, the model gives ' + h.sim + '. Its invitees leave; new profiles arrive at ' + num(Math.round(t.base.rate)) + ' a day and replace the invited at the pool’s rate of new points' }));
   line(box, '=', 'Eligible at the next round, ' + date(r.nextDate), n0(r.stock), { cls: 'ee-rc-sub' });
   head(box, 'New points');
@@ -117,10 +121,10 @@ function carriedReceipt(box, r) {
 function firstRoundReceipt(box, r) {
   const t = r.t, isCec = r.key === 'cec';
   head(box, 'Who can be invited');
-  line(box, '', 'IRCC pool count, ' + date(r.snapAsOf), n0(r.poolTotal), { note: 'Every profile in the pool, by CRS band' });
+  line(box, '', 'IRCC pool count, ' + date(r.snapAsOf), n0(r.poolTotal), { note: r.carriedFrom ? 'On old scores: IRCC’s count of ' + date(r.carriedFrom) + ', carried to this date and matched to this count band by band (see Pool scores)' : 'Every profile in the pool, by CRS band' });
   line(box, '', 'Below the last cut-off, ' + r.lastCRS, n0(r.belowLast), { note: 'Last ' + r.category + ' round ' + date(r.lastDate) + '; everyone eligible above it was invited' });
   line(box, '×', isCec ? 'Share with 12+ months of Canadian work' : 'Share eligible for this round', pc(r.share), { note: isCec ? 'CEC-eligible share of the whole pool' : t.basis });
-  line(box, '=', 'Eligible, waiting below ' + r.lastCRS, n0(r.backlog));
+  line(box, '=', 'Eligible, waiting below ' + r.lastCRS, n0(r.backlog), r.carriedFrom ? { note: 'Scaled band by band so the rescored pool adds up to IRCC’s count' } : {});
   line(box, '+', 'Arrivals above ' + r.lastCRS + ' until ' + date(r.nextDate), n0(r.inflow), { note: num(Math.round(t.base.rate * 10) / 10) + ' a day (invitations per day over recent rounds) × ' + Math.round(r.days) + ' days' });
   line(box, '=', 'Eligible at the next round', n0(r.stock), { cls: 'ee-rc-sub' });
 

@@ -40,7 +40,8 @@ export function syncScenarioControls() {
       const sr = model.sizeRange(t);
       if (i.type === 'range') { i.min = String(sr.lo); i.max = String(sr.hi); i.step = String(sr.step); }
       i.value = String(r ? r.size : t.usualSize);
-      i.disabled = t.method !== 'pool';
+      // pool types follow the eligible profiles near the cut-off; Provincial Nominee rounds reach further down the nominees
+      i.disabled = t.method !== 'pool' && !t.sizeSlope;
     }
   });
   document.querySelectorAll('.ee-span').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.span === scenario.span())));
@@ -70,7 +71,7 @@ export const joOut = (el) => { el.textContent = pctOf(model.jo()); };
 
 export const sizeLabel = (el) => {
   const r = model.cur();
-  el.textContent = !r ? '—' : !r.modelled ? 'Usual size (not modelled)' : num(r.size) + (r.usual ? ' (usual)' : '');
+  el.textContent = !r ? '—' : !r.modelled && !r.sized ? 'Usual size (not modelled)' : num(r.size) + (r.usual ? ' (usual)' : '');
 };
 
 /** The folded bar's one-line summary on phones. */

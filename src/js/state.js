@@ -25,8 +25,8 @@ store.derive('snapshots', ['rounds'], D.snapshots);
 // read on each reload of the data, so main.js reloads it when the date changes in Ottawa
 store.derive('types', ['draws', 'composition'], (draws, comp) => D.drawTypes(draws, comp, today()));
 // the forecast engine memoises its results; a new one is made whenever the data reloads
-store.derive('forecast', ['types', 'snapshots', 'composition'], (types, snaps, comp) => {
-  const c = context(types, snaps, comp);
+store.derive('forecast', ['types', 'snapshots', 'composition', 'draws'], (types, snaps, comp, draws) => {
+  const c = context(types, snaps, comp, draws);
   return c && { ctx: c, engine: createForecast(c) };
 });
 
@@ -69,6 +69,8 @@ export const model = {
   track: () => { const e = E(); return e ? e.track(P()) : []; },
   impliedHw: () => { const e = E(); return e && e.impliedHw(P()); },
   poolView: () => { const e = E(); return e && e.poolView(P()); },
+  /** The rescoring reverse-calculated from IRCC's counts on either side of November 3, or null before there is one. */
+  transition: () => { const e = E(); return e && e.transition(); },
   /** Every round of a type through the horizon, the selected one by default. */
   plan: (key) => { const e = E(); return e && e.plan(key, P()); },
   /** The next round of a type at a size (null: usual), optionally overriding hw, jo, cw or next. */

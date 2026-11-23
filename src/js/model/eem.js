@@ -16,6 +16,25 @@ export const BANDS = [['dd17', '0–300', 0, 300], ['dd16', '301–350', 301, 35
   ['dd8', '451–460', 451, 460], ['dd7', '461–470', 461, 470], ['dd6', '471–480', 471, 480], ['dd5', '481–490', 481, 490], ['dd4', '491–500', 491, 500],
   ['dd2', '501–600', 501, 600], ['dd1', '601–1200', 601, 1200]];
 export const median = (a) => { const s = [...a].sort((x, y) => x - y), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+// Provincial Nominee rounds invite nearly every nominee in the pool, so a bigger round reaches further down the
+// nominees and its cut-off is lower. The cut-off falls by `slope` points per unit of ln(size): the least-squares
+// slope over the rounds given ({ size, crs }), never above zero, and 0 with fewer than 12 rounds or no spread in size.
+export const sizeSlope = (rounds) => {
+  if (rounds.length < 12) return 0;
+  const xs = rounds.map((r) => Math.log(Math.max(1, r.size))), mx = xs.reduce((s, v) => s + v, 0) / xs.length;
+  const my = rounds.reduce((s, r) => s + r.crs, 0) / rounds.length;
+  let sxy = 0, sxx = 0;
+  rounds.forEach((r, i) => { sxy += (xs[i] - mx) * (r.crs - my); sxx += (xs[i] - mx) ** 2; });
+  return sxx > 0 ? Math.min(0, sxy / sxx) : 0;
+};
+// the slope over a type's rounds before index i ({ date, size, crs }, oldest first), within two years of the last of them
+export const sizeSlopeBefore = (rounds, i) => {
+  if (i < 1) return 0;
+  const end = Date.parse(rounds[i - 1].date + 'T00:00:00Z');
+  return sizeSlope(rounds.slice(0, i).filter((r) => end - Date.parse(r.date + 'T00:00:00Z') <= 730 * 864e5));
+};
+// the median of the last four cut-offs before index i, each moved to size n along the slope b (b = 0: the plain median)
+export const sizedMedian = (rounds, i, b, n) => median(rounds.slice(Math.max(0, i - 4), i).map((r) => r.crs - b * Math.log(Math.max(1, r.size)))) + b * Math.log(Math.max(1, n));
 // profiles at each score 0..1200, keeping every band total. Bands up to 50 points wide are spread evenly;
 // 501-600 thins out from the 491-500 density (exponential), instead of 100 equal steps
 export const density = (snap) => {
@@ -36,25 +55,64 @@ export const tail = (a) => { const t = new Float64Array(1202); for (let s = 1200
 // profiles eligible for a draw type when it runs: below the last cut-off c0, the type's whole-pool share;
 // at or above c0, everyone eligible was invited, so only those who arrived since (inflow), spread like the pool
 // up to 600. Scores of 601+ carry a provincial nomination and are invited in Provincial Nominee rounds.
-export const eligible = (d, share, c0, inflow) => {
+// Arrivals above the last cut-off c0 (up to `top`): x profiles, the share `fill` of them filling scores upward from
+// c0 (people who just crossed it), the rest spread like the pool; never more at a score than the pool holds there,
+// less the `have` already there. up: the pool from c0 to top. With fill = 0 this is the pool's spread.
+export const arrive = (d, have, c0, top, up, x, fill = 0) => {
+  const add = new Float64Array(1201);
+  for (let s = Math.max(0, c0); s < top; s++) add[s] = Math.min(((1 - fill) * x * d[s]) / up, Math.max(0, d[s] - have[s]));
+  let left = fill * x;
+  for (let s = Math.max(0, c0); s < top && left > 0; s++) { const v = Math.min(left, Math.max(0, d[s] - have[s] - add[s])); add[s] += v; left -= v; }
+  return add;
+};
+// m (optional, per score): scales the profiles waiting below c0, as calibrate() returns it. fill: see arrive().
+export const eligible = (d, share, c0, inflow, m = null, fill = 0) => {
   const a = new Float64Array(1201), t = tail(d), top = c0 <= 600 ? 601 : 1201;
-  const up = (t[Math.min(1200, c0)] - (top <= 1200 ? t[top] : 0)) || 1, k = Math.min(1, inflow / up);
-  for (let s = 0; s <= 1200; s++) a[s] = s < c0 ? d[s] * share : s < top ? d[s] * k : 0;
+  const up = (t[Math.min(1200, c0)] - (top <= 1200 ? t[top] : 0)) || 1;
+  const arr = arrive(d, new Float64Array(1201), c0, top, up, inflow, fill);
+  for (let s = 0; s <= 1200; s++) a[s] = s < c0 ? d[s] * share * (m ? m[s] : 1) : s < top ? arr[s] : 0;
   return a;
 };
+// a gain class's share of the profiles at old score s: one number for every score, or one per score
+export const qAt = (q, s) => (typeof q === 'number' ? q : q[s]);
 // points gained under the Nov 3 rules: with Canadian work, +70/+40/+20 for 2x/1.5x/1.3x occupations;
 // without Canadian work, a high-wage job offer gives 100/70/50. With Canadian work an offer in the same
-// tier never beats the work points (factor takes the higher), so offers only count for the rest
+// tier never beats the work points (factor takes the higher), so offers only count for the rest.
+// hw is one share, or one per old score (from IRCC's counts on either side of the change); with one per score,
+// each class's share is per score too.
 export const gains = (cw, hw, mix, jo, joMix) => {
-  const g = new Map(), add = (p, q) => { if (q > 0) g.set(p, (g.get(p) || 0) + q); };
-  add(0, cw * (1 - hw)); [70, 40, 20].forEach((p, i) => add(p, cw * hw * mix[i]));
-  add(0, (1 - cw) * (1 - jo)); [100, 70, 50].forEach((p, i) => add(p, (1 - cw) * jo * joMix[i]));
+  if (typeof hw === 'number') {
+    const g = new Map(), add = (p, q) => { if (q > 0) g.set(p, (g.get(p) || 0) + q); };
+    add(0, cw * (1 - hw)); [70, 40, 20].forEach((p, i) => add(p, cw * hw * mix[i]));
+    add(0, (1 - cw) * (1 - jo)); [100, 70, 50].forEach((p, i) => add(p, (1 - cw) * jo * joMix[i]));
+    return [...g];
+  }
+  const n = hw.length, g = new Map(), add = (p, f) => { let a = g.get(p); if (!a) g.set(p, (a = new Float64Array(n))); for (let s = 0; s < n; s++) a[s] += f(hw[s]); };
+  add(0, (h) => cw * (1 - h) + (1 - cw) * (1 - jo));
+  [70, 40, 20].forEach((p, i) => { if (cw * mix[i] > 0) add(p, (h) => cw * h * mix[i]); });
+  [100, 70, 50].forEach((p, i) => { if ((1 - cw) * jo * joMix[i] > 0) add(p, () => (1 - cw) * jo * joMix[i]); });
   return [...g];
 };
 export const shift = (a, g) => {
   const out = new Float64Array(1201);
-  for (let s = 0; s <= 1200; s++) if (a[s]) g.forEach(([p, q]) => { out[Math.min(1200, s + p)] += a[s] * q; });
+  for (let s = 0; s <= 1200; s++) if (a[s]) g.forEach(([p, q]) => { out[Math.min(1200, s + p)] += a[s] * qAt(q, s); });
   return out;
+};
+// Calibration to an IRCC count under the new rules. ratio[s]: IRCC's count over the model's, in the band holding new
+// score s. A profile at old score s in gain class k lands at s + p_k, so its stock is scaled by that band's ratio.
+// Returns m[s], how much the stock at old score s scales, and the classes renormalised (each class's share of the
+// profiles at s once scaled), so every band adds up to IRCC's count.
+export const calibrate = (g, ratio) => {
+  const m = new Float64Array(1201);
+  for (let s = 0; s <= 1200; s++) g.forEach(([p, q]) => { m[s] += qAt(q, s) * ratio[Math.min(1200, s + p)]; });
+  return {
+    m,
+    g: g.map(([p, q]) => {
+      const a = new Float64Array(1201);
+      for (let s = 0; s <= 1200; s++) a[s] = m[s] > 0 ? (qAt(q, s) * ratio[Math.min(1200, s + p)]) / m[s] : qAt(q, s);
+      return [p, a];
+    }),
+  };
 };
 // the lowest score still invited when n profiles are invited from the top
 export const cutoff = (a, n) => {
@@ -87,30 +145,32 @@ export const offBreak = (iso) => {
 // type's share of the pool (target). When rounds reach into them they recover at rate mu a day, but the
 // profiles that replace them carry the new points only at the population rate g, not at the rate of those
 // invited: 12 months in a high-wage job or a high-wage offer is a higher bar than the old turnover had.
-// Above c0, profiles arrive at `rate` a day, spread like the pool up to 600 and never more than the pool
-// count holds there. With no round before it, the first round equals the single-round calculation.
-export const path = ({ d, share, c0, t0, rate, g, mu, rounds, keep = -1 }) => {
+// Above c0, profiles arrive at `rate` a day (see arrive(): spread like the pool up to 600, or partly filling
+// upward from c0) and never more than the pool count holds there. With no round before it, the first round
+// equals the single-round calculation.
+// g's shares may be per score (see gains), and m (optional) scales the target, as calibrate() returns them.
+export const path = ({ d, share, c0, t0, rate, g, mu, rounds, keep = -1, m = null, fill = 0 }) => {
   const N = 1201, K = g.length, top = c0 <= 600 ? 601 : 1201, tl = tail(d);
   const up = (tl[Math.min(1200, c0)] - (top <= 1200 ? tl[top] : 0)) || 1;
-  const target = new Float64Array(N), arr = new Float64Array(N);
-  for (let s = 0; s < N; s++) { if (s < c0) target[s] = d[s] * share; else if (s < top) arr[s] = d[s] / up; }
-  const W = g.map(([, p]) => target.map((v) => v * p)), A = g.map(() => new Float64Array(N));
+  const target = new Float64Array(N);
+  for (let s = 0; s < c0 && s < N; s++) target[s] = d[s] * share * (m ? m[s] : 1);
+  const Q = g.map(([, q]) => (typeof q === 'number' ? new Float64Array(N).fill(q) : q));
+  const W = Q.map((q) => target.map((v, s) => v * q[s])), A = g.map(() => new Float64Array(N)), have = new Float64Array(N);
   let t = Date.parse(t0 + 'T00:00:00Z');
   return rounds.map((r, i) => {
     const days = Math.max(0, (Date.parse(r.date + 'T00:00:00Z') - t) / 864e5), f = 1 - Math.exp(-mu * days);
     t = Date.parse(r.date + 'T00:00:00Z');
     for (let s = 0; s < N; s++) {
       if (target[s] > 0) {
-        let have = 0; for (let k = 0; k < K; k++) have += W[k][s];
-        const gap = target[s] - have;
-        if (gap > 0) for (let k = 0; k < K; k++) W[k][s] += f * gap * g[k][1];
+        let h = 0; for (let k = 0; k < K; k++) h += W[k][s];
+        const gap = target[s] - h;
+        if (gap > 0) for (let k = 0; k < K; k++) W[k][s] += f * gap * Q[k][s];
       }
-      if (arr[s] > 0) {
-        let have = 0; for (let k = 0; k < K; k++) have += A[k][s];
-        const add = Math.min(arr[s] * rate * days, Math.max(0, d[s] - have));
-        if (add > 0) for (let k = 0; k < K; k++) A[k][s] += add * g[k][1];
-      }
+      let h = 0; for (let k = 0; k < K; k++) h += A[k][s];
+      have[s] = h;
     }
+    const add = arrive(d, have, c0, top, up, rate * days, fill);
+    for (let s = Math.max(0, c0); s < top; s++) if (add[s] > 0) for (let k = 0; k < K; k++) A[k][s] += add[s] * Q[k][s];
     const T = new Float64Array(N);
     for (let k = 0; k < K; k++) { const p = g[k][0]; for (let s = 0; s < N; s++) { const v = W[k][s] + A[k][s]; if (v) T[Math.min(1200, s + p)] += v; } }
     const c = cutoff(T, r.size), tt = tail(T), eligibleN = tt[0];

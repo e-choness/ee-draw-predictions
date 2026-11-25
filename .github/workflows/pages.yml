@@ -7,8 +7,9 @@ on:
   push:
     branches: [main]
   schedule:
-    # Every day at 22:47 UTC, after IRCC usually posts a draw
-    - cron: "47 22 * * *"
+    # Every two hours. GitHub starts scheduled runs late, often by hours, so a once-a-day schedule could leave a new
+    # round off the site for a day. A scheduled run with nothing new stops after the download, without a deploy.
+    - cron: "23 */2 * * *"
   workflow_dispatch:
 
 permissions:
@@ -23,6 +24,9 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      deploy: ${{ steps.plan.outputs.deploy }}
+      fetched: ${{ steps.fetch.outcome == 'success' }}
     steps:
       - uses: actions/checkout@v7
 
@@ -30,32 +34,42 @@ jobs:
         with:
           node-version: 26
 
+      # if IRCC can't be reached the run carries on with the committed snapshot, and the "IRCC feed" job below fails
       - name: Download the latest rounds from IRCC
         id: fetch
+        continue-on-error: true
         run: node scripts/fetch-ircc.mjs
-        env:
-          ALLOW_STALE: "1"
 
-      - name: Commit the new snapshot when IRCC adds a draw
+      - name: Commit the new snapshot when IRCC adds or corrects a round
         if: steps.fetch.outputs.changed == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/ee_rounds.json
-          git commit -m "Update IRCC rounds to draw #${{ steps.fetch.outputs.latest }}"
-          git push
+          git commit -m "Update IRCC rounds, latest draw #${{ steps.fetch.outputs.latest }}"
+          # main may have moved since the checkout
+          git pull --rebase origin main
+          git push origin HEAD:main
+
+      - name: Deploy on a push, on demand, or when the data changed
+        id: plan
+        run: echo "deploy=${{ github.event_name != 'schedule' || steps.fetch.outputs.changed == 'true' }}" >> "$GITHUB_OUTPUT"
 
       - name: Build the site
+        if: steps.plan.outputs.deploy == 'true'
         run: node scripts/build.mjs
 
       - uses: actions/configure-pages@v6
+        if: steps.plan.outputs.deploy == 'true'
 
       - uses: actions/upload-pages-artifact@v5
+        if: steps.plan.outputs.deploy == 'true'
         with:
           path: dist
 
   deploy:
     needs: build
+    if: needs.build.outputs.deploy == 'true'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -63,3 +77,15 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v5
+
+  # The site is still deployed when IRCC can't be reached, but the run is marked failed (and GitHub emails about it)
+  # instead of passing as if there were simply no new round.
+  feed:
+    name: IRCC feed
+    needs: [build, deploy]
+    if: always() && needs.build.outputs.fetched != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "::error title=IRCC feed unreachable::Could not download IRCC's rounds feed; the site shows the last snapshot. The build job's log has the error."
+          exit 1

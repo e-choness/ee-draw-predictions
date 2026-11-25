@@ -52,7 +52,7 @@ docker run -p 8080:8080 ee-draw-outlook
 docker compose up -d
 ```
 
-The container serves the site on port 8080, refreshes IRCC data when it starts, and again every `REFRESH_HOURS` (default 6). If IRCC can't be reached, it keeps serving the last snapshot.
+The container serves the site on port 8080, refreshes IRCC data when it starts, and again every `REFRESH_HOURS` (default 6). If IRCC can't be reached, it keeps serving the last snapshot. A dashboard left open checks for new data every five minutes and redraws when a round is added, on GitHub Pages as in Docker.
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
@@ -67,7 +67,7 @@ A health check answers at `/healthz`.
 
 1. Push this folder to a new GitHub repository, on the `main` branch.
 2. In the repository, open **Settings → Pages** and set **Source** to **GitHub Actions**.
-3. The **Refresh IRCC data and deploy to GitHub Pages** workflow runs on every push, every day at 22:47 UTC, and on demand from the Actions tab. It downloads the IRCC feed, commits `data/ee_rounds.json` when IRCC adds a draw, builds the site and deploys it.
+3. The **Refresh IRCC data and deploy to GitHub Pages** workflow runs on every push, every two hours, and on demand from the Actions tab. It downloads the IRCC feed and, when IRCC has added or corrected a round, commits `data/ee_rounds.json`, builds the site and deploys it; a scheduled run with nothing new stops there. If IRCC can't be reached, the site keeps the last snapshot and the run is marked failed (its **IRCC feed** job), so GitHub emails you instead of the run passing quietly.
 4. The **Build and publish the Docker image** workflow pushes `ghcr.io/<owner>/<repo>` for amd64 and arm64 on every push to `main` and on `v*` tags.
 
 ## How it's built

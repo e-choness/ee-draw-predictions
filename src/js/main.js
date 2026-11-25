@@ -79,7 +79,15 @@ store.subscribe(renderer.schedule);
 renderer.start();
 store.loadAll();
 
-// a page left open past midnight in Ottawa reloads the data: the earliest projected round moves to the new day, and
-// IRCC may have published a round since
-let day = today();
-setInterval(() => { const d = today(); if (d !== day) { day = d; store.loadAll(); } }, 5 * 60e3);
+// A page left open re-checks the data every five minutes while it is in view, and when it comes back into view: it
+// redraws only when a file changed (IRCC published a round and the site was rebuilt). Past midnight in Ottawa it
+// reloads them in any case, since the earliest projected round moves to the new day.
+let day = today(), checked = Date.now();
+const recheck = () => {
+  if (document.hidden || Date.now() - checked < 60e3) return;
+  checked = Date.now();
+  const d = today();
+  if (d !== day) { day = d; store.loadAll(); } else store.refresh();
+};
+setInterval(recheck, 5 * 60e3);
+document.addEventListener('visibilitychange', recheck);

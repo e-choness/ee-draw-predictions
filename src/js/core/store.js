@@ -19,17 +19,22 @@ export function createStore({ sources = {}, defaults = {}, fetch: get = globalTh
     changed();
   };
 
-  // fetch a source file; the browser revalidates it with the server every time, so a new snapshot shows at once
-  const load = async (id) => {
+  // fetch a source file; the browser revalidates it with the server every time, so a new snapshot shows at once.
+  // quiet: a re-check of a file already loaded, which changes nothing unless the file did, and keeps what is there
+  // when the fetch fails
+  const load = async (id, quiet = false) => {
     const url = sources[id];
     if (!url) { put(id, { status: 'error', data: [], message: 'No file for dataset ' + id }); return; }
-    const prev = files.get(id);
-    if (!prev || prev.status !== 'ok') files.set(id, { status: 'loading', data: [] });
+    const prev = files.get(id), had = prev && prev.status === 'ok';
+    if (!had) files.set(id, { status: 'loading', data: [] });
     try {
       const res = await get(url, { cache: 'no-cache' });
       if (!res.ok) throw new Error('HTTP ' + res.status + ' loading ' + url);
-      put(id, { status: 'ok', data: rowsOf(await res.json()) });
+      const text = await res.text();
+      if (quiet && had && prev.text === text) return;
+      put(id, { status: 'ok', data: rowsOf(JSON.parse(text)), text });
     } catch (err) {
+      if (quiet && had) { console.warn('[ee] re-checking dataset ' + id + ' failed; keeping the loaded copy:', err); return; }
       console.error('[ee] dataset ' + id + ' failed:', err);
       put(id, { status: 'error', data: [], message: String((err && err.message) || err) });
     }
@@ -63,7 +68,9 @@ export function createStore({ sources = {}, defaults = {}, fetch: get = globalTh
     /** Provide a source's rows directly instead of fetching it (tests, or data loaded another way). */
     provide: (id, json) => put(id, { status: 'ok', data: rowsOf(json) }),
     /** Fetch every source file again. */
-    loadAll: () => Promise.all(Object.keys(sources).map(load)),
+    loadAll: () => Promise.all(Object.keys(sources).map((id) => load(id))),
+    /** Fetch every source file again, but redraw only for those that changed; a failed fetch keeps the loaded copy. */
+    refresh: () => Promise.all(Object.keys(sources).map((id) => load(id, true))),
 
     /** A copy of the scenario parameters. */
     params: () => ({ ...params }),

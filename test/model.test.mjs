@@ -10,6 +10,8 @@ import * as D from '../src/js/model/datasets.js';
 import * as M from '../src/js/model/eem.js';
 import { context, createForecast, horizon } from '../src/js/model/forecast.js';
 import { transition, KNOTS } from '../src/js/model/transition.js';
+import { FEED_URL, parseFeed, upToDate } from '../src/js/model/ircc-feed.js';
+import { createStore } from '../src/js/core/store.js';
 
 const read = (f) => JSON.parse(readFileSync(new URL('../data/' + f, import.meta.url), 'utf8'));
 const ROUNDS = read('ee_rounds.json').rows, COMP = read('pool_composition.json').rows;
@@ -148,4 +150,45 @@ test('after a round under the new rules, the projections correct themselves from
   assert.ok(next.date > date, 'the next round comes after it');
   // with no other change, half the miss is carried into the next projection
   assert.equal(after.project('cec', null, S).anchor, Math.round((drawn - after.project('cec', null, S).held[0].sim) / 2));
+});
+
+// The page reads IRCC's feed itself, after the saved file: these run the store with a stand-in for fetch.
+const feedOf = (rows) => ({ rounds: rows.map((r) => ({ ...Object.fromEntries(Object.entries(r).map(([k, v]) => [k, String(v)])),
+  drawDistributionAsOn: new Date(r.distributionAsOn + 'T12:00:00Z').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' }) })) });
+const storeOver = (fileRows, feed) => {
+  const reply = (body) => ({ ok: true, text: async () => JSON.stringify(body), json: async () => body });
+  return createStore({
+    sources: { rounds: 'data/ee_rounds.json' },
+    live: { rounds: { url: FEED_URL, parse: (f) => parseFeed(f).rows, accept: upToDate } },
+    fetch: async (url) => { if (url !== FEED_URL) return reply({ rows: fileRows }); if (feed instanceof Error) throw feed; return reply(feed); },
+  });
+};
+
+test('IRCC’s feed parses to the saved rows, and a round whose pool counts do not add up is left out', () => {
+  assert.deepEqual(parseFeed(feedOf(ROUNDS)).rows, ROUNDS);
+  const feed = feedOf(ROUNDS);
+  feed.rounds[0].dd18 = String(ROUNDS[0].dd18 + 1);
+  const { rows, skipped } = parseFeed(feed);
+  assert.equal(skipped, 1);
+  assert.equal(rows[0].drawNumber, ROUNDS[1].drawNumber);
+  assert.throws(() => parseFeed({}));
+});
+
+test('the page shows a round IRCC has published before the site is rebuilt, and keeps the saved file otherwise', async () => {
+  // the saved file is one round behind the feed
+  let s = storeOver(ROUNDS.slice(1), feedOf(ROUNDS));
+  await s.loadAll();
+  assert.equal(s.rows('rounds')[0].drawNumber, ROUNDS[0].drawNumber);
+  // a re-check with nothing new redraws nothing
+  let redraws = 0;
+  s.subscribe(() => redraws++);
+  await s.refresh();
+  assert.equal(redraws, 0);
+  // a feed behind the saved file (a stale cache), or one that can't be read, is not used
+  s = storeOver(ROUNDS, feedOf(ROUNDS.slice(1)));
+  await s.loadAll();
+  assert.equal(s.rows('rounds').length, ROUNDS.length);
+  s = storeOver(ROUNDS, new Error('offline'));
+  await s.loadAll();
+  assert.deepEqual(s.rows('rounds'), ROUNDS);
 });

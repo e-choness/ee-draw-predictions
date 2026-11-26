@@ -80,7 +80,7 @@ renderer.start();
 store.loadAll();
 
 // A page left open re-checks the data every five minutes while it is in view, and when it comes back into view: it
-// redraws only when a file changed (IRCC published a round and the site was rebuilt). Past midnight in Ottawa it
+// redraws only when the data changed (IRCC published a round, or the site was rebuilt). Past midnight in Ottawa it
 // reloads them in any case, since the earliest projected round moves to the new day.
 let day = today(), checked = Date.now();
 const recheck = () => {

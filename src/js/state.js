@@ -3,12 +3,12 @@
 
 // The one store the page runs on, the datasets derived from IRCC's files, and the forecast for the current scenario.
 // Views read everything through `store`, `scenario` and `model`; nothing else holds state.
-import { SOURCES, DEFAULTS } from './config.js';
+import { SOURCES, LIVE, DEFAULTS } from './config.js';
 import { createStore } from './core/store.js';
 import * as D from './model/datasets.js';
 import { context, createForecast, horizon, sizeRange } from './model/forecast.js';
 
-export const store = createStore({ sources: SOURCES, defaults: DEFAULTS });
+export const store = createStore({ sources: SOURCES, live: LIVE, defaults: DEFAULTS });
 
 /** Today's date in Ottawa, where IRCC holds its rounds (yyyy-mm-dd). No round is projected before it. */
 export const today = () => {

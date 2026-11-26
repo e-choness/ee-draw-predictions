@@ -52,7 +52,9 @@ docker run -p 8080:8080 ee-draw-outlook
 docker compose up -d
 ```
 
-The container serves the site on port 8080, refreshes IRCC data when it starts, and again every `REFRESH_HOURS` (default 6). If IRCC can't be reached, it keeps serving the last snapshot. A dashboard left open checks for new data every five minutes and redraws when a round is added, on GitHub Pages as in Docker.
+The container serves the site on port 8080, refreshes IRCC data when it starts, and again every `REFRESH_HOURS` (default 6). If IRCC can't be reached, it keeps serving the last snapshot. 
+
+The page also reads IRCC's feed itself, in the visitor's browser, right after the snapshot it was built with: IRCC serves the feed to any origin. A round therefore shows as soon as IRCC publishes it, on GitHub Pages as in Docker, whether or not the site has been rebuilt since. A dashboard left open checks again every five minutes and redraws when a round is added. If the feed can't be read, or is behind the snapshot, the page keeps the snapshot.
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
@@ -67,7 +69,7 @@ A health check answers at `/healthz`.
 
 1. Push this folder to a new GitHub repository, on the `main` branch.
 2. In the repository, open **Settings → Pages** and set **Source** to **GitHub Actions**.
-3. The **Refresh IRCC data and deploy to GitHub Pages** workflow runs on every push, every two hours, and on demand from the Actions tab. It downloads the IRCC feed and, when IRCC has added or corrected a round, commits `data/ee_rounds.json`, builds the site and deploys it; a scheduled run with nothing new stops there. If IRCC can't be reached, the site keeps the last snapshot and the run is marked failed (its **IRCC feed** job), so GitHub emails you instead of the run passing quietly.
+3. The **Refresh IRCC data and deploy to GitHub Pages** workflow runs on every push, every two hours, and on demand from the Actions tab. It downloads the IRCC feed and, when IRCC has added or corrected a round, commits `data/ee_rounds.json`, builds the site and deploys it; a scheduled run with nothing new stops there. If IRCC can't be reached, the site keeps the last snapshot and the run is marked failed (its **IRCC feed** job), so GitHub emails you instead of the run passing quietly; the reason is in the build job's log. canada.ca has refused connections from GitHub's runners, so don't count on this run: visitors still see new rounds, because the page reads the feed itself, and `npm run fetch` followed by a push brings the committed snapshot up to date.
 4. The **Build and publish the Docker image** workflow pushes `ghcr.io/<owner>/<repo>` for amd64 and arm64 on every push to `main` and on `v*` tags.
 
 ## How it's built
@@ -87,10 +89,11 @@ src/
     main.js              entry point: maps every data-view name to its view and starts the app
     config.js            data files, scenario defaults, pages
     state.js             the store, the datasets derived from IRCC's files, the forecast for the current scenario
-    core/store.js        data and scenario state, no DOM: datasets cached until a file reloads
+    core/store.js        data and scenario state, no DOM: each file, then its live copy; datasets cached until one reloads
     core/renderer.js     draws views on the next frame after a change; skips hidden pages
     model/eem.js         CRS model math: pool density, eligibility, new points, cut-offs, rounds carried forward
     model/datasets.js    draws, monthly totals, pool counts and draw types from IRCC's rounds
+    model/ircc-feed.js   IRCC's feed address and the checks that turn it into rows, shared by the page and the fetch script
     model/forecast.js    projections, self-correction and the pool under the new rules
     charts/              one module per chart, each an ECharts option built from the state
     charts/base.js       the shared look (axes, labels, legends, tooltips from the CSS tokens) and pins
@@ -112,7 +115,7 @@ data/high_wage_occupations.json, data/assumption_inputs.json, data/census_noc_20
 
 The model modules are pure functions over plain arrays, so the tests run them in Node exactly as the page does. Views read state only through `store`, `scenario` and `model` in `state.js`.
 
-The fetch script keeps each round's pool distribution only when IRCC's subtotals add up, so a malformed row never reaches the dashboard. It drops a repeated draw number, reports a pool count dated after its round, two different counts under one date, or one count repeated under two dates (the dashboard counts it once), and refuses a feed that ends before the saved data, so a stale cache can't erase rounds the projections have learned from.
+The feed is read the same way by the fetch script and by the page: each round's pool distribution is kept only when IRCC's subtotals add up, so a malformed row never reaches the dashboard, and a repeated draw number is dropped. The fetch script also reports a pool count dated after its round, two different counts under one date, or one count repeated under two dates (the dashboard counts it once), and both refuse a feed that ends before the saved data, so a stale cache can't erase rounds the projections have learned from.
 
 ## Method in brief
 

@@ -9,20 +9,12 @@
 import { readFile, writeFile, mkdir, appendFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { FEED_URL, SINCE as DEFAULT_SINCE, parseFeed, upToDate } from '../src/js/model/ircc-feed.js';
 
-const FEED = process.env.IRCC_FEED_URL || 'https://www.canada.ca/content/dam/ircc/documents/json/ee_rounds_123_en.json';
-const SINCE = process.env.SINCE || '2024-01-01';
+const FEED = process.env.IRCC_FEED_URL || FEED_URL;
+const SINCE = process.env.SINCE || DEFAULT_SINCE;
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const file = resolve(root, process.env.DATA_FILE || 'data/ee_rounds.json');
-const months = { january: 1, february: 2, march: 3, april: 4, may: 5, june: 6, july: 7, august: 8, september: 9, october: 10, november: 11, december: 12 };
-
-const int = (v) => Number(String(v ?? '').replace(/[^0-9-]/g, ''));
-const isoFromLong = (s) => {
-  const m = String(s || '').trim().match(/^([A-Za-z]+)\s+(\d{1,2}),?\s+(\d{4})/);
-  if (!m || !months[m[1].toLowerCase()]) return null;
-  return `${m[3]}-${String(months[m[1].toLowerCase()]).padStart(2, '0')}-${m[2].padStart(2, '0')}`;
-};
-
 // canada.ca's CDN stalls requests that don't carry the headers a browser sends (no answer at all, not an error), so
 // they are sent explicitly, each attempt is cut off after TIMEOUT_MS, and a failed attempt is retried after a pause.
 const HEADERS = {
@@ -46,7 +38,9 @@ async function download() {
       if (!Array.isArray(feed.rounds)) throw new Error('IRCC feed has no "rounds" list');
       return feed;
     } catch (err) {
-      const why = err.name === 'TimeoutError' ? `no answer within ${TIMEOUT_MS / 1000} s` : err.message;
+      // "fetch failed" says nothing by itself: the reason (connection reset, DNS, TLS) is in the error's cause
+      const cause = err.cause && (err.cause.code || err.cause.message);
+      const why = err.name === 'TimeoutError' ? `no answer within ${TIMEOUT_MS / 1000} s` : err.message + (cause ? ` (${cause})` : '');
       if (i >= ATTEMPTS) throw new Error(`${why} (after ${i} attempts)`);
       console.warn(`Attempt ${i} of ${ATTEMPTS} failed: ${why}; retrying in ${15 * i} s`);
       await sleep(15000 * i);
@@ -57,31 +51,11 @@ async function download() {
 async function main() {
   const feed = await download();
 
-  const rows = [];
-  let skipped = 0;
-  for (const r of feed.rounds) {
-    if (!r.drawDate || r.drawDate < SINCE) continue;
-    const o = {
-      drawNumber: int(r.drawNumber), drawDate: r.drawDate, drawName: String(r.drawName || '').trim(),
-      drawSize: int(r.drawSize), drawCRS: int(r.drawCRS), distributionAsOn: isoFromLong(r.drawDistributionAsOn),
-    };
-    for (let i = 1; i <= 18; i++) o['dd' + i] = int(r['dd' + i]);
-    const ok = o.distributionAsOn && o.drawNumber && o.drawSize > 0
-      && o.dd3 === o.dd4 + o.dd5 + o.dd6 + o.dd7 + o.dd8
-      && o.dd9 === o.dd10 + o.dd11 + o.dd12 + o.dd13 + o.dd14
-      && o.dd18 === o.dd1 + o.dd2 + o.dd3 + o.dd9 + o.dd15 + o.dd16 + o.dd17;
-    if (!ok) { skipped++; console.warn(`Skipping draw #${o.drawNumber}: pool distribution does not add up`); continue; }
-    rows.push(o);
-  }
-  if (!rows.length) throw new Error('No usable rounds in the IRCC feed');
-  rows.sort((a, b) => b.drawNumber - a.drawNumber);
+  // the rounds since SINCE whose pool distribution adds up, newest first, without repeats of a draw number
+  const { rows, skipped, notes } = parseFeed(feed, SINCE);
+  notes.forEach((n) => console.warn(n));
 
-  // Checks across rounds. A repeated draw number is dropped, since it would count one round twice in the
-  // projections' record; the others are reported only, because the dashboard handles them.
-  const seen = new Set();
-  for (let i = rows.length - 1; i >= 0; i--) {
-    if (seen.has(rows[i].drawNumber)) { console.warn(`Dropping a repeat of draw #${rows[i].drawNumber}`); rows.splice(i, 1); skipped++; } else seen.add(rows[i].drawNumber);
-  }
+  // Checks across rounds, reported only, because the dashboard handles them.
   const byDate = new Map();
   for (const r of rows) {
     if (r.distributionAsOn > r.drawDate) console.warn(`Draw #${r.drawNumber} (${r.drawDate}) carries a pool count dated after it, ${r.distributionAsOn}`);
@@ -99,7 +73,7 @@ async function main() {
   try { before = JSON.parse(await readFile(file, 'utf8')); } catch { /* first run */ }
   // a feed served from a stale cache must not erase rounds the projections have already learned from
   const savedTop = before?.rows?.[0]?.drawNumber;
-  if (savedTop && rows[0].drawNumber < savedTop) throw new Error(`IRCC feed ends at draw #${rows[0].drawNumber}, behind the saved data (#${savedTop}); keeping the saved data`);
+  if (!upToDate(rows, before?.rows)) throw new Error(`IRCC feed ends at draw #${rows[0].drawNumber}, behind the saved data (#${savedTop}); keeping the saved data`);
   const prevTop = before?.rows?.[0]?.drawNumber;
   // unchanged rounds leave the file alone, so fetchedAt dates the last change and a scheduled run has nothing to commit
   const changed = JSON.stringify(before?.rows) !== JSON.stringify(rows);

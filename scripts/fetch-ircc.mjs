@@ -7,6 +7,9 @@
 // (set ALLOW_STALE=1 to exit 0 instead, so a build can carry on with the last snapshot).
 // The file is rewritten only when the rounds differ from the saved ones (a new round, or IRCC correcting one).
 import { readFile, writeFile, mkdir, appendFile } from 'node:fs/promises';
+import { execFile } from 'node:child_process';
+import https from 'node:https';
+import zlib from 'node:zlib';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { FEED_URL, SINCE as DEFAULT_SINCE, parseFeed, upToDate } from '../src/js/model/ircc-feed.js';
@@ -15,8 +18,16 @@ const FEED = process.env.IRCC_FEED_URL || FEED_URL;
 const SINCE = process.env.SINCE || DEFAULT_SINCE;
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const file = resolve(root, process.env.DATA_FILE || 'data/ee_rounds.json');
-// canada.ca's CDN stalls requests that don't carry the headers a browser sends (no answer at all, not an error), so
-// they are sent explicitly, each attempt is cut off after TIMEOUT_MS, and a failed attempt is retried after a pause.
+// canada.ca's CDN (Akamai) is picky about who it serves:
+// - Over HTTP/2 it resets the stream (NGHTTP2_INTERNAL_ERROR, which fetch reports as "fetch failed
+//   (ERR_HTTP2_STREAM_ERROR)") for requests it doesn't like. Newer Node versions' fetch negotiates HTTP/2, so every
+//   GitHub Actions run on Node 26 failed this way. The download therefore goes through node:https, which only speaks
+//   HTTP/1.1, the protocol the feed has always been served over to scripts.
+// - It stalls requests that don't carry the headers a browser sends (no answer at all, not an error), so they are sent
+//   explicitly, each attempt is cut off after TIMEOUT_MS, and a failed attempt is retried after a pause.
+// If every attempt fails, curl (HTTP/1.1 too) gets one last try where it is installed, as on GitHub's runners, since
+// the CDN tells clients apart by their TLS handshake as well as by their headers.
+// TIMEOUT_MS, ATTEMPTS and RETRY_MS (the pause before the second attempt, doubled before the third, ...) tune this.
 const HEADERS = {
   'user-agent': 'ee-outlook-data-refresh',
   accept: 'application/json, text/plain, */*',
@@ -27,25 +38,88 @@ const HEADERS = {
   'sec-fetch-site': 'same-origin',
 };
 const TIMEOUT_MS = Number(process.env.TIMEOUT_MS || 60000), ATTEMPTS = Number(process.env.ATTEMPTS || 4);
+const RETRY_MS = Number(process.env.RETRY_MS ?? 15000);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const timedOut = () => new Error(`no answer within ${TIMEOUT_MS / 1000} s`);
+
+/** One HTTP/1.1 GET of `url` with HEADERS, following redirects, resolving to the decoded body as text. */
+function get(url, redirects = 5) {
+  return new Promise((resolveBody, reject) => {
+    let settled = false;
+    const done = (err, body) => { if (settled) return; settled = true; clearTimeout(timer); err ? reject(err) : resolveBody(body); };
+    const req = https.get(url, { headers: HEADERS }, (res) => {
+      const { statusCode: status, headers } = res;
+      if (status >= 300 && status < 400 && headers.location) {
+        res.resume();
+        if (redirects <= 0) return done(new Error('IRCC feed redirects too many times'));
+        return get(new URL(headers.location, url), redirects - 1).then((b) => done(null, b), done);
+      }
+      if (status !== 200) { res.resume(); return done(new Error(`IRCC feed answered HTTP ${status}`)); }
+      const enc = String(headers['content-encoding'] || '').trim().toLowerCase();
+      const decode = { br: zlib.createBrotliDecompress, gzip: zlib.createGunzip, 'x-gzip': zlib.createGunzip, deflate: zlib.createInflate }[enc];
+      if (enc && enc !== 'identity' && !decode) { res.resume(); return done(new Error(`IRCC feed sent an unknown encoding, ${enc}`)); }
+      const body = decode ? res.pipe(decode()) : res;
+      const chunks = [];
+      body.on('data', (c) => chunks.push(c));
+      body.on('end', () => done(null, Buffer.concat(chunks).toString('utf8')));
+      body.on('error', done);
+      res.on('error', done);
+      res.on('aborted', () => done(new Error('IRCC feed closed the connection mid-download')));
+    });
+    req.on('error', (err) => done(err));
+    // the deadline covers the whole download, not just the wait for the first byte
+    const timer = setTimeout(() => { done(timedOut()); req.destroy(); }, TIMEOUT_MS);
+  });
+}
+
+/**
+ * The same GET through curl, or null when curl isn't installed. curl keeps its own user-agent and sends no
+ * browser-style headers: the CDN stalls a curl handshake that claims to be anything other than curl.
+ */
+function curl(url) {
+  const args = ['--http1.1', '--fail', '--silent', '--show-error', '--location', '--compressed', '--max-time', String(TIMEOUT_MS / 1000),
+    '--header', `accept: ${HEADERS.accept}`, url];
+  return new Promise((resolveBody, reject) => {
+    execFile('curl', args, { maxBuffer: 64 * 1024 * 1024 }, (err, stdout, stderr) => {
+      if (err?.code === 'ENOENT') return resolveBody(null);
+      if (err) return reject(new Error(String(stderr).trim() || err.message));
+      resolveBody(stdout);
+    });
+  });
+}
+
+function parseBody(text) {
+  let feed;
+  try { feed = JSON.parse(text); } catch { throw new Error(`IRCC feed is not JSON (starts with ${JSON.stringify(String(text).slice(0, 60))})`); }
+  if (!Array.isArray(feed?.rounds)) throw new Error('IRCC feed has no "rounds" list');
+  return feed;
+}
+
+// a network error's message alone ("socket hang up") hides the reason; its code (ECONNRESET, ENOTFOUND, ...) says it
+const describe = (err) => err.message + (err.code && !err.message.includes(err.code) ? ` (${err.code})` : '');
 
 async function download() {
-  for (let i = 1; ; i++) {
+  let last;
+  for (let i = 1; i <= ATTEMPTS; i++) {
     try {
-      const res = await fetch(FEED, { headers: HEADERS, signal: AbortSignal.timeout(TIMEOUT_MS) });
-      if (!res.ok) throw new Error(`IRCC feed answered HTTP ${res.status}`);
-      const feed = await res.json();
-      if (!Array.isArray(feed.rounds)) throw new Error('IRCC feed has no "rounds" list');
-      return feed;
+      return parseBody(await get(FEED));
     } catch (err) {
-      // "fetch failed" says nothing by itself: the reason (connection reset, DNS, TLS) is in the error's cause
-      const cause = err.cause && (err.cause.code || err.cause.message);
-      const why = err.name === 'TimeoutError' ? `no answer within ${TIMEOUT_MS / 1000} s` : err.message + (cause ? ` (${cause})` : '');
-      if (i >= ATTEMPTS) throw new Error(`${why} (after ${i} attempts)`);
-      console.warn(`Attempt ${i} of ${ATTEMPTS} failed: ${why}; retrying in ${15 * i} s`);
-      await sleep(15000 * i);
+      last = describe(err);
+      if (i < ATTEMPTS) {
+        console.warn(`Attempt ${i} of ${ATTEMPTS} failed: ${last}; retrying in ${(RETRY_MS * i) / 1000} s`);
+        await sleep(RETRY_MS * i);
+      }
     }
   }
+  console.warn(`All ${ATTEMPTS} attempts failed, the last with: ${last}; trying curl`);
+  try {
+    const text = await curl(FEED);
+    if (text !== null) return parseBody(text);
+    last += '; curl is not installed';
+  } catch (err) {
+    last += `; curl: ${describe(err)}`;
+  }
+  throw new Error(`${last} (after ${ATTEMPTS} attempts)`);
 }
 
 async function main() {

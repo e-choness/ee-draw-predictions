@@ -69,6 +69,27 @@ export const snapshots = (rounds) => distinctCounts(rounds).map((r) => {
   return o;
 });
 
+const DAY = 864e5;
+const msOf = (d) => Date.parse(d + 'T00:00:00Z');
+/** The Monday of the week holding time t (UTC milliseconds). */
+const mondayOf = (t) => t - ((new Date(t).getUTCDay() + 6) % 7) * DAY;
+/** A round's day of the week, Monday 0 to Friday 4. */
+export const weekday = (date) => Math.min(4, (new Date(msOf(date)).getUTCDay() + 6) % 7);
+
+/**
+ * IRCC holds its rounds in draw weeks: a Provincial Nominee round on the Monday, then Canadian Experience Class,
+ * French and category rounds over the days after, and then usually a week or more with none (every draw week of 2026
+ * so far was followed by at least one empty week). Returns the Monday of the latest draw week (lastWeek, yyyy-mm-dd)
+ * and the usual time from one draw week to the next (cadence, in days, a whole number of weeks): the median over the
+ * last eight.
+ */
+export function drawWeeks(draws) {
+  const weeks = [...new Set(draws.map((d) => mondayOf(msOf(d.drawDate))))].sort((a, b) => a - b);
+  const tail = weeks.slice(-9), gaps = tail.slice(1).map((w, i) => (w - tail[i]) / DAY);
+  const cadence = gaps.length ? Math.max(7, Math.round(M.median(gaps) / 7) * 7) : 7;
+  return { lastWeek: new Date(weeks[weeks.length - 1]).toISOString().slice(0, 10), cadence };
+}
+
 /**
  * For each draw type: its last round, usual size, how fast eligible profiles arrive between rounds, its share of the
  * whole pool and occupation mix, and how far the model was off when replayed on its recent rounds.
@@ -86,6 +107,14 @@ export function drawTypes(draws, comp, today) {
     if (w.length < 2) return w.length ? w[0].drawSize / 14 : 0;
     return w.slice(1).reduce((s, d) => s + d.drawSize, 0) / Math.max(7, (ms(w[w.length - 1].drawDate) - ms(w[0].drawDate)) / day);
   };
+  // The next draw week: the usual cadence after the latest one, or the current week once that has passed with no
+  // round. A type can still come in the latest draw week while today is in it and its usual weekday is still ahead;
+  // otherwise its next round comes no sooner than its usual weekday in the next draw week, so the week after a draw
+  // week holds no projected round.
+  const { lastWeek, cadence } = drawWeeks(asc);
+  const now = M.isDate(today) ? ms(today) : ms(latest) + day, nowWeek = mondayOf(now);
+  const nextWeek = Math.max(ms(lastWeek) + cadence * day, nowWeek);
+  const weekFloor = (wd) => (nowWeek === ms(lastWeek) && ms(lastWeek) + wd * day >= now ? ms(lastWeek) : nextWeek) + wd * day;
   const keys = [...new Set(asc.map((d) => d.key))].filter((k) => k !== 'military' && k !== 'other');
   const out = keys.map((key) => {
     const all = asc.filter((d) => d.key === key);
@@ -100,9 +129,10 @@ export function drawTypes(draws, comp, today) {
     const tail = recent.slice(-7), gaps = tail.slice(1).map((d, i) => (ms(d.drawDate) - ms(tail[i].drawDate)) / day);
     const gap = Math.max(7, Math.round(M.median(gaps)));
     // the earliest next round: the day after the latest round of any type, no sooner than IRCC's rescoring estimate
-    // ran out while no round has followed the new rules, and never in the past. A type whose usual gap has already
-    // passed is projected for today, or the next weekday
-    const floor = Math.max(latest >= M.RULES ? ms(latest) + day : ms(M.RESUME), M.isDate(today) ? ms(today) : 0);
+    // ran out while no round has followed the new rules, never in the past, and on the type's usual weekday in the
+    // next draw week at the soonest. A type whose usual gap has already passed is projected for that day
+    const wd = Math.round(M.median(all.slice(-6).map((d) => weekday(d.drawDate))));
+    const floor = Math.max(latest >= M.RULES ? ms(latest) + day : ms(M.RESUME), M.isDate(today) ? ms(today) : 0, weekFloor(wd));
     // replay the same model on this type's recent rounds, each against the pool count IRCC published before it
     const errs = [], naive = [];
     for (let i = Math.max(3, all.length - 8); i < all.length; i++) {
@@ -139,7 +169,7 @@ export function drawTypes(draws, comp, today) {
     return {
       key, category: last.category, method: base ? method : 'pattern', draws12m: recent.length,
       lastDate: last.drawDate, lastCRS: last.drawCRS, lastSize: last.drawSize, lastAsOf: last.distributionAsOn, lastNumber: last.drawNumber,
-      gapDays: gap, nextDate: M.offBreak(iso(Math.max(ms(last.drawDate) + gap * day, floor))),
+      gapDays: gap, weekday: wd, nextDate:M.offBreak(iso(Math.max(ms(last.drawDate) + gap * day, floor))),
       usualSize, ratePerDay: Math.round(rateBefore(all, all.length) * 10) / 10,
       // the median of the last four cut-offs, at the usual size for types whose cut-off falls with size
       pattern: Math.round(M.sizedMedian(history, all.length, slope, usualSize)), sizeSlope: slope,

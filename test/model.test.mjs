@@ -73,6 +73,27 @@ test('no round is projected before today, on a weekend, or in the year-end break
   D.drawTypes(D.toDraws(ROUNDS), COMP).forEach((t) => assert.ok(t.nextDate > latest && t.nextDate >= (latest >= M.RULES ? latest : M.RESUME), t.key));
 });
 
+test('no round is projected in the empty weeks after a draw week', () => {
+  const draws = D.toDraws(ROUNDS), { lastWeek, cadence } = D.drawWeeks(draws);
+  assert.ok(cadence >= 7 && cadence % 7 === 0, `cadence ${cadence}`);
+  const day = (iso, n) => new Date(Date.parse(iso + 'T00:00:00Z') + n * 864e5).toISOString().slice(0, 10);
+  const nextWeek = day(lastWeek, cadence);
+  // the Saturday after the latest draw week and, when the cadence leaves one, the Monday of an empty week after it
+  [day(lastWeek, 5), cadence > 7 ? day(lastWeek, 7) : null].filter(Boolean).forEach((today) => {
+    D.drawTypes(draws, COMP, today).forEach((t) => {
+      // a round pushed into the year-end break moves to January, which is later still
+      assert.ok(t.nextDate >= M.offBreak(day(nextWeek, t.weekday)), `${t.key}: ${t.nextDate} falls before its day in the draw week of ${nextWeek} (today ${today})`);
+    });
+  });
+  // once the next draw week has passed with no round, a type whose usual gap has passed is projected for this week:
+  // a Wednesday two draw weeks late, so this week's Friday is the latest (in January, should that be the break)
+  const late = day(nextWeek, cadence + 2), friday = M.offBreak(day(late, 2));
+  D.drawTypes(draws, COMP, late).forEach((t) => {
+    if (day(t.lastDate, t.gapDays) > late) return;
+    assert.ok(t.nextDate >= late && t.nextDate <= friday, `${t.key}: ${t.nextDate}, not in the week of ${late}`);
+  });
+});
+
 test('a bigger round never raises the cut-off', () => {
   c.types.filter((t) => t.method === 'pool').forEach((t) => {
     const cuts = [0.5, 1, 2, 4].map((k) => F.project(t.key, Math.round(t.usualSize * k), S).projected);
